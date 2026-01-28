@@ -1,12 +1,13 @@
-// lib/features/auth/repository/auth_repository.dart
-
 import 'package:dio/dio.dart';
+import 'package:task_manager/features/auth/models/api_response.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../core/storage/storage_keys.dart';
 import '../../../core/constants/api_constants.dart';
-import '../models/user_model.dart';
+
 import '../models/auth_request.dart';
+import '../models/login_response.dart';
+import '../models/user_model.dart';
 
 class AuthRepository {
   final DioClient _dioClient;
@@ -14,157 +15,154 @@ class AuthRepository {
 
   AuthRepository(this._dioClient, this._storage);
 
-  /// Login
-  Future<UserModel> login(AuthRequest request) async {
-    try {
-      print('🔐 Attempting login: ${request.email}');
+  /// LOGIN → Call API & return LoginResponse
 
-      final response = await _dioClient.post(
-        ApiConstants.login,
-        data: request.toJson(),
-      );
+Future<LoginResponse> login(AuthRequest request) async {
+  try {
+    print("LOGIN REQUEST BODY: ${request.toJson()}");
 
-      final token = response.data['token'] as String;
-      
-      // Save to storage
-      await _storage.write(StorageKeys.authToken, token);
-      await _storage.write(StorageKeys.isLoggedIn, 'true');
-      await _storage.write(StorageKeys.userEmail, request.email);
-      
-      _dioClient.addAuthToken(token);
+    final response = await _dioClient.post(
+      ApiConstants.login,
+      data: request.toJson(),
+    );
 
-      // Create user (in real app, fetch from /user endpoint)
-      final user = UserModel(
-        id: 1,
-        email: request.email,
-        firstName: 'John',
-        lastName: 'Doe',
-        token: token,
-      );
+    print("LOGIN RESPONSE BODY: ${response.data}");
 
-      await _saveUserToStorage(user);
-      
-      print('✅ Login successful');
-      return user;
-      
-    } on DioException catch (e) {
-      throw _handleError(e);
+    final apiResponse = ApiResponse.fromJson(
+      response.data,
+      (data) => LoginResponse.fromJson(data),
+    );
+
+    // Backend already wraps data inside ApiResponse
+    if (apiResponse.status && apiResponse.data != null) {
+      return apiResponse.data!;
+    } else {
+      throw apiResponse.message.isNotEmpty
+          ? apiResponse.message
+          : (apiResponse.error ?? "Unknown login error");
     }
+  } on DioException catch (e) {
+    if (e.response != null) {
+      print("LOGIN ERROR BODY: ${e.response?.data}");
+    }
+    throw _handleError(e);
+  }
+}
+
+
+
+  /// SAVE USER → Store selected or single account user
+  Future<void> saveUser(UserModel user) async {
+    await _storage.write(StorageKeys.isLoggedIn, 'true');
+
+    await _storage.write(StorageKeys.loginSessionId, user.loginSessionId);
+
+    await _storage.write(StorageKeys.userName, user.userName);
+    await _storage.write(StorageKeys.userId, user.userId.toString());
+    await _storage.write(StorageKeys.userType, user.userType.toString());
+    await _storage.write(StorageKeys.userTypeName, user.userTypeName);
+    await _storage.write(StorageKeys.userMobile, user.userMobileNumber);
+    await _storage.write(StorageKeys.userEmail, user.userEmail);
+    await _storage.write(StorageKeys.designation, user.designation);
+    await _storage.write(
+        StorageKeys.userAccAutoCreate, user.userAccAutoCreate.toString());
+    await _storage.write(
+        StorageKeys.refCandidateId, user.refCandidateId.toString());
+    await _storage.write(StorageKeys.userFixId, user.userFixId.toString());
+    await _storage.write(StorageKeys.profileType, user.profileType);
+    await _storage.write(StorageKeys.userProfileUrl, user.userProfileUrl);
+
+    await _storage.write(StorageKeys.companyId, user.companyId.toString());
+    await _storage.write(StorageKeys.companyName, user.companyName);
+    await _storage.write(StorageKeys.companyType, user.companyType);
+    await _storage.write(StorageKeys.companyLogoUrl, user.companyLogoUrl);
+
+    await _storage.write(StorageKeys.userPassword, user.userPassword);
   }
 
-  /// Register
-  Future<UserModel> register(AuthRequest request) async {
-    try {
-      print('📝 Attempting registration: ${request.email}');
-
-      final response = await _dioClient.post(
-        ApiConstants.register,
-        data: request.toJson(),
-      );
-
-      final token = response.data['token'] as String;
-      final userId = response.data['id'] ?? 1;
-      
-      // Save to storage
-      await _storage.write(StorageKeys.authToken, token);
-      await _storage.write(StorageKeys.isLoggedIn, 'true');
-      await _storage.write(StorageKeys.userEmail, request.email);
-      await _storage.write(StorageKeys.userId, userId.toString());
-      
-      _dioClient.addAuthToken(token);
-
-      final user = UserModel(
-        id: userId,
-        email: request.email,
-        token: token,
-      );
-
-      await _saveUserToStorage(user);
-      
-      print('✅ Registration successful');
-      return user;
-      
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Logout
   Future<void> logout() async {
-    print('👋 Logging out...');
-    
-    await _storage.delete(StorageKeys.authToken);
-    await _storage.delete(StorageKeys.userId);
-    await _storage.delete(StorageKeys.userEmail);
-    await _storage.delete(StorageKeys.userName);
-    await _storage.delete(StorageKeys.isLoggedIn);
-    
-    _dioClient.removeAuthToken();
-    
-    print('✅ Logout successful');
+  for (final key in [
+    StorageKeys.isLoggedIn,
+    StorageKeys.loginSessionId,
+    StorageKeys.userName,
+    StorageKeys.userId,
+    StorageKeys.userType,
+    StorageKeys.userTypeName,
+    StorageKeys.userMobile,
+    StorageKeys.userEmail,
+    StorageKeys.designation,
+    StorageKeys.userAccAutoCreate,
+    StorageKeys.refCandidateId,
+    StorageKeys.userFixId,
+    StorageKeys.profileType,
+    StorageKeys.userProfileUrl,
+    StorageKeys.companyId,
+    StorageKeys.companyName,
+    StorageKeys.companyType,
+    StorageKeys.companyLogoUrl,
+    StorageKeys.userPassword,
+  ]) {
+    await _storage.delete(key);
   }
+}
 
-  /// Check if logged in
-  Future<bool> isLoggedIn() async {
-    final hasToken = await _storage.containsKey(StorageKeys.authToken);
-    final isLoggedInValue = await _storage.read(StorageKeys.isLoggedIn);
-    return hasToken && isLoggedInValue == 'true';
-  }
 
-  /// Get saved user
+  /// RESTORE USER
   Future<UserModel?> getSavedUser() async {
-    try {
-      final token = await _storage.read(StorageKeys.authToken);
-      final userIdStr = await _storage.read(StorageKeys.userId);
-      final email = await _storage.read(StorageKeys.userEmail);
+    final isLoggedIn = await _storage.read(StorageKeys.isLoggedIn);
+    if (isLoggedIn != 'true') return null;
 
-      if (token == null || email == null) return null;
-
-      final userId = int.tryParse(userIdStr ?? '0') ?? 0;
-
-      return UserModel(
-        id: userId,
-        email: email,
-        token: token,
-      );
-    } catch (e) {
-      print('❌ Error getting saved user: $e');
-      return null;
-    }
+    return UserModel(
+      userName: await _storage.read(StorageKeys.userName) ?? '',
+      userId:
+          int.tryParse(await _storage.read(StorageKeys.userId) ?? '0') ?? 0,
+      userType:
+          int.tryParse(await _storage.read(StorageKeys.userType) ?? '0') ?? 0,
+      userTypeName: await _storage.read(StorageKeys.userTypeName) ?? '',
+      companyId:
+          int.tryParse(await _storage.read(StorageKeys.companyId) ?? '0') ?? 0,
+      companyName: await _storage.read(StorageKeys.companyName) ?? '',
+      companyType: await _storage.read(StorageKeys.companyType) ?? '',
+      companyLogoUrl: await _storage.read(StorageKeys.companyLogoUrl) ?? '',
+      userProfileUrl: await _storage.read(StorageKeys.userProfileUrl) ?? '',
+      profileType: await _storage.read(StorageKeys.profileType) ?? '',
+      userMobileNumber: await _storage.read(StorageKeys.userMobile) ?? '',
+      userEmail: await _storage.read(StorageKeys.userEmail) ?? '',
+      designation: await _storage.read(StorageKeys.designation) ?? '',
+      userAccAutoCreate:
+          (await _storage.read(StorageKeys.userAccAutoCreate)) == 'true',
+      refCandidateId:
+          int.tryParse(await _storage.read(StorageKeys.refCandidateId) ?? '0') ??
+              0,
+      userFixId:
+          int.tryParse(await _storage.read(StorageKeys.userFixId) ?? '0') ?? 0,
+      userPassword: await _storage.read(StorageKeys.userPassword) ?? '',
+      loginSessionId: await _storage.read(StorageKeys.loginSessionId) ?? '',
+    );
   }
 
-  /// Save user to storage
-  Future<void> _saveUserToStorage(UserModel user) async {
-    await _storage.write(StorageKeys.userId, user.id.toString());
-    await _storage.write(StorageKeys.userEmail, user.email);
-    
-    if (user.firstName != null && user.lastName != null) {
-      await _storage.write(StorageKeys.userName, user.fullName);
-    }
-  }
-
-  /// Handle errors
+  /// ERROR HANDLER
   String _handleError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return 'Connection timeout. Please try again.';
-      
+        return 'Connection timeout. Try again.';
+
       case DioExceptionType.badResponse:
-        final statusCode = error.response?.statusCode;
-        final message = error.response?.data['error'] ?? 'Server error';
-        
-        if (statusCode == 400) return message;
-        if (statusCode == 401) return 'Invalid email or password';
-        if (statusCode == 404) return 'User not found';
-        return 'Error: $statusCode';
-      
+        final status = error.response?.statusCode;
+        final message = error.response?.data['message'] ?? 'Server error';
+
+        if (status == 400) return message;
+        if (status == 401) return 'Invalid credentials';
+        if (status == 404) return 'User not found';
+        return 'Error: $status';
+
       case DioExceptionType.connectionError:
         return 'No internet connection';
-      
+
       default:
-        return 'Something went wrong. Please try again.';
+        return 'Something went wrong';
     }
   }
 }

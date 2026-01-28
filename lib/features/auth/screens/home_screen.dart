@@ -1,17 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_manager/features/auth/bloc/auth_bloc.dart';
+import 'package:task_manager/features/auth/bloc/auth_event.dart';
+import 'package:task_manager/features/auth/bloc/auth_state.dart';
+import 'package:task_manager/features/auth/models/user_model.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text("Home Screen"),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Home"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              // Just clear user and let AuthWrapper show LoginScreen
+              context.read<AuthBloc>().add(LogoutRequested());
+            },
+          )
+        ],
+      ),
+      body: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is AuthAuthenticated) {
+            final UserModel user = state.user;
+
+            return Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Welcome, ${user.userName}",
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  Text("Email: ${user.userEmail}"),
+                  Text("Mobile: ${user.userMobileNumber}"),
+                  Text("Company: ${user.companyName}"),
+                  Text("Designation: ${user.designation}"),
+                  const SizedBox(height: 20),
+                  Text("Session ID: ${user.loginSessionId}",
+                      style: const TextStyle(fontSize: 12)),
+                ],
+              ),
+            );
+          }
+
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
     );
   }
 }

@@ -1,96 +1,123 @@
-// lib/features/auth/bloc/auth_bloc.dart
-
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../repository/auth_repository.dart';
-import '../models/auth_request.dart';
-import 'auth_event.dart';
-import 'auth_state.dart';
+import 'package:task_manager/features/auth/bloc/auth_event.dart';
+import 'package:task_manager/features/auth/bloc/auth_state.dart';
+import 'package:task_manager/features/auth/models/auth_request.dart';
+import 'package:task_manager/features/auth/models/login_response.dart';
+import 'package:task_manager/features/auth/repository/auth_repository.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository _authRepository;
+  final AuthRepository repo;
 
-  AuthBloc(this._authRepository) : super(AuthInitial()) {
-    on<CheckAuthStatus>(_onCheckAuthStatus);
-    on<LoginRequested>(_onLoginRequested);
-    on<RegisterRequested>(_onRegisterRequested);
-    on<LogoutRequested>(_onLogoutRequested);
+  AuthBloc(this.repo) : super(AuthInitial()) {
+    on<LoginRequested>(_login);
+    on<SelectAccount>(_selectAccount);
+    on<LogoutRequested>(_logout);
   }
 
-  Future<void> _onCheckAuthStatus(
-    CheckAuthStatus event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    
+  LoginResponse? _cachedLoginResponse;
+
+  void _logDivider(String title) {
+    print("\n======================================");
+    print(" $title");
+    print("======================================");
+  }
+
+  Future<void> _login(LoginRequested event, Emitter<AuthState> emit) async {
+    _logDivider("LOGIN REQUEST STARTED");
+
+    print("Username: ${event.username}");
+    print("Device Name: ${event.deviceName}");
+    print("Device Type: ${event.deviceType}");
+    print("Device Unique ID: ${event.deviceUniqueId}");
+    print("Device Token: ${event.deviceToken}");
+
+    emit(AuthLoading("Checking account..."));
+
+    final request = AuthRequest(
+      username: event.username,
+      password: event.password,
+      deviceName: event.deviceName,
+      deviceType: event.deviceType,
+      deviceUniqueId: event.deviceUniqueId,
+      deviceToken: event.deviceToken,
+      isForce: false,
+      isSwitch: false,
+      appType: "2",
+    );
+
     try {
-      final isLoggedIn = await _authRepository.isLoggedIn();
-      
-      if (isLoggedIn) {
-        final user = await _authRepository.getSavedUser();
-        if (user != null) {
-          emit(AuthAuthenticated(user));
-        } else {
-          emit(AuthUnauthenticated());
+      print("Calling Login API...");
+      final loginResponse = await repo.login(request);
+
+      print("Login API Response received");
+      print("isMultiAccount: ${loginResponse.isMulti}");
+
+      if (loginResponse.isMulti) {
+        _cachedLoginResponse = loginResponse;
+
+        print("Multiple accounts found: ${loginResponse.accountList.length}");
+        for (var acc in loginResponse.accountList) {
+          print("Account: ${acc.userName} | ${acc.userEmail}");
         }
+
+        emit(AuthHasMultiAccount(
+          message: "Multiple accounts found",
+          accounts: loginResponse.accountList,
+        ));
       } else {
-        emit(AuthUnauthenticated());
+        final user = loginResponse.userInfo!;
+        print("Single account login: ${user.userName}");
+        print("Company: ${user.companyName}");
+        print("Session ID: ${user.loginSessionId}");
+
+        await repo.saveUser(user);
+
+        print("User saved to local storage");
+
+        emit(AuthAuthenticated(user));
       }
-    } catch (e) {
-      emit(AuthUnauthenticated());
+
+      _logDivider("LOGIN REQUEST COMPLETED");
+    } catch (error) {
+      print("Login error: $error");
+      _logDivider("LOGIN FAILED");
+      emit(AuthError(error.toString()));
     }
   }
 
-  Future<void> _onLoginRequested(
-    LoginRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    
-    try {
-      final request = AuthRequest(
-        email: event.email,
-        password: event.password,
-      );
-      
-      final user = await _authRepository.login(request);
-      emit(AuthAuthenticated(user));
-    } catch (e) {
-      emit(AuthError(e.toString()));
-      emit(AuthUnauthenticated());
-    }
+  Future<void> _selectAccount(
+      SelectAccount event, Emitter<AuthState> emit) async {
+    _logDivider("MULTI-ACCOUNT SELECTION");
+
+    print("Selected Account: ${event.account.userName}");
+    print("Email: ${event.account.userEmail}");
+    print("Company: ${event.account.companyName}");
+
+    emit(AuthLoading("Signing into selected account..."));
+
+    await repo.saveUser(event.account);
+
+    print("Selected account saved locally");
+    print("Session ID: ${event.account.loginSessionId}");
+
+    emit(AuthAuthenticated(event.account));
+
+    _logDivider("ACCOUNT SELECTION COMPLETED");
   }
 
-  Future<void> _onRegisterRequested(
-    RegisterRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    
-    try {
-      final request = AuthRequest(
-        email: event.email,
-        password: event.password,
-      );
-      
-      final user = await _authRepository.register(request);
-      emit(AuthAuthenticated(user));
-    } catch (e) {
-      emit(AuthError(e.toString()));
-      emit(AuthUnauthenticated());
-    }
-  }
+  Future<void> _logout(
+      LogoutRequested event, Emitter<AuthState> emit) async {
+    _logDivider("LOGOUT STARTED");
 
-  Future<void> _onLogoutRequested(
-    LogoutRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    
-    try {
-      await _authRepository.logout();
-      emit(AuthUnauthenticated());
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
+    emit(AuthLoading("Logging out..."));
+
+    await repo.logout();
+
+    print("Local storage cleared");
+    print("User logged out successfully");
+
+    emit(AuthInitial());
+
+    _logDivider("LOGOUT COMPLETED");
   }
 }

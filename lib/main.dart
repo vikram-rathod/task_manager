@@ -1,21 +1,15 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/bloc/auth_bloc.dart';
-import 'features/auth/bloc/auth_event.dart';
 import 'features/auth/bloc/auth_state.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize all dependencies
   await initializeDependencies();
-  
   runApp(const MyApp());
 }
 
@@ -27,9 +21,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Task Manager',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme, 
+      theme: AppTheme.lightTheme,
+
+      // Provide AuthBloc globally
       home: BlocProvider(
-        create: (context) => sl<AuthBloc>()..add(CheckAuthStatus()),
+        create: (_) => sl<AuthBloc>(),
         child: const AuthWrapper(),
       ),
     );
@@ -43,33 +39,30 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
-        // Show error messages
         if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
               backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
             ),
           );
         }
       },
       builder: (context, state) {
-        // Loading state
-        if (state is AuthLoading || state is AuthInitial) {
+
+        // Show loading only when API call is running
+        if (state is AuthLoading) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
-        
-        // Authenticated - show home
+
+        // If logged in → Home
         if (state is AuthAuthenticated) {
           return const HomeScreen();
         }
-        
-        // Unauthenticated - show login
+
+        // Default → Login
         return const LoginScreen();
       },
     );

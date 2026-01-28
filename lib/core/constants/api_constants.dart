@@ -1,14 +1,13 @@
 class ApiConstants {
   ApiConstants._();
 
-  // Base URL - Using reqres.in for demo
-  static const String baseUrl = 'https://reqres.in/api';
+  // Base URL
+  static const String baseUrl = 'https://bcstep.com/bcsteperp/bcstep_apis/task_manager/';
 
-  // Auth Endpoints
-  static const String login = '/login';
-  static const String register = '/register';
-  static const String logout = '/logout';
-  static const String user = '/users';
+ // Auth Endpoints
+  static const String login = '${baseUrl}v1/login.php';
+  static const String logout = '${baseUrl}v1/logout.php';
+
 
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);

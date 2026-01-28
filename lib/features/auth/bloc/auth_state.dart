@@ -1,35 +1,30 @@
-// lib/features/auth/bloc/auth_state.dart
+import 'package:task_manager/features/auth/models/user_model.dart';
 
-import 'package:equatable/equatable.dart';
-import '../models/user_model.dart';
-
-abstract class AuthState extends Equatable {
-  const AuthState();
-
-  @override
-  List<Object?> get props => [];
-}
+abstract class AuthState {}
 
 class AuthInitial extends AuthState {}
 
-class AuthLoading extends AuthState {}
-
-class AuthAuthenticated extends AuthState {
-  final UserModel user;
-
-  const AuthAuthenticated(this.user);
-
-  @override
-  List<Object?> get props => [user];
+class AuthLoading extends AuthState {
+  final String message;
+  AuthLoading(this.message);
 }
-
-class AuthUnauthenticated extends AuthState {}
 
 class AuthError extends AuthState {
   final String message;
+  AuthError(this.message);
+}
 
-  const AuthError(this.message);
+class AuthHasMultiAccount extends AuthState {
+  final String message;
+  final List<UserModel> accounts;
 
-  @override
-  List<Object?> get props => [message];
+  AuthHasMultiAccount({
+    required this.message,
+    required this.accounts,
+  });
+}
+
+class AuthAuthenticated extends AuthState {
+  final UserModel user;
+  AuthAuthenticated(this.user);
 }

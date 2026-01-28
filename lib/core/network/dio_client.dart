@@ -24,17 +24,17 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          print('🚀 REQUEST[${options.method}] => PATH: ${options.path}');
-          print('📦 DATA: ${options.data}');
+          print(' REQUEST[${options.method}] => PATH: ${options.path}');
+          print(' DATA: ${options.data}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print('✅ RESPONSE[${response.statusCode}] => DATA: ${response.data}');
+          print(' RESPONSE[${response.statusCode}] => DATA: ${response.data}');
           return handler.next(response);
         },
         onError: (error, handler) {
-          print('❌ ERROR[${error.response?.statusCode}] => MESSAGE: ${error.message}');
-          print('📄 ERROR DATA: ${error.response?.data}');
+          print(' ERROR[${error.response?.statusCode}] => MESSAGE: ${error.message}');
+          print(' ERROR DATA: ${error.response?.data}');
           return handler.next(error);
         },
       ),
@@ -43,13 +43,7 @@ class DioClient {
 
   Dio get dio => _dio;
 
-  void addAuthToken(String token) {
-    _dio.options.headers['Authorization'] = 'Bearer $token';
-  }
-
-  void removeAuthToken() {
-    _dio.options.headers.remove('Authorization');
-  }
+  
 
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     return await _dio.get(path, queryParameters: queryParameters);

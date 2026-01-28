@@ -21,9 +21,7 @@ Future<void> initializeDependencies() async {
   // ============================================
   print(' Setting up External Dependencies...');
   
-  const secureStorageOptions = AndroidOptions(
-    encryptedSharedPreferences: true,
-  );
+  const secureStorageOptions = AndroidOptions();
   
   final flutterSecureStorage = const FlutterSecureStorage(
     aOptions: secureStorageOptions,
