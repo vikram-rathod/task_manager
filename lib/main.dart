@@ -25,6 +25,8 @@ class MyApp extends StatelessWidget {
       title: 'Task Manager',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
 
       // Provide AuthBloc globally
       home: BlocProvider(
