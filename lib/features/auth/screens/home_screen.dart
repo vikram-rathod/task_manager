@@ -5,6 +5,8 @@ import 'package:task_manager/features/auth/bloc/auth_event.dart';
 import 'package:task_manager/features/auth/bloc/auth_state.dart';
 import 'package:task_manager/features/auth/models/user_model.dart';
 
+import '../../../core/theme/theme_cubit.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -14,12 +16,21 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Home"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              // Just clear user and let AuthWrapper show LoginScreen
-              context.read<AuthBloc>().add(LogoutRequested());
-            },
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.brightness_6),
+                onPressed: () {
+                  context.read<ThemeCubit>().toggle();
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: () {
+                  context.read<AuthBloc>().add(LogoutRequested());
+                },
+              )
+            ]
           )
         ],
       ),
@@ -48,7 +59,6 @@ class HomeScreen extends StatelessWidget {
               ),
             );
           }
-
           return const Center(child: CircularProgressIndicator());
         },
       ),

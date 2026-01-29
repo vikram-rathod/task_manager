@@ -26,4 +26,7 @@ class StorageKeys {
   static const String companyLogoUrl = 'company_logo_url';
 
   static const String userPassword = 'user_password';
+
+  // Device Info
+  static const String deviceUniqueId = 'device_unique_id';
 }

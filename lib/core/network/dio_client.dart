@@ -24,17 +24,18 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          print(' REQUEST[${options.method}] => PATH: ${options.path}');
-          print(' DATA: ${options.data}');
+          print('➡️ REQUEST[${options.method}] => PATH: ${options.path}');
+          print('📤 DATA: ${options.data}');
+          print('📋 HEADERS: ${options.headers}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print(' RESPONSE[${response.statusCode}] => DATA: ${response.data}');
+          print('⬅️ RESPONSE[${response.statusCode}] => DATA: ${response.data}');
           return handler.next(response);
         },
         onError: (error, handler) {
-          print(' ERROR[${error.response?.statusCode}] => MESSAGE: ${error.message}');
-          print(' ERROR DATA: ${error.response?.data}');
+          print('❌ ERROR[${error.response?.statusCode}] => MESSAGE: ${error.message}');
+          print('📛 ERROR DATA: ${error.response?.data}');
           return handler.next(error);
         },
       ),
@@ -43,21 +44,49 @@ class DioClient {
 
   Dio get dio => _dio;
 
-  
-
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
-    return await _dio.get(path, queryParameters: queryParameters);
+  Future<Response> get(
+      String path, {
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+      }) async {
+    return await _dio.get(
+      path,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
-  Future<Response> post(String path, {dynamic data}) async {
-    return await _dio.post(path, data: data);
+  Future<Response> post(
+      String path, {
+        dynamic data,
+        Options? options,
+      }) async {
+    return await _dio.post(
+      path,
+      data: data,
+      options: options,
+    );
   }
 
-  Future<Response> put(String path, {dynamic data}) async {
-    return await _dio.put(path, data: data);
+  Future<Response> put(
+      String path, {
+        dynamic data,
+        Options? options,
+      }) async {
+    return await _dio.put(
+      path,
+      data: data,
+      options: options,
+    );
   }
 
-  Future<Response> delete(String path) async {
-    return await _dio.delete(path);
+  Future<Response> delete(
+      String path, {
+        Options? options,
+      }) async {
+    return await _dio.delete(
+      path,
+      options: options,
+    );
   }
 }
