@@ -64,7 +64,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           message: "Multiple accounts found",
           accounts: loginResponse.accountList,
         ));
-      } else {
+
+        return;
+
+      }
+
         final user = loginResponse.userInfo!;
         print("Single account login: ${user.userName}");
         print("Company: ${user.companyName}");
@@ -75,7 +79,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         print("User saved to local storage");
 
         emit(AuthAuthenticated(user));
-      }
+
 
       _logDivider("LOGIN REQUEST COMPLETED");
     } catch (error) {

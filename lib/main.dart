@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
+
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/bloc/auth_state.dart';
+
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/home_screen.dart';
 
@@ -50,19 +53,12 @@ class AuthWrapper extends StatelessWidget {
       },
       builder: (context, state) {
 
-        // Show loading only when API call is running
-        if (state is AuthLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        // If logged in → Home
+        // Navigate only when fully authenticated
         if (state is AuthAuthenticated) {
           return const HomeScreen();
         }
 
-        // Default → Login
+        // Stay on LoginScreen for ALL other states
         return const LoginScreen();
       },
     );

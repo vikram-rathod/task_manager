@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -17,8 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _isLoading = false;
-
   @override
   void dispose() {
     _usernameController.dispose();
@@ -32,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     context.read<AuthBloc>().add(
       LoginRequested(
         username: _usernameController.text.trim(),
-        password: _passwordController.text,
+        password: _passwordController.text.trim(),
         deviceName: deviceInfo.deviceName,
         deviceType: deviceInfo.deviceType,
         deviceUniqueId: deviceInfo.deviceUniqueId,
@@ -44,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showMultiAccountDialog(List<UserModel> accounts) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
         title: const Text("Select Account"),
         content: SizedBox(
@@ -71,61 +71,72 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocListener<AuthBloc, AuthState>(
+      body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          _isLoading = state is AuthLoading;
-
           if (state is AuthError) {
             ScaffoldMessenger.of(context)
                 .showSnackBar(SnackBar(content: Text(state.message)));
           }
 
           if (state is AuthHasMultiAccount) {
-            _showMultiAccountDialog(state.accounts);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _showMultiAccountDialog(state.accounts);
+            });
           }
-
-          // When AuthAuthenticated occurs, AuthWrapper automatically shows Home
         },
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("Login",
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 30),
+        builder: (context, state) {
+          final isLoading = state is AuthLoading;
 
-              TextField(
-                controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: "Username / Email",
-                  border: OutlineInputBorder(),
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Login",
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                 ),
-              ),
-              const SizedBox(height: 15),
+                const SizedBox(height: 30),
 
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: "Password",
-                  border: OutlineInputBorder(),
+                TextField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(
+                    labelText: "Username / Email",
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 25),
+                const SizedBox(height: 15),
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Login"),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: "Password",
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
+                const SizedBox(height: 25),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : _login,
+                    child: isLoading
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                        : const Text("Login"),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
