@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _otpController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -72,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _showAlreadyLoggedInDialog(AuthAlreadyLoggedIn state) {
+  void _showAlreadyLoggedInDialog(AuthAlreadyLoggedInAnotherDevice state) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -185,7 +186,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: isVerifying ? null : () {
+                onPressed: isVerifying
+                    ? null
+                    : () {
                   Navigator.pop(dialogContext);
                 },
                 child: const Text("Cancel"),
@@ -238,92 +241,103 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocConsumer<AuthBloc, AuthState>(
+      body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
+          print("LISTENER TRIGGERED: ${state.runtimeType}");
+
           if (state is AuthError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            print(" Showing error: ${state.message}");
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
           }
 
           if (state is AuthHasMultiAccount) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showMultiAccountDialog(state.accounts);
-            });
+            print(" Showing multi-account dialog");
+            _showMultiAccountDialog(state.accounts);
           }
 
-          if (state is AuthAlreadyLoggedIn) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showAlreadyLoggedInDialog(state);
-            });
+          if (state is AuthAlreadyLoggedInAnotherDevice) {
+            print("⚠ Showing already logged in dialog");
+            _showAlreadyLoggedInDialog(state);
           }
 
           if (state is AuthOtpSent) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showOtpVerificationDialog(state);
-            });
+            print("Showing OTP dialog");
+            _showOtpVerificationDialog(state);
           }
         },
-        builder: (context, state) {
-          final isLoading = state is AuthLoading;
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            print(" BUILDER REBUILDING: ${state.runtimeType}");
 
-          return Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Login",
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 30),
+            final isLoading = state is AuthLoading;
 
-                TextField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: "Username / Email",
-                    border: OutlineInputBorder(),
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Login",
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(height: 15),
-
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: "Password",
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 30),
+                  TextField(
+                    controller: _usernameController,
+                    decoration: const InputDecoration(
+                      labelText: "Username / Email",
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 25),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : _login,
-                    child: isLoading
-                        ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(state.message),
-                        const SizedBox(width: 12),
-                        const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
                         ),
-                      ],
-                    )
-                        : const Text("Login"),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                  const SizedBox(height: 25),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : _login,
+                      child: isLoading
+                          ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(state.message),
+                          const SizedBox(width: 12),
+                          const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      )
+                          : const Text("Login"),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

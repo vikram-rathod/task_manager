@@ -6,6 +6,7 @@ import 'core/theme/app_theme.dart';
 
 import 'core/theme/theme_cubit.dart';
 import 'features/auth/bloc/auth_bloc.dart';
+import 'features/auth/bloc/auth_event.dart';
 import 'features/auth/bloc/auth_state.dart';
 
 import 'features/auth/screens/login_screen.dart';
@@ -25,7 +26,6 @@ void main() async {
   );
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -39,7 +39,6 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeMode,
-
           home: const AuthWrapper(),
         );
       },
@@ -47,27 +46,49 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
   @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    // Dispatch AppStarted event when app initializes
+    context.read<AuthBloc>().add(AppStarted());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
+    return BlocBuilder<AuthBloc, AuthState>(
+      // ✅ Only rebuild when switching between major screens
+      buildWhen: (previous, current) {
+        return current is AuthLoading ||
+            current is AuthAuthenticated ||
+            (current is AuthInitial && previous is! AuthInitial);
+      },
+      builder: (context, state) {
+        print("🏠 AuthWrapper Building: ${state.runtimeType}");
+
+        // Show loading during app initialization
+        if (state is AuthLoading && state.message == "Initializing...") {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
             ),
           );
         }
-      },
-      builder: (context, state) {
+
+        // Show home screen when authenticated
         if (state is AuthAuthenticated) {
           return const HomeScreen();
         }
+
+        // Show login screen for all other states
+        // (AuthInitial, AuthError, AuthAlreadyLoggedInAnotherDevice, etc.)
         return const LoginScreen();
       },
     );

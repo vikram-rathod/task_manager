@@ -23,7 +23,7 @@ class AuthHasMultiAccount extends AuthState {
   AuthHasMultiAccount({required this.message, required this.accounts});
 }
 
-class AuthAlreadyLoggedIn extends AuthState {
+class AuthAlreadyLoggedInAnotherDevice extends AuthState {
   final String message;
   final String username;
   final String password;
@@ -32,7 +32,7 @@ class AuthAlreadyLoggedIn extends AuthState {
   final String deviceUniqueId;
   final String deviceToken;
 
-  AuthAlreadyLoggedIn({
+  AuthAlreadyLoggedInAnotherDevice({
     required this.message,
     required this.username,
     required this.password,

@@ -34,7 +34,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final isValid = await repo.isSessionValid();
 
       if (!isValid) {
-        print("❌ Session invalid or expired");
+        print(" Session invalid or expired");
         await repo.logout();
         emit(AuthInitial());
         return;
@@ -43,16 +43,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final savedUser = await repo.getSavedUser();
 
       if (savedUser != null) {
-        print("✅ Session restored: ${savedUser.userName}");
-        print("🏢 Company: ${savedUser.companyName}");
-        print("🔑 Session ID: ${savedUser.loginSessionId}");
+        print(" Session restored: ${savedUser.userName}");
+        print(" Company: ${savedUser.companyName}");
+        print(" Session ID: ${savedUser.loginSessionId}");
         emit(AuthAuthenticated(savedUser));
       } else {
-        print("ℹ️ No active session");
+        print(" No active session");
         emit(AuthInitial());
       }
     } catch (e) {
-      print("❌ Session restore failed: $e");
+      print(" Session restore failed: $e");
       await repo.logout();
       emit(AuthInitial());
     }
@@ -86,12 +86,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       print(" Calling Login API...");
       final apiResponse = await repo.login(request);
-      final loginResponse = apiResponse.data as LoginResponse;
 
       print(" Login API Response received");
 
       // api status is true then only check for multiple accounts and logic with single or multiple account
       if (apiResponse.status) {
+        final loginResponse = apiResponse.data as LoginResponse;
         print(" isMultiAccount: ${loginResponse.isMulti}");
 
         if (loginResponse.isMulti) {
@@ -124,8 +124,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _logDivider("LOGIN REQUEST COMPLETED");
       } else {
         if (apiResponse.message == "Already Logged In on another device") {
-          print("⚠User already logged in on another device");
-          emit(AuthAlreadyLoggedIn(
+          print("⚠ User already logged in on another device");
+          emit(AuthAlreadyLoggedInAnotherDevice(
             message: apiResponse.message,
             username: event.username,
             password: event.password,
@@ -136,6 +136,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ));
           return;
         } else {
+          print(" Login failed: ${apiResponse.message}");
           emit(AuthError(apiResponse.message));
         }
       }
