@@ -243,33 +243,27 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          print("LISTENER TRIGGERED: ${state.runtimeType}");
 
           if (state is AuthError) {
-            print(" Showing error: ${state.message}");
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
           }
 
           if (state is AuthHasMultiAccount) {
-            print(" Showing multi-account dialog");
             _showMultiAccountDialog(state.accounts);
           }
 
           if (state is AuthAlreadyLoggedInAnotherDevice) {
-            print("⚠ Showing already logged in dialog");
             _showAlreadyLoggedInDialog(state);
           }
 
           if (state is AuthOtpSent) {
-            print("Showing OTP dialog");
             _showOtpVerificationDialog(state);
           }
         },
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            print(" BUILDER REBUILDING: ${state.runtimeType}");
 
             final isLoading = state is AuthLoading;
 

@@ -24,18 +24,12 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          print('➡️ REQUEST[${options.method}] => PATH: ${options.path}');
-          print('📤 DATA: ${options.data}');
-          print('📋 HEADERS: ${options.headers}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print('⬅️ RESPONSE[${response.statusCode}] => DATA: ${response.data}');
           return handler.next(response);
         },
         onError: (error, handler) {
-          print('❌ ERROR[${error.response?.statusCode}] => MESSAGE: ${error.message}');
-          print('📛 ERROR DATA: ${error.response?.data}');
           return handler.next(error);
         },
       ),

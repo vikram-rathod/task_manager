@@ -36,12 +36,10 @@ class AppTheme {
       primary: AppColors.primary,
       secondary: AppColors.secondary,
       surface: AppColors.surface,
-      background: AppColors.background,
       error: AppColors.error,
       onPrimary: AppColors.textWhite,
       onSecondary: AppColors.textWhite,
       onSurface: AppColors.textPrimary,
-      onBackground: AppColors.textPrimary,
       onError: AppColors.textWhite,
     ),
 

@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,6 +15,7 @@ import 'features/auth/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp();
   await initializeDependencies();
   runApp(
     MultiBlocProvider(
@@ -57,21 +59,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    // Dispatch AppStarted event when app initializes
     context.read<AuthBloc>().add(AppStarted());
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
-      // ✅ Only rebuild when switching between major screens
       buildWhen: (previous, current) {
         return current is AuthLoading ||
             current is AuthAuthenticated ||
             (current is AuthInitial && previous is! AuthInitial);
       },
       builder: (context, state) {
-        print("🏠 AuthWrapper Building: ${state.runtimeType}");
 
         // Show loading during app initialization
         if (state is AuthLoading && state.message == "Initializing...") {

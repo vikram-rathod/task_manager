@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:task_manager/features/auth/models/api_response.dart';
 import '../../../core/network/dio_client.dart';
@@ -20,26 +18,19 @@ class AuthRepository {
 
   Future<ApiResponse<LoginResponse>> login(AuthRequest request) async {
     try {
-      print(" LOGIN REQUEST BODY: ${request.toJson()}");
 
       final response = await _dioClient.post(
         ApiConstants.login,
         data: request.toJson(),
       );
 
-      print(" LOGIN RESPONSE BODY: ${response.data}");
-
       final apiResponse = ApiResponse.fromJson(
         response.data,
             (data) => LoginResponse.fromJson(data),
       );
 
-
         return apiResponse;
     } on DioException catch (e) {
-      if (e.response != null) {
-        print(" LOGIN ERROR BODY: ${e.response?.data}");
-      }
       throw _handleError(e);
     }
   }
@@ -47,9 +38,8 @@ class AuthRepository {
   /// REQUEST OTP for force login
   Future<ApiResponse<dynamic>> requestOtp(String email) async {
     try {
-      print(" REQUEST OTP FOR: $email");
 
-      // Using FormData
+      // Using Form-Data
       final formData = FormData.fromMap({
         'sendOtp': '1',
         'email': email,
@@ -63,33 +53,13 @@ class AuthRepository {
         ),
       );
 
-      print(" REQUEST OTP RESPONSE: ${response.data}");
-
-      // Parse the response
-      final responseData = response.data is String
-          ? _parseJsonString(response.data)
-          : response.data;
-
-      // Create ApiResponse wrapper
-      final status = responseData['status'] ?? false;
-      final message = responseData['message'] ?? 'OTP request failed';
-      final otp = responseData['otp'].toString() ?? '';
-
-      print(" OTP Status: $status");
-      print(" OTP Message: $message");
-      if (status && otp.isNotEmpty) {
-        print(" OTP: $otp"); // For development only, remove in production
-      }
-
-      return ApiResponse(
-        status: status,
-        message: message,
-        data: {'otp': otp},
+      final apiResponse = ApiResponse.fromJson(
+        response.data,
+            (data) => data,
       );
+
+      return apiResponse;
     } on DioException catch (e) {
-      if (e.response != null) {
-        print(" REQUEST OTP ERROR: ${e.response?.data}");
-      }
       throw _handleError(e);
     }
   }
@@ -97,10 +67,7 @@ class AuthRepository {
   /// VERIFY OTP
   Future<ApiResponse<dynamic>> verifyOtp(String email, String otp) async {
     try {
-      print(" VERIFY OTP FOR: $email");
-      print(" OTP: $otp");
-
-      // Using FormData as per the Kotlin implementation
+      // Using Form-Data
       final formData = FormData.fromMap({
         'verifyOtp': '1',
         'otp': otp,
@@ -115,47 +82,21 @@ class AuthRepository {
         ),
       );
 
-      print(" VERIFY OTP RESPONSE: ${response.data}");
-
-      // Parse the response
-      final responseData = response.data is String
-          ? _parseJsonString(response.data)
-          : response.data;
-
-      // Create ApiResponse wrapper
-      final status = responseData['status'] ?? false;
-      final message = responseData['message'] ?? 'OTP verification failed';
-
-      print(" Verification Status: $status");
-      print(" Message: $message");
-
-      return ApiResponse(
-        status: status,
-        message: message,
-        data: null,
+      final apiResponse = ApiResponse.fromJson(
+        response.data,
+            (data) => data,
       );
+
+      return apiResponse;
     } on DioException catch (e) {
-      if (e.response != null) {
-        print(" VERIFY OTP ERROR: ${e.response?.data}");
-      }
       throw _handleError(e);
     }
   }
 
-  /// Helper method to parse JSON string response
-  Map<String, dynamic> _parseJsonString(String jsonString) {
-    try {
-      return json.decode(jsonString);
-    } catch (e) {
-      print("JSON Parse Error: $e");
-      return {};
-    }
-  }
 
   /// CHECK SESSION - Validate with backend using generic ApiResponse
   Future<bool> checkSessionWithBackend() async {
     try {
-      print(" CHECKING SESSION WITH BACKEND");
 
       final email = await _storage.read(StorageKeys.userEmail);
       final deviceUniqueId = await _storage.read(StorageKeys.deviceUniqueId);
@@ -167,13 +108,9 @@ class AuthRepository {
           deviceUniqueId.isEmpty ||
           storedSessionId == null ||
           storedSessionId.isEmpty) {
-        print(" Missing required session data");
         return false;
       }
 
-      print(" Email: $email");
-      print(" Device ID: $deviceUniqueId");
-      print(" Stored Session ID: $storedSessionId");
 
       final response = await _dioClient.get(
         ApiConstants.sessionCheck,
@@ -182,9 +119,6 @@ class AuthRepository {
           'device_unique_id': deviceUniqueId,
         },
       );
-
-      print("SESSION CHECK RESPONSE: ${response.statusCode}");
-      print("Response Data: ${response.data}");
 
       // ApiResponse with SessionData
       final apiResponse = ApiResponse.fromJson(
@@ -195,29 +129,18 @@ class AuthRepository {
       if (apiResponse.status && apiResponse.data != null) {
         final backendSessionId = apiResponse.data!.loginSessionId.toString();
 
-        print(" Backend Session ID: $backendSessionId");
-        print(" Stored Session ID: $storedSessionId");
-
         // Compare session IDs
         if (backendSessionId == storedSessionId) {
-          print(" SESSION VALID - IDs match");
           return true;
         } else {
-          print(" SESSION MISMATCH - Different session IDs");
           return false;
         }
       } else {
-        print(" NO ACTIVE SESSION: ${apiResponse.message}");
         return false;
       }
-    } on DioException catch (e) {
-      print(" SESSION CHECK FAILED: ${e.type}");
-      if (e.response != null) {
-        print("Error Response: ${e.response?.data}");
-      }
+    } on DioException {
       return false;
     } catch (e) {
-      print(" SESSION CHECK ERROR: $e");
       return false;
     }
   }
@@ -230,23 +153,18 @@ class AuthRepository {
       final sessionId = await _storage.read(StorageKeys.loginSessionId);
 
       if (isLoggedIn != 'true' || sessionId == null || sessionId.isEmpty) {
-        print(" Local session invalid");
         return false;
       }
 
       // Validate with backend
-      print(" Validating session with backend...");
       final isBackendValid = await checkSessionWithBackend();
 
       if (!isBackendValid) {
-        print(" Backend session validation failed");
         return false;
       }
 
-      print(" Session valid (local + backend)");
       return true;
     } catch (e) {
-      print(" Session validation error: $e");
       return false;
     }
   }
