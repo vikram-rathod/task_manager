@@ -22,4 +22,13 @@ class LoginResponse {
           .toList(),
     );
   }
+  @override
+  String toString() {
+    return 'LoginResponse('
+        'isMulti: $isMulti, '
+        'userInfo: $userInfo, '
+        'accountList: $accountList'
+        ')';
+  }
+
 }

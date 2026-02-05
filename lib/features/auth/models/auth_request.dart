@@ -9,6 +9,9 @@ class AuthRequest {
   final bool isSwitch;
   final String appType;
 
+  // for selected account login
+  final int? selectedUserId;
+
   AuthRequest({
     required this.username,
     required this.password,
@@ -19,6 +22,7 @@ class AuthRequest {
     required this.isForce,
     required this.isSwitch,
     required this.appType,
+    this.selectedUserId,
   });
 
   Map<String, dynamic> toJson() {
@@ -32,6 +36,7 @@ class AuthRequest {
       'isForce': isForce,
       'isSwitch': isSwitch,
       'app_type': appType,
+      'user_id': selectedUserId,
     };
   }
 }

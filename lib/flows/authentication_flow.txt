@@ -1,0 +1,202 @@
+Authentication Flow - Detailed Implementation:
+
+1. Login Attempt:
+   - User Input Validation
+     - Validate email/username format
+     - Validate password strength (minimum 8 characters, special chars, etc.)
+     - Check for empty fields
+     - Trim whitespace from inputs
+   - API Call: login(email/username, password, deviceId, appVersion)
+     - Request: POST /auth/login
+     - Payload: {email/username, password, deviceId, appVersion}
+     - Response: {userId, token, refreshToken, sessionId, userData, tokenExpiry}
+   - Success Path
+     - Store token in secure storage (flutter_secure_storage)
+     - Store refreshToken for future token renewal
+     - Store sessionId locally
+     - Cache user data (name, email, preferences, role, permissions)
+     - Set isLoggedIn = true
+     - Set loginSessionId = sessionId
+     - Set tokenExpiryTime
+     - Clear any previous session data
+     - Redirect to Home screen
+     - Initialize app state and load user dashboard
+   - Failure Path
+     - Display error message (invalid credentials, account locked, etc.)
+     - Increment failed login attempt counter
+     - If attempts > 5: Lock account for 15 minutes
+     - Show "Forgot Password?" option if credentials invalid
+     - Allow retry with rate limiting
+
+2. Force Login (If active session exists elsewhere - Multi-Device Detection):
+   - Backend detects active session from different device
+   - Backend rejects login with error: "Force login required - OTP needed"
+   - Trigger OTP Flow
+     - API Call: requestOtp(email/phone, loginAttemptId)
+     - Response: {otpId, expiryTime (e.g., 10 minutes), deliveryMethod}
+     - User receives OTP via email or SMS
+     - Display OTP entry screen with countdown timer
+   - OTP Verification
+     - User enters 6-digit OTP
+     - Validate OTP format (numeric, 6 digits)
+     - API Call: verifyOtp(otpId, otp, deviceId, deviceName)
+     - Response: {token, refreshToken, sessionId, userData}
+     - Success Path
+       - Validate OTP before accepting
+       - Invalidate previous session on other device
+       - Store new token & refreshToken
+       - Store new sessionId
+       - Cache user data
+       - Set isLoggedIn = true
+       - Redirect to Home screen
+       - Notify user: "Previous session on other device has been logged out"
+     - Failure Path
+       - Increment OTP attempt counter
+       - If attempts > 3: Block for 5 minutes
+       - Show remaining attempts
+       - Allow resend OTP with countdown (60 seconds between resends)
+   - OTP Expiry Handling
+     - Monitor countdown timer (e.g., 10 minutes)
+     - If expired before submission
+       - Clear OTP input
+       - Show "OTP Expired" message
+       - Provide "Resend OTP" button
+       - Option to restart login process
+   - Resend OTP Flow
+     - User clicks "Resend OTP"
+     - Enforce rate limit (min 60 seconds between resends)
+     - API Call: requestOtp(email/phone, loginAttemptId)
+     - Show new countdown timer
+
+3. Session Validation (App Start / App Resume):
+   - Check Local Storage
+     - Retrieve isLoggedIn flag
+     - Retrieve loginSessionId
+     - Retrieve stored token
+     - Retrieve refreshToken
+     - Retrieve tokenExpiryTime
+   - Token Status Check
+     - If no token found: Redirect to Login
+     - If token expired: Proceed to token refresh
+     - If token valid but approaching expiry (< 5 mins): Refresh token
+     - If token valid: Proceed to backend validation
+   - Token Refresh Flow (if needed)
+     - API Call: refreshToken(refreshToken, sessionId)
+     - Response: {newToken, newRefreshToken, newExpiryTime}
+     - If refresh successful
+       - Update token in secure storage
+       - Update refreshToken
+       - Update tokenExpiryTime
+       - Proceed to backend validation
+     - If refresh failed (invalid/expired refreshToken)
+       - Clear all session data
+       - Set isLoggedIn = false
+       - Redirect to Login screen
+       - Show "Session expired - Please login again"
+   - Backend Session Check: checkSessionWithBackend()
+     - API Call: POST /auth/validate-session
+     - Payload: {sessionId, token, deviceId}
+     - Response: {isValid, userData, newExpiryTime, permissions}
+     - Success Path (session valid)
+       - Update session expiry time
+       - Update user data (fetch latest preferences, permissions)
+       - Load user dashboard
+       - Initialize app state
+       - Restore app navigation state if available
+     - Failure Path (session invalid/revoked)
+       - Clear all local session data (token, refreshToken, sessionId)
+       - Clear cached user data
+       - Set isLoggedIn = false
+       - Clear app state
+       - Redirect to Login screen
+       - Show "Session invalid - Please login again"
+   - Session Expiry Monitoring
+     - Set inactivity timer (30 minutes default)
+     - Track user interactions (taps, scrolls, etc.)
+     - Reset timer on user interaction
+     - If timeout occurs without activity
+       - Show warning dialog (last 2 minutes)
+       - Allow user to extend session with one tap
+       - If user confirms: Reset timer and continue
+       - If user ignores: Proceed to auto-logout
+     - Auto-logout on timeout
+       - Clear session data
+       - Show "Session Expired Due to Inactivity" message
+       - Redirect to Login
+   - Network Failure Handling
+     - If backend validation fails due to network
+       - Retry with exponential backoff (1s, 2s, 4s, 8s max)
+       - Max 3 retry attempts
+       - If all retries fail: Allow offline mode (if cached data available)
+       - Show "Session validation failed - Offline mode" message
+
+4. Token Refresh:
+   - Detect token expiry approach (5 minutes before actual expiry)
+   - API Call: POST /auth/refresh-token
+     - Payload: {refreshToken, sessionId}
+     - Response: {newToken, newRefreshToken, expiryTime}
+   - Update stored tokens in secure storage
+   - Update tokenExpiryTime
+   - Continue current operation without user interruption
+   - Handle refresh failure
+     - If refreshToken invalid: Trigger logout
+
+5. Logout:
+   - User Initiated Logout
+     - Confirm logout action with user
+     - API Call: logout(sessionId, token)
+       - Payload: {sessionId, token, deviceId}
+       - Response: {success, message}
+     - Regardless of API response, proceed to cleanup
+   - Session Cleanup
+     - Clear token from secure storage
+     - Clear refreshToken from secure storage
+     - Clear sessionId from local storage
+     - Clear cached user data (name, email, preferences)
+     - Set isLoggedIn = false
+     - Clear tokenExpiryTime
+     - Clear app state and redux/provider state
+     - Clear inactivity timer
+     - Close WebSocket/real-time connections
+     - Clear navigation stack
+   - Navigation
+     - Redirect to Login screen
+     - Clear back stack (no back button to app screens)
+     - Show logout success message (optional)
+     - Reset app to initial state
+
+6. Error Handling & Edge Cases:
+   - Network Failures
+     - Implement retry mechanism with exponential backoff
+     - Max 3 attempts with delays: 1s, 2s, 4s
+     - Show network error message after all retries fail
+     - Allow offline mode if cached session valid
+   - Concurrent Login Attempts
+     - Cancel previous login request if new one initiated
+     - Process only latest request
+     - Prevent duplicate API calls
+   - Account Locked
+     - After 5 failed login attempts
+     - Lock account for 15 minutes
+     - Notify user with remaining lock time
+     - Suggest password reset or contact support
+   - Session Conflict Detection
+     - Monitor for duplicate sessionIds from different devices
+     - Trigger force-logout if new session detected
+     - Notify user: "You've been logged in on another device"
+   - Corrupted Session Data
+     - Validate token format and structure
+     - Validate sessionId format
+     - If corrupted: Clear and restart authentication
+   - Device ID Mismatch
+     - Store device ID with session
+     - If device ID changes (app reinstall): Invalidate session
+     - Force re-authentication
+   - Token Tampering Detection
+     - Validate token signature
+     - Check token integrity before use
+     - If invalid: Force logout
+   - Timeout Handling
+     - API call timeout: 30 seconds default
+     - Retry with timeout increase: 45 seconds second attempt
+     - Show "Server not responding" after timeouts

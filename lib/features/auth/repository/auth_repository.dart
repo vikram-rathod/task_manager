@@ -1,10 +1,13 @@
-import 'package:dio/dio.dart';
-import 'package:task_manager/features/auth/models/api_response.dart';
-import '../../../core/network/dio_client.dart';
-import '../../../core/storage/storage_service.dart';
-import '../../../core/storage/storage_keys.dart';
-import '../../../core/constants/api_constants.dart';
+import 'dart:convert';
 
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:task_manager/features/auth/models/api_response.dart';
+
+import '../../../core/constants/api_constants.dart';
+import '../../../core/network/dio_client.dart';
+import '../../../core/storage/storage_keys.dart';
+import '../../../core/storage/storage_service.dart';
 import '../models/auth_request.dart';
 import '../models/login_response.dart';
 import '../models/session_data.dart';
@@ -18,18 +21,25 @@ class AuthRepository {
 
   Future<ApiResponse<LoginResponse>> login(AuthRequest request) async {
     try {
-
+      debugPrint(
+        "Login Request:\n${const JsonEncoder.withIndent('  ').convert(
+            request.toJson())}",
+      );
       final response = await _dioClient.post(
         ApiConstants.login,
         data: request.toJson(),
       );
+
 
       final apiResponse = ApiResponse.fromJson(
         response.data,
             (data) => LoginResponse.fromJson(data),
       );
 
-        return apiResponse;
+      debugPrint("Login Response: $apiResponse");
+
+      return apiResponse;
+
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -94,7 +104,7 @@ class AuthRepository {
   }
 
 
-  /// CHECK SESSION - Validate with backend using generic ApiResponse
+  /// CHECK SESSION
   Future<bool> checkSessionWithBackend() async {
     try {
 
@@ -145,12 +155,15 @@ class AuthRepository {
     }
   }
 
-  /// VALIDATE SESSION (local + backend check)
+  /// VALIDATE SESSION
   Future<bool> isSessionValid() async {
     try {
       // First check local storage
       final isLoggedIn = await _storage.read(StorageKeys.isLoggedIn);
       final sessionId = await _storage.read(StorageKeys.loginSessionId);
+      debugPrint(
+         " session check : ->"  "isLoggedIn: $isLoggedIn, sessionId: $sessionId"
+      );
 
       if (isLoggedIn != 'true' || sessionId == null || sessionId.isEmpty) {
         return false;
@@ -205,29 +218,45 @@ class AuthRepository {
     }
   }
 
-  Future<void> logout() async {
-    for (final key in [
-      StorageKeys.isLoggedIn,
-      StorageKeys.loginSessionId,
-      StorageKeys.userName,
-      StorageKeys.userId,
-      StorageKeys.userType,
-      StorageKeys.userTypeName,
-      StorageKeys.userMobile,
-      StorageKeys.userEmail,
-      StorageKeys.designation,
-      StorageKeys.userAccAutoCreate,
-      StorageKeys.refCandidateId,
-      StorageKeys.userFixId,
-      StorageKeys.profileType,
-      StorageKeys.userProfileUrl,
-      StorageKeys.companyId,
-      StorageKeys.companyName,
-      StorageKeys.companyType,
-      StorageKeys.companyLogoUrl,
-      StorageKeys.userPassword,
-    ]) {
-      await _storage.delete(key);
+  Future<void> logout({required String sessionId}) async {
+    //
+    final response = await _dioClient.get(
+      ApiConstants.logout,
+      queryParameters: {
+        'session_id': sessionId,
+      },
+    );
+
+    // ApiResponse with SessionData
+    final apiResponse = ApiResponse.fromJson(
+        response.data, (data) => data as dynamic);
+
+    if (apiResponse.status) {
+      for (final key in [
+        StorageKeys.isLoggedIn,
+        StorageKeys.loginSessionId,
+        StorageKeys.userName,
+        StorageKeys.userId,
+        StorageKeys.userType,
+        StorageKeys.userTypeName,
+        StorageKeys.userMobile,
+        StorageKeys.userEmail,
+        StorageKeys.designation,
+        StorageKeys.userAccAutoCreate,
+        StorageKeys.refCandidateId,
+        StorageKeys.userFixId,
+        StorageKeys.profileType,
+        StorageKeys.userProfileUrl,
+        StorageKeys.companyId,
+        StorageKeys.companyName,
+        StorageKeys.companyType,
+        StorageKeys.companyLogoUrl,
+        StorageKeys.userPassword,
+      ]) {
+        await _storage.delete(key);
+      }
+    } else {
+      throw apiResponse.message;
     }
   }
 

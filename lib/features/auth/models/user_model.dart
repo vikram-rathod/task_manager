@@ -82,4 +82,9 @@ class UserModel extends Equatable {
         companyId,
         loginSessionId,
       ];
+
+  @override
+  String toString() {
+    return 'UserModel{userName: $userName, userId: $userId, userType: $userType, userTypeName: $userTypeName, companyId: $companyId, companyName: $companyName, companyType: $companyType, companyLogoUrl: $companyLogoUrl, userProfileUrl: $userProfileUrl, profileType: $profileType, userMobileNumber: $userMobileNumber, userEmail: $userEmail, designation: $designation, userAccAutoCreate: $userAccAutoCreate, refCandidateId: $refCandidateId, userFixId: $userFixId, userPassword: $userPassword, loginSessionId: $loginSessionId}';
+  }
 }

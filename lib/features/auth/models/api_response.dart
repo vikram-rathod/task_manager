@@ -22,4 +22,15 @@ class ApiResponse<T> {
       error: json['error'],
     );
   }
+
+  @override
+  String toString() {
+    return 'ApiResponse('
+        'status: $status, '
+        'message: $message, '
+        'data: $data, '
+        'error: $error'
+        ')';
+  }
+
 }

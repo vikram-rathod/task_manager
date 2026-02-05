@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/features/auth/bloc/auth_event.dart';
 import 'package:task_manager/features/auth/bloc/auth_state.dart';
@@ -5,45 +8,17 @@ import 'package:task_manager/features/auth/models/auth_request.dart';
 import 'package:task_manager/features/auth/models/login_response.dart';
 import 'package:task_manager/features/auth/repository/auth_repository.dart';
 
+import '../models/user_model.dart';
+
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository repo;
 
   AuthBloc(this.repo) : super(AuthInitial()) {
-    on<AppStarted>(_onAppStarted);
     on<LoginRequested>(_login);
-    on<SelectAccount>(_selectAccount);
-    on<RequestOtp>(_requestOtp);
-    on<VerifyOtpAndForceLogin>(_verifyOtpAndForceLogin);
+    on<SessionCheckRequested>(_sessionCheck);
+    on<AccountSelected>(_onAccountSelected);
     on<LogoutRequested>(_logout);
-  }
 
-
-  /// APP STARTED - Check for existing session
-  Future<void> _onAppStarted(AppStarted event, Emitter<AuthState> emit) async {
-
-    emit(AuthLoading("Initializing..."));
-
-    try {
-      // Validate session first
-      final isValid = await repo.isSessionValid();
-
-      if (!isValid) {
-        await repo.logout();
-        emit(AuthInitial());
-        return;
-      }
-
-      final savedUser = await repo.getSavedUser();
-
-      if (savedUser != null) {
-        emit(AuthAuthenticated(savedUser));
-      } else {
-        emit(AuthInitial());
-      }
-    } catch (e) {
-      await repo.logout();
-      emit(AuthInitial());
-    }
   }
 
   Future<void> _login(LoginRequested event, Emitter<AuthState> emit) async {
@@ -51,6 +26,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading("Checking account..."));
 
     final request = AuthRequest(
+      selectedUserId: event.selectedUserId,
       username: event.username,
       password: event.password,
       deviceName: event.deviceName,
@@ -61,6 +37,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       isSwitch: event.isSwitch,
       appType: "2",
     );
+
+    debugPrint(
+      "AuthRequest:\n${const JsonEncoder.withIndent('  ').convert(request.toJson())}",
+    );
+
     try {
       final apiResponse = await repo.login(request);
 
@@ -70,12 +51,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
         if (loginResponse.isMulti) {
           emit(
-            AuthHasMultiAccount(
-              message: "Multiple accounts found",
+            AuthMultipleAccountsFound(
               accounts: loginResponse.accountList,
+              username: event.username,
+              password: event.password,
+              deviceName: event.deviceName,
+              deviceType: event.deviceType,
+              deviceUniqueId: event.deviceUniqueId,
+              deviceToken: event.deviceToken,
             ),
           );
-
           return;
         }
 
@@ -86,15 +71,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       } else {
         if (apiResponse.message == "Already Logged In on another device") {
-          emit(AuthAlreadyLoggedInAnotherDevice(
-            message: apiResponse.message,
-            username: event.username,
-            password: event.password,
-            deviceName: event.deviceName,
-            deviceType: event.deviceType,
-            deviceUniqueId: event.deviceUniqueId,
-            deviceToken: event.deviceToken,
-          ));
+          // already login in another device
           return;
         } else {
           emit(AuthError(apiResponse.message));
@@ -104,113 +81,63 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(error.toString()));
     }
   }
+  void _onAccountSelected(
+      AccountSelected event,
+      Emitter<AuthState> emit,
+      ) {
+    if (state is! AuthMultipleAccountsFound) return;
 
-  Future<void> _requestOtp(RequestOtp event, Emitter<AuthState> emit) async {
-    emit(AuthLoading("Sending OTP..."));
-    try {
-      // Pass username as email parameter
-      final response = await repo.requestOtp(event.username);
+    final current = state as AuthMultipleAccountsFound;
 
-      if (response.status) {
-        emit(AuthOtpSent(
-          message: response.message.isNotEmpty
-              ? response.message
-              : "OTP sent successfully to your registered email",
-          username: event.username,
-          password: event.password,
-          deviceName: event.deviceName,
-          deviceType: event.deviceType,
-          deviceUniqueId: event.deviceUniqueId,
-          deviceToken: event.deviceToken,
 
-        ));
-      } else {
-        emit(AuthError(response.message.isNotEmpty
-            ? response.message
-            : "Failed to send OTP"));
-      }
-    } catch (error) {
-      emit(AuthError(error.toString()));
-    }
+    // Auto-login with selected account
+    add(
+      LoginRequested(
+        username: current.username,
+        password: current.password,
+        selectedUserId: event.selectedAccount.userId,
+        deviceName: current.deviceName,
+        deviceType: current.deviceType,
+        deviceUniqueId: current.deviceUniqueId,
+        deviceToken: current.deviceToken,
+        isForce: false,
+        isSwitch: true,
+      ),
+    );
   }
 
-  Future<void> _verifyOtpAndForceLogin(
-      VerifyOtpAndForceLogin event,
+  Future<void> _sessionCheck(
+      SessionCheckRequested event,
       Emitter<AuthState> emit,
       ) async {
-
-    emit(AuthLoading("Verifying OTP..."));
+    emit(AuthLoading("Checking session..."));
 
     try {
-      final verifyResponse = await repo.verifyOtp(event.username, event.otp);
+      final isValid = await repo.isSessionValid();
 
-      if (verifyResponse.status) {
+      if (isValid) {
+        final user = await repo.getSavedUser();
 
-        emit(AuthLoading("Forcing login..."));
-
-        // Now perform force login
-        final request = AuthRequest(
-          username: event.username,
-          password: event.password,
-          deviceName: event.deviceName,
-          deviceType: event.deviceType,
-          deviceUniqueId: event.deviceUniqueId,
-          deviceToken: event.deviceToken,
-          isForce: true, // Force login = true
-          isSwitch: false,
-          appType: "2",
-        );
-
-        final apiResponse = await repo.login(request);
-        final loginResponse = apiResponse.data as LoginResponse;
-
-        if (apiResponse.status) {
-
-          if (loginResponse.isMulti) {
-            emit(
-              AuthHasMultiAccount(
-                message: "Multiple accounts found",
-                accounts: loginResponse.accountList,
-              ),
-            );
-            return;
-          }
-          final user = loginResponse.userInfo!;
-          await repo.saveUser(user, deviceUniqueId: event.deviceUniqueId);
-
+        if (user != null) {
           emit(AuthAuthenticated(user));
-
         } else {
-          emit(AuthError(apiResponse.message));
+          emit(AuthSessionExpired("Not a valid session. Please login again."));
         }
       } else {
-        emit(AuthError(verifyResponse.message.isNotEmpty
-            ? verifyResponse.message
-            : "Invalid OTP"));
+        emit(AuthSessionExpired("Session expired. Please login again."));
       }
-    } catch (error) {
-      emit(AuthError(error.toString()));
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
-  }
-
-  Future<void> _selectAccount(
-      SelectAccount event,
-      Emitter<AuthState> emit,
-      ) async {
-
-    emit(AuthLoading("Signing into selected account..."));
-    await repo.saveUser(event.account);
-    emit(AuthAuthenticated(event.account));
-
   }
 
   Future<void> _logout(LogoutRequested event, Emitter<AuthState> emit) async {
 
     emit(AuthLoading("Logging out..."));
 
-    await repo.logout();
+    await repo.logout(sessionId: event.sessionId);
 
-    emit(AuthInitial());
+    emit(AuthSessionExpired("Session Expired...Log out Successfully."));
 
   }
 }

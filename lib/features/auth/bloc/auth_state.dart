@@ -15,16 +15,8 @@ class AuthError extends AuthState {
 
   AuthError(this.message);
 }
-
-class AuthHasMultiAccount extends AuthState {
-  final String message;
+class AuthMultipleAccountsFound extends AuthState {
   final List<UserModel> accounts;
-
-  AuthHasMultiAccount({required this.message, required this.accounts});
-}
-
-class AuthAlreadyLoggedInAnotherDevice extends AuthState {
-  final String message;
   final String username;
   final String password;
   final String deviceName;
@@ -32,8 +24,8 @@ class AuthAlreadyLoggedInAnotherDevice extends AuthState {
   final String deviceUniqueId;
   final String deviceToken;
 
-  AuthAlreadyLoggedInAnotherDevice({
-    required this.message,
+  AuthMultipleAccountsFound({
+    required this.accounts,
     required this.username,
     required this.password,
     required this.deviceName,
@@ -43,25 +35,8 @@ class AuthAlreadyLoggedInAnotherDevice extends AuthState {
   });
 }
 
-class AuthOtpSent extends AuthState {
-  final String message;
-  final String username;
-  final String password;
-  final String deviceName;
-  final String deviceType;
-  final String deviceUniqueId;
-  final String deviceToken;
 
-  AuthOtpSent({
-    required this.message,
-    required this.username,
-    required this.password,
-    required this.deviceName,
-    required this.deviceType,
-    required this.deviceUniqueId,
-    required this.deviceToken,
-  });
-}
+
 
 class AuthAuthenticated extends AuthState {
   final UserModel user;

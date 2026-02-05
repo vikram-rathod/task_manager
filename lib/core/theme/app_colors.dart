@@ -3,38 +3,59 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Primary Colors
-  static const Color primary = Color(0xFF6366F1);
-  static const Color primaryDark = Color(0xFF4F46E5);
-  static const Color primaryLight = Color(0xFF818CF8);
+  // Light Theme Colors
+  static const lightPrimary = Color(0xFF37693C);
+  static const lightOnPrimary = Color(0xFFFFFFFF);
+  static const lightPrimaryContainer = Color(0xFFE8F5E8);
+  static const lightOnPrimaryContainer = Color(0xFF002107);
 
-  // Secondary Colors
-  static const Color secondary = Color(0xFF10B981);
-  static const Color secondaryDark = Color(0xFF059669);
-  static const Color secondaryLight = Color(0xFF34D399);
+  static const lightSecondary = Color(0xFF546E7A);
+  static const lightOnSecondary = Color(0xFFFFFFFF);
+  static const lightSecondaryContainer = Color(0xFFECEFF1);
+  static const lightOnSecondaryContainer = Color(0xFF1C2A30);
 
-  // Background Colors
-  static const Color background = Color(0xFFF9FAFB);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceDark = Color(0xFF1F2937);
+  static const lightTertiary = Color(0xFF6A1B9A);
+  static const lightOnTertiary = Color(0xFFFFFFFF);
+  static const lightTertiaryContainer = Color(0xFFF3E5F5);
+  static const lightOnTertiaryContainer = Color(0xFF31111D);
 
-  // Text Colors
-  static const Color textPrimary = Color(0xFF111827);
-  static const Color textSecondary = Color(0xFF6B7280);
-  static const Color textHint = Color(0xFF9CA3AF);
-  static const Color textWhite = Color(0xFFFFFFFF);
+  static const lightError = Color(0xFFB3261E);
+  static const lightOnError = Color(0xFFFFFFFF);
+  static const lightErrorContainer = Color(0xFFF9DEDC);
+  static const lightOnErrorContainer = Color(0xFF410E0B);
 
-  // Status Colors
-  static const Color success = Color(0xFF10B981);
-  static const Color error = Color(0xFFEF4444);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color info = Color(0xFF3B82F6);
+  static const lightBackground = Color(0xFFFBFDFC);
+  static const lightOnBackground = Color(0xFF1A1C1A);
+  static const lightSurface = Color(0xFFF8FAF9);
+  static const lightOnSurface = Color(0xFF1A1C1A);
+  static const lightSurfaceVariant = Color(0xFFF1F4F2);
+  static const lightOnSurfaceVariant = Color(0xFF424940);
 
-  // Border Colors
-  static const Color border = Color(0xFFE5E7EB);
-  static const Color borderDark = Color(0xFF374151);
+  // Dark Theme Colors
+  static const darkPrimary = Color(0xFF81C784);
+  static const darkOnPrimary = Color(0xFF0A2E0F);
+  static const darkPrimaryContainer = Color(0xFF1B3A1F);
+  static const darkOnPrimaryContainer = Color(0xFFB9F0B8);
 
-  // Other Colors
-  static const Color shadow = Color(0x1A000000);
-  static const Color disabled = Color(0xFFD1D5DB);
+  static const darkSecondary = Color(0xFF90CAF9);
+  static const darkOnSecondary = Color(0xFF0D1B29);
+  static const darkSecondaryContainer = Color(0xFF1E3A5A);
+  static const darkOnSecondaryContainer = Color(0xFFE3F2FD);
+
+  static const darkTertiary = Color(0xFFCE93D8);
+  static const darkOnTertiary = Color(0xFF2A0D35);
+  static const darkTertiaryContainer = Color(0xFF4A1B5A);
+  static const darkOnTertiaryContainer = Color(0xFFF3E5F5);
+
+  static const darkError = Color(0xFFF2B8B5);
+  static const darkOnError = Color(0xFF601410);
+  static const darkErrorContainer = Color(0xFF8C1D18);
+  static const darkOnErrorContainer = Color(0xFFF9DEDC);
+
+  static const darkBackground = Color(0xFF0B0F0B);
+  static const darkOnBackground = Color(0xFFE0E4DB);
+  static const darkSurface = Color(0xFF131813);
+  static const darkOnSurface = Color(0xFFE0E4DB);
+  static const darkSurfaceVariant = Color(0xFF1F241F);
+  static const darkOnSurfaceVariant = Color(0xFFC2C9BD);
 }

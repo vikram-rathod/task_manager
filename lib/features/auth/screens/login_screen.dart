@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/device/device_info_service.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
-import '../../../core/device/device_info_service.dart';
+import '../dialogs/multi_account_dialog.dart';
 import '../models/user_model.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,320 +15,418 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _otpController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
-    _otpController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
-    final deviceInfo = await DeviceInfoService.getDeviceInfo();
+    if (_formKey.currentState?.validate() ?? false) {
+      final deviceInfo = await DeviceInfoService.getDeviceInfo();
 
-    context.read<AuthBloc>().add(
-      LoginRequested(
-        username: _usernameController.text.trim(),
-        password: _passwordController.text.trim(),
-        deviceName: deviceInfo.deviceName,
-        deviceType: deviceInfo.deviceType,
-        deviceUniqueId: deviceInfo.deviceUniqueId,
-        deviceToken: deviceInfo.deviceToken,
-        isForce: false,
-        isSwitch: false,
-      ),
-    );
-  }
-
-  void _showMultiAccountDialog(List<UserModel> accounts) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: const Text("Select Account"),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: accounts.length,
-            itemBuilder: (_, index) {
-              final account = accounts[index];
-              return ListTile(
-                title: Text(account.userName),
-                subtitle: Text(account.userEmail),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.read<AuthBloc>().add(SelectAccount(account));
-                },
-              );
-            },
-          ),
+      context.read<AuthBloc>().add(
+        LoginRequested(
+          username: _usernameController.text.trim(),
+          password: _passwordController.text.trim(),
+          deviceName: deviceInfo.deviceName,
+          deviceType: deviceInfo.deviceType,
+          deviceUniqueId: deviceInfo.deviceUniqueId,
+          deviceToken: deviceInfo.deviceToken,
+          isForce: false,
+          isSwitch: false,
         ),
-      ),
-    );
+      );
+    }
   }
 
-  void _showAlreadyLoggedInDialog(AuthAlreadyLoggedInAnotherDevice state) {
-    showDialog(
+  void showMultiAccountSheet(
+      BuildContext context,
+      List<UserModel> accounts,
+      Function(UserModel) onSelected,
+      ) {
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: const Text("Already Logged In"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.orange,
-              size: 60,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              state.message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Would you like to verify and force login?",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Request OTP
-              context.read<AuthBloc>().add(
-                RequestOtp(
-                  username: state.username,
-                  password: state.password,
-                  deviceName: state.deviceName,
-                  deviceType: state.deviceType,
-                  deviceUniqueId: state.deviceUniqueId,
-                  deviceToken: state.deviceToken,
-                ),
-              );
-            },
-            child: const Text("Get OTP"),
-          ),
-        ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (_) {
+        return MultiAccountSheet(
+          accounts: accounts,
+          onAccountSelected: onSelected,
+        );
+      },
     );
   }
 
-  void _showOtpVerificationDialog(AuthOtpSent state) {
-    _otpController.clear();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, newState) {
-          if (newState is AuthAuthenticated) {
-            // Close dialog on successful authentication
-            Navigator.pop(dialogContext);
-          } else if (newState is AuthError) {
-            // Show error but keep dialog open
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(newState.message)),
-            );
-          }
-        },
-        builder: (context, currentState) {
-          final isVerifying = currentState is AuthLoading;
-
-          return AlertDialog(
-            title: const Text("Verify OTP"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  state.message,
-                  style: const TextStyle(color: Colors.green),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  "Enter the OTP sent to your registered email/phone:",
-                  style: TextStyle(fontSize: 14),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  decoration: const InputDecoration(
-                    labelText: "OTP",
-                    border: OutlineInputBorder(),
-                    counterText: "",
-                  ),
-                ),
-                if (isVerifying)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 16),
-                    child: LinearProgressIndicator(),
-                  ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: isVerifying
-                    ? null
-                    : () {
-                  Navigator.pop(dialogContext);
-                },
-                child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                onPressed: isVerifying
-                    ? null
-                    : () {
-                  final otp = _otpController.text.trim();
-                  if (otp.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Please enter OTP"),
-                      ),
-                    );
-                    return;
-                  }
-
-                  // Verify OTP and force login
-                  context.read<AuthBloc>().add(
-                    VerifyOtpAndForceLogin(
-                      otp: otp,
-                      username: state.username,
-                      password: state.password,
-                      deviceName: state.deviceName,
-                      deviceType: state.deviceType,
-                      deviceUniqueId: state.deviceUniqueId,
-                      deviceToken: state.deviceToken,
-                    ),
-                  );
-                },
-                child: isVerifying
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-                    : const Text("Verify & Login"),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme
+        .of(context)
+        .brightness == Brightness.dark;
+    final theme = Theme.of(context);
+
+
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(state.message)),
+                  ],
+                ),
+                backgroundColor: Colors.red.shade600,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            );
+          }
+          if (state is AuthMultipleAccountsFound) {
+            showMultiAccountSheet(
+              context,
+              state.accounts,
+                  (account) {
+                  Navigator.of(context).pushReplacementNamed('/home');
+                context.read<AuthBloc>().add(
+                  AccountSelected(
+                    selectedAccount: account,
+                  ),
+                );
+              },
             );
           }
 
-          if (state is AuthHasMultiAccount) {
-            _showMultiAccountDialog(state.accounts);
-          }
 
-          if (state is AuthAlreadyLoggedInAnotherDevice) {
-            _showAlreadyLoggedInDialog(state);
-          }
-
-          if (state is AuthOtpSent) {
-            _showOtpVerificationDialog(state);
-          }
         },
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-
             final isLoading = state is AuthLoading;
 
-            return Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "Login",
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 30),
-                  TextField(
-                    controller: _usernameController,
-                    decoration: const InputDecoration(
-                      labelText: "Username / Email",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: "Password",
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            return SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 450),
+                        child: Card(
+                          elevation: 0,
+                          shadowColor: Colors.black.withOpacity(0.3),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Logo or Icon
+                                  SizedBox(
+                                    height: 80,
+                                    width: 80,
+                                    child: Image.asset(
+                                      'assets/images/app_logo.png',
+                                      width: 140,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  // Title
+                                  Text(
+                                    "Welcome Back",
+                                    style: Theme
+                                        .of(context)
+                                        .textTheme
+                                        .headlineMedium
+                                        ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "Sign in to continue",
+                                    style: Theme
+                                        .of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 40),
+
+                                  // Username Field
+                                  TextFormField(
+                                    controller: _usernameController,
+                                    enabled: !isLoading,
+                                    decoration: InputDecoration(
+                                      labelText: "Username or Email",
+                                      hintText: "Enter your username or email",
+                                      prefixIcon: const Icon(
+                                          Icons.person_outline_rounded),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                            color: Colors.grey.shade300),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                            color: Colors.grey.shade300),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFF667eea),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      filled: true,
+                                      fillColor: isDark
+                                          ? Colors.grey.shade800
+                                          : Colors.grey.shade50,
+                                      contentPadding: const EdgeInsets
+                                          .symmetric(
+                                        horizontal: 20,
+                                        vertical: 18,
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value
+                                          .trim()
+                                          .isEmpty) {
+                                        return 'Please enter your username or email';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Password Field
+                                  TextFormField(
+                                    controller: _passwordController,
+                                    enabled: !isLoading,
+                                    obscureText: _obscurePassword,
+                                    decoration: InputDecoration(
+                                      labelText: "Password",
+                                      hintText: "Enter your password",
+                                      prefixIcon: const Icon(
+                                          Icons.lock_outline_rounded),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscurePassword
+                                              ? Icons.visibility_off_outlined
+                                              : Icons.visibility_outlined,
+                                        ),
+                                        onPressed: isLoading
+                                            ? null
+                                            : () {
+                                          setState(() {
+                                            _obscurePassword =
+                                            !_obscurePassword;
+                                          });
+                                        },
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                            color: Colors.grey.shade300),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                            color: Colors.grey.shade300),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: const BorderSide(
+                                          width: 2,
+                                        ),
+                                      ),
+                                      filled: true,
+                                      fillColor: isDark
+                                          ? Colors.grey.shade800
+                                          : Colors.grey.shade50,
+                                      contentPadding: const EdgeInsets
+                                          .symmetric(
+                                        horizontal: 20,
+                                        vertical: 18,
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter your password';
+                                      }
+
+                                      return null;
+                                    },
+                                  ),
+
+                                  // Forgot Password
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: isLoading ? null : () {
+                                        // Handle forgot password
+                                      },
+                                      child: Text(
+                                        "Forgot Password?",
+                                        style: TextStyle(
+                                          color: theme.primaryColor,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Login Button
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 56,
+                                    child: ElevatedButton(
+                                      onPressed: isLoading ? null : _login,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: theme.primaryColor,
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              16),
+                                        ),
+                                        disabledBackgroundColor: Colors.grey
+                                            .shade300,
+                                      ),
+                                      child: isLoading
+                                          ? Row(
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .center,
+                                        children: [
+                                          Text(
+                                            state.message,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              valueColor: AlwaysStoppedAnimation<
+                                                  Color>(
+                                                Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                          : const Text(
+                                        "Sign In",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  Column(
+                                    children: [
+                                      Text(
+                                        "© 2025 Task Manager. All rights reserved.",
+                                        textAlign: TextAlign.center,
+                                        style: Theme
+                                            .of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                          color: Theme
+                                              .of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant
+                                              .withOpacity(0.6),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Version 1.0.0",
+                                        textAlign: TextAlign.center,
+                                        style: Theme
+                                            .of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                          color: Theme
+                                              .of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant
+                                              .withOpacity(0.5),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
                       ),
                     ),
                   ),
-                  const SizedBox(height: 25),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _login,
-                      child: isLoading
-                          ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(state.message),
-                          const SizedBox(width: 12),
-                          const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      )
-                          : const Text("Login"),
-                    ),
-                  ),
-                ],
+                ),
               ),
             );
           },

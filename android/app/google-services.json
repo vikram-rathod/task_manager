@@ -1,0 +1,77 @@
+{
+  "project_info": {
+    "project_number": "25820351915",
+    "firebase_url": "https://bcstep-942ed-default-rtdb.firebaseio.com",
+    "project_id": "bcstep-942ed",
+    "storage_bucket": "bcstep-942ed.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:25820351915:android:5aa8f8b2cc0e8c771b16ee",
+        "android_client_info": {
+          "package_name": "com.apperp.bcstep"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBxhvGia0WAiU6GM2WucCOVe1i96YO-X4"
+        },
+        {
+          "current_key": "AIzaSyBV4ttMc1kRuPFn5QyketMt1Nsb2mePrTI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:25820351915:android:35cf2bd0f33232701b16ee",
+        "android_client_info": {
+          "package_name": "com.bcstep.hr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBxhvGia0WAiU6GM2WucCOVe1i96YO-X4"
+        },
+        {
+          "current_key": "AIzaSyBV4ttMc1kRuPFn5QyketMt1Nsb2mePrTI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:25820351915:android:bf881c8147606ea51b16ee",
+        "android_client_info": {
+          "package_name": "com.bcstep.tm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBxhvGia0WAiU6GM2WucCOVe1i96YO-X4"
+        },
+        {
+          "current_key": "AIzaSyBV4ttMc1kRuPFn5QyketMt1Nsb2mePrTI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

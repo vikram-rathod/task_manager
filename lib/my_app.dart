@@ -1,0 +1,68 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_manager/router/app_router.dart';
+
+import 'core/theme/app_theme.dart';
+import 'core/theme/theme_cubit.dart';
+import 'features/auth/bloc/auth_bloc.dart';
+import 'features/auth/bloc/auth_event.dart';
+import 'features/auth/bloc/auth_state.dart';
+import 'features/auth/screens/home_screen.dart';
+import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/splash_screen.dart';
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ThemeCubit, ThemeMode>(
+      builder: (context, themeMode) {
+        return MaterialApp(
+          title: 'Task Manager',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeMode,
+          home: const AuthWrapper(),
+          initialRoute: '/',
+          onGenerateRoute: AppRouter.generateRoute,
+        );
+      },
+    );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Trigger session check on app launch
+    context.read<AuthBloc>().add(SessionCheckRequested());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthInitial) {
+          Navigator.pushReplacementNamed(context, '/splash');
+        } else if (state is AuthAuthenticated) {
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      },
+      child: Container(),
+    );
+  }
+}
+
