@@ -44,8 +44,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-
-    // Trigger session check on app launch
     context.read<AuthBloc>().add(SessionCheckRequested());
   }
 
@@ -53,15 +51,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is AuthInitial) {
-          Navigator.pushReplacementNamed(context, '/splash');
-        } else if (state is AuthAuthenticated) {
-          Navigator.pushReplacementNamed(context, '/home');
-        } else {
-          Navigator.pushReplacementNamed(context, '/login');
+        if (state is AuthAuthenticated) {
+          debugPrint("[AuthWrapper] Initial session valid - navigating to Home");
+          Navigator.of(context).pushReplacementNamed('/home');
+        } else if (state is AuthSessionExpired) {
+          debugPrint("[AuthWrapper] Session expired - navigating to Login");
+          Navigator.of(context).pushReplacementNamed('/login');
         }
       },
-      child: Container(),
+      child: const SplashScreen(),
     );
   }
 }

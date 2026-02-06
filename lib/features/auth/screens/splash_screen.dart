@@ -22,6 +22,11 @@ class _SplashScreenState extends State<SplashScreen>
       upperBound: 1.05,
     )..repeat(reverse: true);
   }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

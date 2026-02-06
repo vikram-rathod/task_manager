@@ -5,11 +5,13 @@ import '../models/user_model.dart';
 class MultiAccountSheet extends StatefulWidget {
   final List<UserModel> accounts;
   final Function(UserModel) onAccountSelected;
+  final UserModel? currentUser;
 
   const MultiAccountSheet({
     super.key,
     required this.accounts,
     required this.onAccountSelected,
+    this.currentUser,
   });
 
   @override
@@ -27,7 +29,7 @@ class _MultiAccountSheetState extends State<MultiAccountSheet> {
           a.userTypeName.toLowerCase().contains(searchQuery.toLowerCase());
     }).toList()
       ..sort((a, b) =>
-      a.userName.toLowerCase().compareTo(b.userName.toLowerCase()));
+          a.userName.toLowerCase().compareTo(b.userName.toLowerCase()));
 
     return Padding(
       padding: EdgeInsets.only(
@@ -68,15 +70,31 @@ class _MultiAccountSheetState extends State<MultiAccountSheet> {
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (_, index) {
                   final account = filteredAccounts[index];
+                  final isCurrentAccount = widget.currentUser != null &&
+                      widget.currentUser!.userId == account.userId;
 
                   return InkWell(
                     borderRadius: BorderRadius.circular(12),
-                    onTap: () {
+                    onTap: isCurrentAccount
+                        ? null // Disable tap for current account
+                        : () {
                       Navigator.pop(context);
                       widget.onAccountSelected(account);
                     },
                     child: Container(
                       padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: isCurrentAccount
+                            ? Border.all(
+                          color: Theme.of(context).primaryColor,
+                          width: 2,
+                        )
+                            : null,
+                        borderRadius: BorderRadius.circular(12),
+                        color: isCurrentAccount
+                            ? Theme.of(context).primaryColor.withOpacity(0.1)
+                            : null,
+                      ),
                       child: Row(
                         children: [
                           /// Logo
@@ -103,22 +121,59 @@ class _MultiAccountSheetState extends State<MultiAccountSheet> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  account.companyName,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        account.companyName,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                          fontWeight: isCurrentAccount
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isCurrentAccount)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).primaryColor,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Text(
+                                          "Current",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   "${account.companyType} • ${account.userTypeName}",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall,
+                                  style:
+                                  Theme.of(context).textTheme.labelSmall,
                                 ),
                               ],
                             ),
                           ),
+
+                          /// Check icon for current account
+                          if (isCurrentAccount)
+                            Icon(
+                              Icons.check_circle,
+                              color: Theme.of(context).primaryColor,
+                              size: 24,
+                            ),
                         ],
                       ),
                     ),
@@ -131,4 +186,3 @@ class _MultiAccountSheetState extends State<MultiAccountSheet> {
     );
   }
 }
-

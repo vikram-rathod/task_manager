@@ -4,6 +4,7 @@ class StorageKeys {
   // Session
   static const String isLoggedIn = 'is_logged_in';
   static const String loginSessionId = 'login_session_id';
+  static const String isMultipleAccounts = "is_multiple_accounts";
 
   // User
   static const String userName = 'user_name';

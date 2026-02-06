@@ -6,6 +6,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../dialogs/multi_account_dialog.dart';
+import '../dialogs/otp_verification_dialog.dart';
 import '../models/user_model.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -73,6 +74,49 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  Future<void> showOtpVerificationSheet(BuildContext context,
+      String username,
+      String password,
+      String deviceName,
+      String deviceType,
+      String deviceUniqueId,
+      String deviceToken,
+      bool isForce,
+      bool isSwitch,
+      int? selectedUserId,) async {
+    final authBloc = context.read<AuthBloc>();
+
+    if (!context.mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return BlocProvider.value(
+          value: authBloc,
+          child: OtpVerificationSheet(
+            email: _usernameController.text.trim(),
+            username: _usernameController.text.trim(),
+            password: _passwordController.text.trim(),
+            deviceName: deviceName,
+            deviceType: deviceType,
+            deviceUniqueId: deviceUniqueId,
+            deviceToken: deviceToken,
+            isForce: isForce,
+            isSwitch: isSwitch,
+            selectedUserId: selectedUserId,
+          ),
+        );
+      },
+    );
+  }
+
+
   void showMultiAccountSheet(
       BuildContext context,
       List<UserModel> accounts,
@@ -100,12 +144,12 @@ class _LoginScreenState extends State<LoginScreen>
         .of(context)
         .brightness == Brightness.dark;
     final theme = Theme.of(context);
-
-
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
+
           if (state is AuthError) {
+            // Show regular error snackbar
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Row(
@@ -123,21 +167,45 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             );
           }
+
+          if (state is LoggedInAnotherDevice) {
+            debugPrint(
+                "[LoginScreen] LoggedInAnotherDevice - showing OTP verification sheet");
+            showOtpVerificationSheet(
+              context,
+              state.username,
+              state.password,
+              state.deviceName,
+              state.deviceType,
+              state.deviceUniqueId,
+              state.deviceToken,
+              state.isForce,
+              state.isSwitch,
+              state.selectedUserId,
+            );
+          }
+
           if (state is AuthMultipleAccountsFound) {
             showMultiAccountSheet(
               context,
               state.accounts,
                   (account) {
-                  Navigator.of(context).pushReplacementNamed('/home');
+                    Navigator.of(context).pop();
                 context.read<AuthBloc>().add(
                   AccountSelected(
                     selectedAccount: account,
+                    isSwitch: false,
                   ),
                 );
               },
             );
           }
 
+          if (state is AuthAuthenticated) {
+            debugPrint("[LoginScreen] AuthAuthenticated - navigating to home");
+            Navigator.of(context).pushNamedAndRemoveUntil(
+                '/home', (route) => false);
+          }
 
         },
         child: BlocBuilder<AuthBloc, AuthState>(
@@ -435,3 +503,4 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 }
+

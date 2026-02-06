@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:task_manager/features/auth/models/api_response.dart';
+import 'package:task_manager/features/auth/models/device_data.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
@@ -45,7 +46,6 @@ class AuthRepository {
     }
   }
 
-  /// REQUEST OTP for force login
   Future<ApiResponse<dynamic>> requestOtp(String email) async {
     try {
 
@@ -62,9 +62,10 @@ class AuthRepository {
           contentType: Headers.formUrlEncodedContentType,
         ),
       );
+      final Map<String, dynamic> jsonData = jsonDecode(response.data);
 
       final apiResponse = ApiResponse.fromJson(
-        response.data,
+        jsonData,
             (data) => data,
       );
 
@@ -74,7 +75,6 @@ class AuthRepository {
     }
   }
 
-  /// VERIFY OTP
   Future<ApiResponse<dynamic>> verifyOtp(String email, String otp) async {
     try {
       // Using Form-Data
@@ -92,8 +92,13 @@ class AuthRepository {
         ),
       );
 
+      debugPrint("[verifyOtp] Raw response: ${response}");
+      debugPrint("[verifyOtp] Response data: ${response.data}");
+
+      final Map<String, dynamic> jsonData = jsonDecode(response.data);
+
       final apiResponse = ApiResponse.fromJson(
-        response.data,
+        jsonData,
             (data) => data,
       );
 
@@ -103,8 +108,6 @@ class AuthRepository {
     }
   }
 
-
-  /// CHECK SESSION
   Future<bool> checkSessionWithBackend() async {
     try {
 
@@ -155,7 +158,6 @@ class AuthRepository {
     }
   }
 
-  /// VALIDATE SESSION
   Future<bool> isSessionValid() async {
     try {
       // First check local storage
@@ -317,4 +319,28 @@ class AuthRepository {
         return 'Something went wrong';
     }
   }
+
+  Future<void> saveIsMultipleAccounts(bool bool ) async {
+    await _storage.write(StorageKeys.isMultipleAccounts, bool.toString());
+  }
+  Future<bool> getSavedIsMultipleAccounts() async {
+    final isMultipleAccounts = await _storage.read(StorageKeys.isMultipleAccounts);
+    return isMultipleAccounts == 'true';
+  }
+
+  Future<void> saveLastLoginCredentials({
+    required String username,
+    required String password,
+  }) async {
+    await _storage.write(StorageKeys.userName, username);
+    await _storage.write(StorageKeys.userPassword, password);
+  }
+
+  Future<Map<String, String>?> getLastLoginCredentials() async {
+    final u = await _storage.read(StorageKeys.userName);
+    final p = await _storage.read(StorageKeys.userPassword);
+    if (u == null || p == null) return null;
+    return {"username": u, "password": p};
+  }
+
 }
