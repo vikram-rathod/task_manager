@@ -12,8 +12,61 @@ class ApiConstants {
   static const String requestOtp = '${bcStepUrl}get_otp_for_email_mob.php';
   static const String verifyOtp = '${bcStepUrl}get_otp_for_email_mob.php';
 
-  // Timeouts
+  /*
+  * ───────────────── Home API Endpoints ─────────────────
+  */
+
+  static const String getProjectsList = '${baseUrl}list_projects.php';
+  static const String userList = '${baseUrl}checker_maker_list.php';
+  static const String pcEnggUserList = '${baseUrl}list_pc_engg_users.php';
+
+
+
+  /* ───────────────── Task API Endpoints ───────────────── */
+
+  // Task CRUD
+  static const String insertNewTask = '${baseUrl}insert_new_task.php';
+  static const String taskList = '${baseUrl}task_list.php';
+  static const String taskDetails = '${baseUrl}get_task_details.php';
+
+  // Task list filters
+  static const String taskListByUserId =
+      '${baseUrl}task_list_by_user_id.php';
+  static const String taskListByProjectId =
+      '${baseUrl}task_list_by_project_id.php';
+  static const String employeeWiseTaskList =
+      '${baseUrl}getUserPendingTasks.php';
+
+  // Task status based
+  static const String taskListOverDue =
+      '${baseUrl}task_list_over_due.php';
+  static const String taskListDueToday =
+      '${baseUrl}task_list_due_today.php';
+
+  /* ───────────────── Task Template APIs ───────────────── */
+
+  static const String taskListBase = '${baseUrl}task_list';
+
+  static const String taskListTemplate =
+      '$taskListBase/task_list_templates.php';
+  static const String taskListTemplateInsert =
+      '$taskListBase/task_template_insert.php';
+  static const String taskListTemplatePermission =
+      '$taskListBase/task_template_permision_auth.php';
+  static const String approvalGetAuthorities =
+      '$taskListBase/approval_get_authorities.php';
+  static const String taskTransfer =
+      '$taskListBase/task_transfer.php';
+  static const String taskListOnProject =
+      '$taskListBase/task_list_on_project.php';
+  static const String taskTemplateAssign =
+      '$taskListBase/task_template_assign.php';
+  static const String taskListTemplateApproval =
+      '$taskListBase/task_list_template_approval.php';
+
+  /* ───────────────── Timeouts ───────────────── */
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
   static const Duration sendTimeout = Duration(seconds: 30);
+
 }

@@ -12,9 +12,9 @@ class ApiResponse<T> {
   });
 
   factory ApiResponse.fromJson(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJsonT,
-  ) {
+      Map<String, dynamic> json,
+      T Function(dynamic json) fromJsonT,
+      ) {
     return ApiResponse(
       status: json['status'] ?? false,
       message: json['message'] ?? '',
@@ -22,6 +22,7 @@ class ApiResponse<T> {
       error: json['error'],
     );
   }
+
 
   @override
   String toString() {

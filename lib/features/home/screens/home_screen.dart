@@ -1,21 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_manager/features/AllTasks/screens/all_task_screen.dart';
 import 'package:task_manager/features/auth/bloc/auth_bloc.dart';
 import 'package:task_manager/features/auth/bloc/auth_event.dart';
 import 'package:task_manager/features/auth/bloc/auth_state.dart';
 import 'package:task_manager/features/auth/models/user_model.dart';
+import 'package:task_manager/features/home/screens/profile_page.dart';
 
+import '../../../animations/header_text_animation.dart';
 import '../../../core/device/device_info_service.dart';
 import '../../../core/theme/theme_cubit.dart';
-import '../dialogs/multi_account_dialog.dart';
+import '../../auth/dialogs/multi_account_dialog.dart';
+import '../../createtask/screen/create_task_screen.dart';
+import 'home_dash_board_page.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  void showMultiAccountSheet(BuildContext context,
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const HomeDashboardPage(),
+    const AllTaskScreen(),
+    const ProfilePage(),
+  ];
+
+  void showMultiAccountSheet(
+      BuildContext context,
       List<UserModel> accounts,
       UserModel? currentUser,
-      Function(UserModel) onSelected,) {
+      Function(UserModel) onSelected,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -23,15 +43,14 @@ class HomeScreen extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) =>
-          BlocProvider.value(
-            value: context.read<AuthBloc>(),
-            child: MultiAccountSheet(
-              accounts: accounts,
-              currentUser: currentUser,
-              onAccountSelected: onSelected,
-            ),
-          ),
+      builder: (_) => BlocProvider.value(
+        value: context.read<AuthBloc>(),
+        child: MultiAccountSheet(
+          accounts: accounts,
+          currentUser: currentUser,
+          onAccountSelected: onSelected,
+        ),
+      ),
     );
   }
 
@@ -50,9 +69,7 @@ class HomeScreen extends StatelessWidget {
           debugPrint("[HomeScreen] Multiple accounts found - showing sheet");
 
           UserModel? currentUser;
-          final currentState = context
-              .read<AuthBloc>()
-              .state;
+          final currentState = context.read<AuthBloc>().state;
           if (currentState is AuthAuthenticated) {
             currentUser = currentState.user;
           }
@@ -92,11 +109,10 @@ class HomeScreen extends StatelessWidget {
             ),
           );
         }
-
       },
       builder: (context, state) {
-        final bool showSwitchAccount = state is AuthAuthenticated &&
-            state.isMultipleAccounts;
+        final bool showSwitchAccount =
+            state is AuthAuthenticated && state.isMultipleAccounts;
         // Get user info if authenticated
         UserModel? user;
         if (state is AuthAuthenticated) {
@@ -105,67 +121,82 @@ class HomeScreen extends StatelessWidget {
         // Build UI here
         return Scaffold(
           appBar: AppBar(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  user?.userName ?? "Home",
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user?.designation ?? "",
-                  style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.normal),
-                ),
-                if (user != null)
-                  Text(
-                    "${user.companyName} • ${user.companyType}",
-                    style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-              ],
+            title: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
+              child: Row(
+                children: [
+                  if (user != null)
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundImage: NetworkImage(user.userProfileUrl),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.2),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Column(
+                      key: ValueKey(user?.designation),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              const TextSpan(
+                                text: "TASK ",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              TextSpan(
+                                text: "MANAGER",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        HeaderTextAnimation(
+                          designation: user!.designation,
+                          companyText: user.companyName.isEmpty
+                              ? user.userName
+                              : "${user.companyName} • ${user.companyType}",
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: 120,
+                          height: 0.5,
+                          color: const Color(0xFFB5E5B6),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
             ),
             actions: [
               Row(
                 children: [
-                  // Session ID info button
-                  if (user != null)
-                    IconButton(
-                      tooltip: "Session: ${user.loginSessionId}",
-                      icon: const Icon(Icons.info_outline),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) =>
-                              AlertDialog(
-                                title: const Text("User Information"),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildInfoRow("Username:", user!.userName),
-                                    const SizedBox(height: 8),
-                                    _buildInfoRow("Company:", user.companyName),
-                                    const SizedBox(height: 8),
-                                    _buildInfoRow("Type:", user.companyType),
-                                    const SizedBox(height: 8),
-                                    _buildInfoRow(
-                                        "Session ID:", user.loginSessionId),
-                                  ],
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text("Close"),
-                                  ),
-                                ],
-                              ),
-                        );
-                      },
-                    ),
                   // Toggle Button
                   IconButton(
                     icon: const Icon(Icons.brightness_6),
@@ -183,8 +214,8 @@ class HomeScreen extends StatelessWidget {
                             "[HomeScreen] Switch account button pressed");
                         final authBloc = context.read<AuthBloc>();
                         final repo = authBloc.repo;
-                        final deviceInfo = await DeviceInfoService
-                            .getDeviceInfo();
+                        final deviceInfo =
+                        await DeviceInfoService.getDeviceInfo();
                         final creds = await repo.getLastLoginCredentials();
 
                         if (creds == null ||
@@ -231,27 +262,45 @@ class HomeScreen extends StatelessWidget {
               )
             ],
           ),
-          body: const Center(
-            child: Text("Welcome to Home Screen"),
+          body: IndexedStack(
+            index: _currentIndex,
+            children: _pages,
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            type: BottomNavigationBarType.fixed,
+
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard),
+                label: 'Dashboard',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.task_alt),
+                label: 'All Tasks',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CreateTaskScreen()),
+              );
+            },
+            child: const Icon(Icons.task_alt_outlined),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(value),
-        ),
-      ],
     );
   }
 }

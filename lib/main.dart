@@ -1,3 +1,5 @@
+import 'features/AllTasks/bloc/all_task_bloc.dart';
+import 'features/createtask/bloc/task_create_bloc.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +23,8 @@ void main() async {
       providers: [
         BlocProvider.value(value: sl<AuthBloc>()),
         BlocProvider(create: (_) => ThemeCubit()),
+        BlocProvider.value(value: CreateTaskBloc(sl(), sl())),
+        BlocProvider.value(value: AllTaskBloc(sl(), sl()))
       ],
       child: const MyApp(),
     ),

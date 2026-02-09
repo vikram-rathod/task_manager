@@ -15,6 +15,7 @@ import '../models/session_data.dart';
 import '../models/user_model.dart';
 
 class AuthRepository {
+
   final DioClient _dioClient;
   final StorageService _storage;
 

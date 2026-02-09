@@ -74,6 +74,31 @@ class UserModel extends Equatable {
   }
 
 
+  Map<String, dynamic> toJson() {
+    return {
+      'user_name': userName,
+      'user_id': userId,
+      'user_type': userType,
+      'user_type_name': userTypeName,
+      'company_id': companyId,
+      'company_name': companyName,
+      'company_type': companyType,
+      'company_logo_url': companyLogoUrl,
+      'user_profile_url': userProfileUrl,
+      'profile_type': profileType,
+      'user_mobile_number': userMobileNumber,
+      'user_email': userEmail,
+      'designation': designation,
+      'user_acc_auto_create': userAccAutoCreate,
+      'ref_candidate_id': refCandidateId,
+      'user_fix_id': userFixId,
+      'user_password': userPassword,
+      'login_session_id': loginSessionId,
+    };
+  }
+
+
+
   @override
   List<Object?> get props => [
         userId,
