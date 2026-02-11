@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../createtask/models/task_model.dart';
+import '../../../core/models/task_model.dart';
 import '../bloc/all_task_bloc.dart';
-
 
 class AllTaskScreen extends StatelessWidget {
   const AllTaskScreen({super.key});
@@ -54,10 +53,10 @@ class _AllTasksViewState extends State<AllTasksView> {
   Widget build(BuildContext context) {
     return BlocConsumer<AllTaskBloc, AllTaskState>(
       listener: (context, state) {
-        if (state.status == AllTaskStatus.error && state.tasks.isEmpty) {
+        if (state.errorMessage != null && state.tasks.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage ?? 'Failed to load tasks'),
+              content: Text(state.errorMessage!),
               backgroundColor: Colors.red,
             ),
           );
@@ -66,88 +65,79 @@ class _AllTasksViewState extends State<AllTasksView> {
       builder: (context, state) {
         return Column(
           children: [
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search tasks...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                      context.read<AllTaskBloc>().add(
-                        SearchQueryChanged(''),
-                      );
-                    },
-                  )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                ),
-                onChanged: (value) {
-                  context.read<AllTaskBloc>().add(
-                    SearchQueryChanged(value),
-                  );
-                },
-              ),
-            ),
-
+            _buildSearchBar(),
             const SizedBox(height: 8),
-
-            // Task List with Pull-to-Refresh
-            Expanded(
-              child: _buildTaskList(state),
-            ),
+            Expanded(child: _buildTaskList(state)),
           ],
         );
       },
     );
   }
 
+  /// 🔍 Search Bar
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search tasks...',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    context
+                        .read<AllTaskBloc>()
+                        .add(SearchQueryChanged(''));
+                  },
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onChanged: (value) {
+          context.read<AllTaskBloc>().add(SearchQueryChanged(value));
+        },
+      ),
+    );
+  }
+
+  /// 📋 Task List
   Widget _buildTaskList(AllTaskState state) {
-    // Loading state (initial load)
-    if (state.status == AllTaskStatus.loading || state.status == AllTaskStatus.idle) {
+    // Initial loading
+    if (state.isLoading && state.tasks.isEmpty) {
       return _buildShimmerList();
     }
 
-    // Error state (first page)
-    if (state.status == AllTaskStatus.error && state.tasks.isEmpty) {
-      return _buildErrorView(state.errorMessage ?? 'Failed to load tasks');
+    // Error (first page)
+    if (state.errorMessage != null && state.tasks.isEmpty) {
+      return _buildErrorView(state.errorMessage!);
     }
 
-    // Filter tasks based on search query
     final filteredTasks = state.searchQuery.isEmpty
         ? state.tasks
         : state.tasks.where((task) {
-      return task.taskDescription
-          .toLowerCase()
-          .contains(state.searchQuery.toLowerCase());
-    }).toList();
+            return task.taskDescription
+                .toLowerCase()
+                .contains(state.searchQuery.toLowerCase());
+          }).toList();
 
-    // Empty state
-    if (filteredTasks.isEmpty && state.status == AllTaskStatus.success) {
+    // Empty
+    if (filteredTasks.isEmpty) {
       return _buildEmptyView(
         state.searchQuery.isEmpty
-            ? 'No tasks available.'
-            : 'No tasks found matching "${state.searchQuery}"',
+            ? 'No tasks available'
+            : 'No tasks found for "${state.searchQuery}"',
       );
     }
 
-    // Success - Show tasks with pull to refresh
     return RefreshIndicator(
       onRefresh: () async {
         context.read<AllTaskBloc>().add(RefreshTasks());
-        // Wait a bit for the refresh to complete
-        await Future.delayed(const Duration(milliseconds: 800));
+        await Future.delayed(const Duration(milliseconds: 600));
       },
       child: ListView.builder(
         controller: _scrollController,
@@ -157,48 +147,37 @@ class _AllTasksViewState extends State<AllTasksView> {
             : filteredTasks.length + 1,
         itemBuilder: (context, index) {
           if (index >= filteredTasks.length) {
-            // Loading indicator at bottom
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator(),
-              ),
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
             );
           }
 
-          final task = filteredTasks[index];
-          return _buildTaskCard(task, state.searchQuery);
+          return _buildTaskCard(filteredTasks[index]);
         },
       ),
     );
   }
 
-  Widget _buildTaskCard(TMTasksModel task, String searchQuery) {
+  /// 🧾 Task Card
+  Widget _buildTaskCard(TMTasksModel task) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // TODO: Navigate to task details
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Task ${task.taskId} clicked'),
-              duration: const Duration(seconds: 1),
-            ),
+            SnackBar(content: Text('Task ${task.taskId} clicked')),
           );
         },
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Task Description with Status
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Text(
@@ -211,48 +190,13 @@ class _AllTasksViewState extends State<AllTasksView> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 8),
                   _buildStatusChip(task.taskStatus),
                 ],
               ),
-
               const SizedBox(height: 12),
-
-              // Project Name
-              if (task.projectName != null && task.projectName!.isNotEmpty)
-                _buildInfoRow(
-                  Icons.business,
-                  'Project',
-                  task.projectName,
-                ),
-
+              _buildInfoRow(Icons.person, 'Maker', task.makerName),
               const SizedBox(height: 8),
-
-              // Maker
-              _buildInfoRow(
-                Icons.person,
-                'Maker',
-                task.makerName ?? 'N/A',
-              ),
-
-              const SizedBox(height: 8),
-
-              // Checker
-              _buildInfoRow(
-                Icons.check_circle,
-                'Checker',
-                task.checkerName ?? 'N/A',
-              ),
-
-              // End Date
-              if (task.taskEndDate != null && task.taskEndDate!.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _buildInfoRow(
-                  Icons.calendar_today,
-                  'End Date',
-                  task.taskEndDate,
-                ),
-              ],
+              _buildInfoRow(Icons.check_circle, 'Checker', task.checkerName),
             ],
           ),
         ),
@@ -265,26 +209,10 @@ class _AllTasksViewState extends State<AllTasksView> {
       children: [
         Icon(icon, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 8),
-        Flexible(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: '$label: ',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                TextSpan(
-                  text: value ?? 'N/A',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
+        Expanded(
+          child: Text(
+            '$label: ${value ?? 'N/A'}',
+            style: const TextStyle(fontSize: 14),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -293,47 +221,31 @@ class _AllTasksViewState extends State<AllTasksView> {
   }
 
   Widget _buildStatusChip(String? status) {
-    Color color;
-    String displayStatus = status ?? 'N/A';
+    final s = status?.toLowerCase() ?? '';
+    Color color = Colors.grey;
+    String text = 'N/A';
 
-    switch (status?.toLowerCase()) {
-      case 'completed':
-      case 'complete':
-        color = Colors.green;
-        displayStatus = 'Completed';
-        break;
-      case 'in_progress':
-      case 'in progress':
-      case 'inprogress':
-        color = Colors.orange;
-        displayStatus = 'In Progress';
-        break;
-      case 'pending':
-        color = Colors.blue;
-        displayStatus = 'Pending';
-        break;
-      case 'overdue':
-        color = Colors.red;
-        displayStatus = 'Overdue';
-        break;
-      default:
-        color = Colors.grey;
+    if (s.contains('complete')) {
+      color = Colors.green;
+      text = 'Completed';
+    } else if (s.contains('progress')) {
+      color = Colors.orange;
+      text = 'In Progress';
+    } else if (s.contains('pending')) {
+      color = Colors.blue;
+      text = 'Pending';
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color),
       ),
       child: Text(
-        displayStatus,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+        text,
+        style: TextStyle(color: color, fontSize: 12),
       ),
     );
   }
@@ -341,91 +253,27 @@ class _AllTasksViewState extends State<AllTasksView> {
   Widget _buildShimmerList() {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: 10,
-      itemBuilder: (context, index) {
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title shimmer
-                Container(
-                  height: 20,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Info rows shimmer
-                ...List.generate(3, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Container(
-                      height: 16,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
+      itemCount: 8,
+      itemBuilder: (_, __) => Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Container(height: 80, color: Colors.grey[300]),
+      ),
     );
   }
 
   Widget _buildEmptyView(String message) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.task_alt,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+      child: Text(message, style: const TextStyle(fontSize: 16)),
     );
   }
 
   Widget _buildErrorView(String message) {
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 16,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
+          Text(message, style: const TextStyle(color: Colors.red)),
+          const SizedBox(height: 12),
           ElevatedButton(
             onPressed: () {
               context.read<AllTaskBloc>().add(RefreshTasks());

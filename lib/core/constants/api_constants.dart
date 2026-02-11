@@ -17,10 +17,16 @@ class ApiConstants {
   */
 
   static const String getProjectsList = '${baseUrl}list_projects.php';
+
   static const String userList = '${baseUrl}checker_maker_list.php';
+
   static const String pcEnggUserList = '${baseUrl}list_pc_engg_users.php';
 
-
+  static String getProjectsCountList = '${baseUrl}dashboard_project_wise.php';
+  static String getEmployeeWiseTaskList =
+      '${baseUrl}dashboard_employee_wise.php';
+  static const String taskHistory = '${baseUrl}dashboard_history.php';
+  static const String tmDashboardCount = '${baseUrl}tm_dashboard_count.php';
 
   /* ───────────────── Task API Endpoints ───────────────── */
 
@@ -68,5 +74,4 @@ class ApiConstants {
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
   static const Duration sendTimeout = Duration(seconds: 30);
-
 }

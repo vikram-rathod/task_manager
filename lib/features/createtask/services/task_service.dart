@@ -7,7 +7,7 @@ import '../../../core/storage/storage_service.dart';
 import '../../AllTasks/bloc/all_task_bloc.dart';
 import '../../auth/models/api_response.dart';
 import '../models/insert_data_model.dart';
-import '../models/task_model.dart';
+import '../../../core/models/task_model.dart';
 
 import '../../auth/models/user_model.dart';
 import '../models/task_request.dart';
@@ -77,6 +77,23 @@ class TaskApiService {
       response.data,
           (data) =>
           (data as List).map((e) => TMTasksModel.fromJson(e)).toList(),
+    );
+  }
+
+  Future<ApiResponse<TMTasksModel>> getTaskDetails(int taskId) async {
+    final response = await _dio.post(
+      ApiConstants.taskDetails,
+      data: {
+        'task_id': taskId,
+        'user_id': await _storageService.read(StorageKeys.userId),
+        'comp_id': await _storageService.read(StorageKeys.companyId),
+        'user_type': await _storageService.read(StorageKeys.userType),
+      },
+    );
+
+    return ApiResponse.fromJson(
+      response.data,
+          (data) => TMTasksModel.fromJson(data as Map<String, dynamic>),
     );
   }
 

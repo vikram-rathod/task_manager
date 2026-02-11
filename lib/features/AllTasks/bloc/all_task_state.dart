@@ -1,36 +1,38 @@
 part of 'all_task_bloc.dart';
 
-enum AllTaskStatus { idle, loading, success, error, loadingMore }
-
 @immutable
 class AllTaskState {
-  final AllTaskStatus status;
   final List<TMTasksModel> tasks;
-  final String? errorMessage;
+  final bool isLoading;
+  final bool isLoadingMore;
   final bool hasReachedMax;
   final String searchQuery;
+  final String? errorMessage;
 
   const AllTaskState({
-    this.status = AllTaskStatus.idle,
     this.tasks = const [],
-    this.errorMessage,
+    this.isLoading = false,
+    this.isLoadingMore = false,
     this.hasReachedMax = false,
     this.searchQuery = '',
+    this.errorMessage,
   });
 
   AllTaskState copyWith({
-    AllTaskStatus? status,
     List<TMTasksModel>? tasks,
-    String? errorMessage,
+    bool? isLoading,
+    bool? isLoadingMore,
     bool? hasReachedMax,
     String? searchQuery,
+    String? errorMessage,
   }) {
     return AllTaskState(
-      status: status ?? this.status,
       tasks: tasks ?? this.tasks,
-      errorMessage: errorMessage,
+      isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
       searchQuery: searchQuery ?? this.searchQuery,
+      errorMessage: errorMessage,
     );
   }
 }

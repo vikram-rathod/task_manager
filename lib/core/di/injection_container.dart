@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:task_manager/features/AllTasks/bloc/all_task_bloc.dart';
 import 'package:task_manager/features/createtask/bloc/task_create_bloc.dart';
+import 'package:task_manager/features/home/bloc/home_bloc.dart';
 import 'package:task_manager/features/home/repository/task_repository.dart';
 import 'package:task_manager/features/home/services/home_service.dart';
 
@@ -119,6 +120,12 @@ Future<void> initializeDependencies() async {
         AllTaskBloc(
           sl<TaskRepository>(),
           sl<StorageService>(),
+        ),
+  );
+  sl.registerFactory<HomeBloc>(
+        () =>
+        HomeBloc(
+          sl<HomeRepository>(),
         ),
   );
 }

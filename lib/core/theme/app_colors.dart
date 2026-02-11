@@ -28,7 +28,7 @@ class AppColors {
   static const lightOnBackground = Color(0xFF1A1C1A);
   static const lightSurface = Color(0xFFF8FAF9);
   static const lightOnSurface = Color(0xFF1A1C1A);
-  static const lightSurfaceVariant = Color(0xFFF1F4F2);
+  static const lightSurfaceVariant = Color.fromARGB(255, 255, 255, 255);
   static const lightOnSurfaceVariant = Color(0xFF424940);
 
   // Dark Theme Colors

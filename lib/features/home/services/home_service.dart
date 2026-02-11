@@ -1,12 +1,17 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-
 import 'package:task_manager/core/models/project_model.dart';
 import 'package:task_manager/features/auth/models/api_response.dart';
+import 'package:task_manager/features/home/model/dash_board_count_model.dart';
+import 'package:task_manager/features/home/model/employee_count_model.dart';
+import 'package:task_manager/features/home/model/task_history_model.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../auth/models/user_model.dart';
+import '../model/project_count_model.dart';
 
 class HomeApiService {
   final DioClient _dio;
@@ -43,6 +48,65 @@ class HomeApiService {
 
     debugPrint("homeApi Parsed ProjectList => $apiResponse");
 
+    return apiResponse;
+  }
+
+  Future<ApiResponse<List<ProjectCountModel>>> getProjectsCountList({
+    required String userId,
+    required String companyId,
+    required String userType,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.getProjectsCountList,
+      data: {
+        'user_id': userId,
+        'comp_id': companyId,
+        'user_type': userType,
+      },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+
+    final apiResponse = ApiResponse<List<ProjectCountModel>>.fromJson(
+      response.data as Map<String, dynamic>,
+          (data) =>
+          (data as List)
+              .map((e) =>
+              ProjectCountModel.fromJson(Map<String, dynamic>.from(e)))
+              .toList(),
+    );
+
+
+    return apiResponse;
+  }
+  Future<ApiResponse<List<EmployeeModel>>> getEmployeeWiseTaskList({
+    required String userId,
+    required String companyId,
+    required String userType,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.getEmployeeWiseTaskList,
+      data: {
+        'user_id': userId,
+        'comp_id': companyId,
+        'user_type': userType,
+      },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+    debugPrint("homeApi RAW EmployeeWiseTaskList => ${response.data}");
+
+    final apiResponse = ApiResponse<List<EmployeeModel>>.fromJson(
+      response.data as Map<String, dynamic>,
+          (data) =>
+          (data as List)
+              .map((e) =>
+              EmployeeModel.fromJson(Map<String, dynamic>.from(e)))
+              .toList(),
+    );
+    debugPrint("homeApi Parsed EmployeeWiseTaskList => $apiResponse");
     return apiResponse;
   }
 
@@ -114,5 +178,62 @@ class HomeApiService {
     debugPrint("homeApi Parsed ProjectCoordinatorUsers => $apiResponse");
 
     return apiResponse;
+  }
+
+  Future<ApiResponse<List<TaskHistoryModel>>> getTaskHistory(
+      {required String userId, required String companyId, required String userType}) async {
+    final response = await _dio.post(
+      ApiConstants.taskHistory,
+      data: {
+        'user_id': userId,
+        'comp_id': companyId,
+        'user_type': userType,
+      },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+    debugPrint("homeApi RAW TaskHistory => ${response.data}");
+    final apiResponse = ApiResponse<List<TaskHistoryModel>>.fromJson(
+      response.data as Map<String, dynamic>,
+          (data) =>
+          (data as List)
+              .map((e) =>
+              TaskHistoryModel.fromJson(Map<String, dynamic>.from(e)))
+              .toList(),
+    );
+    debugPrint("homeApi Parsed TaskHistory => $apiResponse");
+    return apiResponse;
+  }
+
+  Future<ApiResponse<DashboardCountModel>> getDashboardCounts(
+      {required String userId, required String companyId, required String userType}) async {
+    debugPrint("getDashboardCountsHome|Service: userId=$userId, companyId=$companyId, userType=$userType");
+    final response = await _dio.post(
+        ApiConstants.tmDashboardCount,
+        data: {
+          'user_id': userId,
+          'comp_id': companyId,
+          'user_type': userType,
+        },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+    debugPrint("homeApi RAW DashboardCounts |Service => ${response.data}");
+    late final Map<String, dynamic> json;
+
+    if (response.data is String) {
+      json = jsonDecode(response.data as String);
+    } else {
+      json = Map<String, dynamic>.from(response.data);
+    }
+
+    return ApiResponse<DashboardCountModel>.fromJson(
+      json,
+          (data) => DashboardCountModel.fromJson(
+        Map<String, dynamic>.from(data),
+      ),
+    );
   }
 }

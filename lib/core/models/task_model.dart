@@ -1,4 +1,4 @@
-import '../../auth/models/user_model.dart';
+import '../../features/auth/models/user_model.dart';
 
 class TMTasksModel {
   final String projectId;

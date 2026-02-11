@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../auth/models/api_response.dart';
-import '../../createtask/models/task_model.dart';
+import '../../../core/models/task_model.dart';
 import '../../createtask/models/task_request.dart';
 import '../../createtask/services/task_service.dart';
 
@@ -13,6 +13,10 @@ class TaskRepository {
   Future<ApiResponse<List<TMTasksModel>>> fetchTasks(
       TaskRequestBody body) =>
       _api.getAllTask(body);
+
+
+  Future<ApiResponse<TMTasksModel>> fetchTaskDetails(int taskId) =>
+      _api.getTaskDetails(taskId);    
 
 
   Future<ApiResponse<void>> createTask({

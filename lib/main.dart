@@ -1,3 +1,5 @@
+import 'package:task_manager/features/home/bloc/home_bloc.dart';
+
 import 'features/AllTasks/bloc/all_task_bloc.dart';
 import 'features/createtask/bloc/task_create_bloc.dart';
 import 'firebase_options.dart';
@@ -24,7 +26,8 @@ void main() async {
         BlocProvider.value(value: sl<AuthBloc>()),
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider.value(value: CreateTaskBloc(sl(), sl())),
-        BlocProvider.value(value: AllTaskBloc(sl(), sl()))
+        BlocProvider.value(value: AllTaskBloc(sl(), sl())),
+        BlocProvider.value(value: HomeBloc(sl()))
       ],
       child: const MyApp(),
     ),
