@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/di/injection_container.dart';
+import '../../createtask/bloc/task_create_bloc.dart';
+import '../../task/bloc/task_list_bloc.dart';
+import '../../task/screen/task_list_screen.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_state.dart';
 
@@ -98,6 +102,15 @@ class QuickActionSection extends StatelessWidget {
                     onTap: () {
                       switch (action.id) {
                         case 'addTask':
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BlocProvider(
+                                create: (_) => sl<TaskListBloc>(),
+                                child: const TaskListScreen(),
+                              ),
+                            ),
+                          );
                           break;
                         case 'prochat':
                           break;

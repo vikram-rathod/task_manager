@@ -5,11 +5,14 @@ import 'package:task_manager/features/createtask/bloc/task_create_bloc.dart';
 import 'package:task_manager/features/home/bloc/home_bloc.dart';
 import 'package:task_manager/features/home/repository/task_repository.dart';
 import 'package:task_manager/features/home/services/home_service.dart';
+import 'package:task_manager/features/task/service/task_list_service.dart';
 
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/repository/auth_repository.dart';
 import '../../features/createtask/services/task_service.dart';
 import '../../features/home/repository/home_repository.dart';
+import '../../features/task/bloc/task_list_bloc.dart';
+import '../../features/task/repository/task_list_repository.dart';
 import '../network/dio_client.dart';
 import '../storage/secure_storage_service.dart';
 import '../storage/storage_service.dart';
@@ -127,5 +130,33 @@ Future<void> initializeDependencies() async {
         HomeBloc(
           sl<HomeRepository>(),
         ),
+  );
+
+// ======================================================
+// Task List Feature
+// ======================================================
+
+// Service
+  sl.registerLazySingleton<TaskListService>(
+        () => TaskListService(
+      sl<DioClient>(),
+    ),
+  );
+
+// Repository
+  sl.registerLazySingleton<TaskListRepository>(
+        () => TaskListRepository(
+      sl<TaskListService>(),
+      sl<StorageService>(),
+    ),
+  );
+
+// Bloc
+  sl.registerFactory<TaskListBloc>(
+        () => TaskListBloc(
+      sl<TaskListRepository>(),
+      sl<TaskListService>(),
+      sl<StorageService>(),
+    ),
   );
 }
