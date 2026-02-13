@@ -21,6 +21,9 @@ class CategoryWidgetState extends State<CategoryWidget> {
   @override
   Widget build(BuildContext context) {
     final purple = Colors.purpleAccent;
+    final primary = Theme.of(context).primaryColor;
+    final cs = Theme.of(context).colorScheme;
+
 
     return Column(
       children: [
@@ -38,7 +41,7 @@ class CategoryWidgetState extends State<CategoryWidget> {
                   width: 5,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: purple,
+                    color: Colors.deepOrange,
                     borderRadius:
                     BorderRadius.circular(6),
                   ),
@@ -47,9 +50,10 @@ class CategoryWidgetState extends State<CategoryWidget> {
                 Expanded(
                   child: Text(
                     widget.category.categoryName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 14,
+                      color: cs.outline
                     ),
                   ),
                 ),
@@ -57,7 +61,7 @@ class CategoryWidgetState extends State<CategoryWidget> {
                   expanded
                       ? Icons.keyboard_arrow_up
                       : Icons.keyboard_arrow_down,
-                  color: Colors.greenAccent,
+                  color: primary,
                 )
               ],
             ),

@@ -20,13 +20,13 @@ class MainItemCardState extends State<MainItemCard> {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).primaryColor;
-
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: primary.withOpacity(0.3)),
-        color: Colors.black.withOpacity(0.2),
+        color: cs.surface,
       ),
       child: Column(
         children: [
@@ -36,7 +36,8 @@ class MainItemCardState extends State<MainItemCard> {
               setState(() => expanded = !expanded);
             },
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const
+                    .all(16),
               child: Row(
                 children: [
                   Container(
@@ -51,9 +52,10 @@ class MainItemCardState extends State<MainItemCard> {
                   Expanded(
                     child: Text(
                       widget.item.itemName,
-                      style: const TextStyle(
+                      style:  TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
+                        color: cs.outline
                       ),
                     ),
                   ),

@@ -25,6 +25,8 @@ class TaskRowState extends State<TaskRow> {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).primaryColor;
+    final cs = Theme.of(context).colorScheme;
+
 
     final hasDetails =
         widget.task.transferStatus &&
@@ -62,7 +64,7 @@ class TaskRowState extends State<TaskRow> {
                 Expanded(
                   child: Text(
                     widget.task.taskName,
-                    style: const TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: 14,color: cs.outline ),
                   ),
                 ),
 
@@ -112,7 +114,7 @@ class TaskRowState extends State<TaskRow> {
                     expanded
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
-                    color: Colors.greenAccent,
+                    color: primary,
                   ),
                 ]
               ],

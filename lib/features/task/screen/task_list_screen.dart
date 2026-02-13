@@ -130,7 +130,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 Text(
                   "Select Project",
                   style: TextStyle(
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w700,
                       color: primary),
                 ),
                 const SizedBox(height: 8),
@@ -146,31 +146,29 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         Colors.grey.withOpacity(0.5)),
                   ),
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton(
+                    child: DropdownButton<int>(
                       isExpanded: true,
-                      value: projectState.selectedProject,
+                      value: projectState.selectedProject?.projectId,
                       hint: const Text("Choose Project"),
-                      items: projectState.projects
-                          .map((project) {
-                        return DropdownMenuItem(
-                          value: project,
+                      items: projectState.projects.map((project) {
+                        return DropdownMenuItem<int>(
+                          value: project.projectId,
                           child: Text(
                             project.projectName,
-                            overflow:
-                            TextOverflow.ellipsis,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         );
                       }).toList(),
-                      onChanged: (project) {
-                        if (project != null) {
-                          context
-                              .read<CreateTaskBloc>()
-                              .add(
-                              ProjectSelected(project));
+                      onChanged: (projectId) {
+                        if (projectId != null) {
+                          final selectedProject = projectState.projects
+                              .firstWhere((p) => p.projectId == projectId);
 
-                          _loadHierarchy(
-                              project.projectId
-                                  .toString());
+                          context.read<CreateTaskBloc>().add(
+                            ProjectSelected(selectedProject),
+                          );
+
+                          _loadHierarchy(projectId.toString());
                         }
                       },
                     ),
