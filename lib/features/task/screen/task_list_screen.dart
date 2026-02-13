@@ -6,6 +6,9 @@ import '../../../core/storage/storage_service.dart';
 import '../../createtask/bloc/task_create_bloc.dart';
 import '../../createtask/bloc/taskcreate_event.dart';
 import '../../createtask/bloc/taskcreate_state.dart';
+import '../../template/bloc/template_bloc.dart';
+import '../../template/bloc/template_event.dart';
+import '../../template/screen/template_list_screen.dart';
 import '../bloc/task_list_bloc.dart';
 import '../bloc/task_list_event.dart';
 import '../bloc/task_list_state.dart';
@@ -261,6 +264,19 @@ class _TaskListScreenState extends State<TaskListScreen> {
               label: "Create Template",
               onTap: () {
                 setState(() => _isFabOpen = false);
+
+                final tabId = (_selectedTabIndex + 1).toString();
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider(
+                      create: (_) => sl<TemplateBloc>()
+                        ..add(LoadTemplates(tabId: tabId)),
+                      child: const TemplateListScreen(),
+                    ),
+                  ),
+                );
               },
             ),
 
@@ -308,11 +324,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
               vertical: 8,
             ),
             decoration: BoxDecoration(
-              color:Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              color:Theme.of(context).colorScheme.surface.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
                   blurRadius: 8,
                 ),
               ],
@@ -326,7 +342,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           FloatingActionButton(
             heroTag: label,
             mini: true,
-            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
             onPressed: onTap,
             child: Icon(icon, color: Theme.of(context).colorScheme.primary),
           ),

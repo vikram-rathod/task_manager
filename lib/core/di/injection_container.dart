@@ -13,6 +13,9 @@ import '../../features/createtask/services/task_service.dart';
 import '../../features/home/repository/home_repository.dart';
 import '../../features/task/bloc/task_list_bloc.dart';
 import '../../features/task/repository/task_list_repository.dart';
+import '../../features/template/bloc/template_bloc.dart';
+import '../../features/template/repository/template_repository.dart';
+import '../../features/template/service/template_service.dart';
 import '../network/dio_client.dart';
 import '../storage/secure_storage_service.dart';
 import '../storage/storage_service.dart';
@@ -159,4 +162,27 @@ Future<void> initializeDependencies() async {
       sl<StorageService>(),
     ),
   );
+
+
+
+
+  sl.registerLazySingleton<TemplateService>(
+        () => TemplateService(
+      sl<DioClient>(),   // ✅ Only DioClient
+    ),
+  );
+
+  sl.registerLazySingleton<TemplateRepository>(
+        () => TemplateRepository(
+      sl<TemplateService>(),  // ✅ Service
+      sl<StorageService>(),   // ✅ StorageService REQUIRED
+    ),
+  );
+
+  sl.registerFactory<TemplateBloc>(
+        () => TemplateBloc(
+      sl<TemplateRepository>(),
+    ),
+  );
+
 }
