@@ -157,17 +157,18 @@ class TaskRowState extends State<TaskRow> {
   }
 
   Widget _infoCard(String title, String value) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.25),
+        color: cs.onSecondary,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 13)),
+          Text(title, style: const TextStyle(fontSize: 13,fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(
             value,
