@@ -31,6 +31,18 @@ class _ApprovalBottomSheetState extends State<ApprovalBottomSheet> {
         child: BlocBuilder<TemplateBloc, TemplateState>(
           builder: (context, state) {
 
+            /// 🔥 Create combined list (No One + Authorities)
+            final allAuthorities = [
+              {
+                "user_id": 0,
+                "user_name": "No One (Approve by Self)"
+              },
+              ...state.authorities.map((e) => {
+                "user_id": e.userId,
+                "user_name": e.userName,
+              })
+            ];
+
             return Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +68,7 @@ class _ApprovalBottomSheetState extends State<ApprovalBottomSheet> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.outline
+                    color: outline,
                   ),
                 ),
 
@@ -71,7 +83,7 @@ class _ApprovalBottomSheetState extends State<ApprovalBottomSheet> {
                 ),
 
                 const SizedBox(height: 24),
-                
+
                 /// Authority List Card
                 Container(
                   decoration: BoxDecoration(
@@ -82,15 +94,18 @@ class _ApprovalBottomSheetState extends State<ApprovalBottomSheet> {
                     ),
                   ),
                   child: Column(
-                    children: state.authorities.map((user) {
+                    children: allAuthorities.map((user) {
 
-                      final isSelected = selectedUserId == user.userId;
+                      final int userId = user["user_id"] as int;
+                      final String userName = user["user_name"] as String;
+
+                      final isSelected = selectedUserId == userId;
 
                       return InkWell(
                         borderRadius: BorderRadius.circular(18),
                         onTap: () {
                           setState(() {
-                            selectedUserId = user.userId;
+                            selectedUserId = userId;
                           });
                         },
                         child: Container(
@@ -136,13 +151,15 @@ class _ApprovalBottomSheetState extends State<ApprovalBottomSheet> {
 
                               Expanded(
                                 child: Text(
-                                  user.userName,
+                                  userName,
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: isSelected
                                         ? FontWeight.w600
                                         : FontWeight.w500,
-                                    color: outline,
+                                    color: userId == 0
+                                        ? primary
+                                        : outline,
                                   ),
                                 ),
                               ),
@@ -193,21 +210,26 @@ class _ApprovalBottomSheetState extends State<ApprovalBottomSheet> {
                         onPressed: selectedUserId == null
                             ? null
                             : () {
+
+                          final authorityToSend = selectedUserId == 0
+                              ? "1"   // ✅ self approve
+                              : selectedUserId.toString();
                           context.read<TemplateBloc>().add(
-                            ApproveTemplate(
-                              templateId: widget.templateId,
-                              authorityId:
-                              selectedUserId.toString(),
+                            TemplateApprovalEvent(
+                              itemId: widget.templateId,
+                              status: "1",
+                              authorityId: authorityToSend,
                             ),
                           );
 
                           Navigator.pop(context);
                         },
-                        child: Text(
+                        child: const Text(
                           "Approve",
                           style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white),
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -223,4 +245,3 @@ class _ApprovalBottomSheetState extends State<ApprovalBottomSheet> {
     );
   }
 }
-

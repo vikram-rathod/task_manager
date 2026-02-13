@@ -12,12 +12,14 @@ class FetchAuthorities extends TemplateEvent {
 }
 
 /// 🔥 NEW
-class ApproveTemplate extends TemplateEvent {
-  final String templateId;
+class TemplateApprovalEvent extends TemplateEvent {
+  final String itemId;
+  final String status; // 0,1,2
   final String authorityId;
 
-  ApproveTemplate({
-    required this.templateId,
+  TemplateApprovalEvent({
+    required this.itemId,
+    required this.status,
     required this.authorityId,
   });
 }

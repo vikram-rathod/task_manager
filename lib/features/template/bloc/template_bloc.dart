@@ -6,7 +6,7 @@ import '../repository/template_repository.dart';
 
 class TemplateBloc extends Bloc<TemplateEvent, TemplateState> {
   final TemplateRepository repository;
-
+  String currentTabId = "";
   TemplateBloc(this.repository) : super(TemplateState()) {
     on<LoadTemplates>(_onLoadTemplates);
 
@@ -24,27 +24,33 @@ class TemplateBloc extends Bloc<TemplateEvent, TemplateState> {
     });
 
     /// 🔥 APPROVE TEMPLATE
-    on<ApproveTemplate>((event, emit) async {
-      final success = await repository.approveTemplate(
-        templateId: event.templateId,
+    on<TemplateApprovalEvent>((event, emit) async {
+      final success = await repository.templateApproval(
+        itemId: event.itemId,
+        status: event.status,
         authorityId: event.authorityId,
       );
 
-      emit(state.copyWith(approveSuccess: success));
+      if (success) {
+        emit(state.copyWith(approveSuccess: true));
+
+        // refresh templates automatically
+        add(LoadTemplates(tabId: currentTabId));
+      }
     });
+
   }
 
   Future<void> _onLoadTemplates(
       LoadTemplates event,
       Emitter<TemplateState> emit,
       ) async {
-    print("🔥 LoadTemplates triggered");
+    currentTabId = event.tabId;
     emit(state.copyWith(isLoading: true));
 
     try {
       final templates =
       await repository.getTemplates(tabId: event.tabId);
-      print("🔥 Template count: ${templates.length}");
 
       emit(state.copyWith(
         isLoading: false,

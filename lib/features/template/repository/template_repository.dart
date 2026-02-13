@@ -44,19 +44,24 @@ class TemplateRepository {
     );
   }
 
-  Future<bool> approveTemplate({
-    required String templateId,
+  Future<bool> templateApproval({
+    required String itemId,
+    required String status,
     required String authorityId,
   }) async {
-    final userId = await storage.read(StorageKeys.userId) ?? "";
-    final compId = await storage.read(StorageKeys.companyId) ?? "";
+    final userId =
+        await storage.read(StorageKeys.userId) ?? "";
+    final compId =
+        await storage.read(StorageKeys.companyId) ?? "";
 
-    return service.approveTemplate(
+    return service.templateApproval(
+      itemId: itemId,
+      status: status,
+      approvalAuthority: authorityId,
       userId: userId,
       compId: compId,
-      templateId: templateId,
-      authorityId: authorityId,
     );
   }
+
 }
 

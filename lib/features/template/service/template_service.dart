@@ -56,25 +56,28 @@ class TemplateService {
   }
 
   /// ---------------- APPROVE TEMPLATE ----------------
-  Future<bool> approveTemplate({
+  Future<bool> templateApproval({
+    required String itemId,
+    required String status,
+    required String approvalAuthority,
     required String userId,
     required String compId,
-    required String templateId,
-    required String authorityId,
   }) async {
     final response = await _dio.post(
-      "task_list/template_approve.php",
+      "task_list/task_list_template_approval.php",
       data: {
+        "item_id": itemId,
+        "status": status,
+        "approval_authority": approvalAuthority,
         "user_id": userId,
         "comp_id": compId,
-        "template_id": templateId,
-        "authority_id": authorityId,
       },
       options: Options(
         contentType: Headers.formUrlEncodedContentType,
       ),
     );
 
-    return response.data['status'] == true;
+    return response.data["status"] == true;
   }
+
 }

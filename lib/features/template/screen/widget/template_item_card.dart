@@ -173,7 +173,7 @@ class _TemplateItemCardState extends State<TemplateItemCard> {
               ),
               const SizedBox(width: 10),
               Text(task.taskName,
-                  style: const TextStyle(fontWeight: FontWeight.w500)),
+                  style:  TextStyle(fontWeight: FontWeight.w500,color: cs.outline)),
             ],
           ),
 

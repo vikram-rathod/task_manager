@@ -10,44 +10,87 @@ class TemplateListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).primaryColor;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Task-Template-List"),
       ),
-      body: BlocBuilder<TemplateBloc, TemplateState>(
-        builder: (context, state) {
+      body: Stack(
+        children: [
 
-          if (state.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+          /// MAIN LIST
+          BlocBuilder<TemplateBloc, TemplateState>(
+            builder: (context, state) {
 
-          if (state.error != null) {
-            return Center(
-              child: Text(state.error!),
-            );
-          }
+              if (state.isLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
 
-          if (state.templates.isEmpty) {
-            return const Center(
-              child: Text("No Templates Found"),
-            );
-          }
+              if (state.templates.isEmpty) {
+                return const Center(
+                  child: Text("No Templates Found"),
+                );
+              }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: state.templates.length,
-            itemBuilder: (context, index) {
-              return TemplateItemCard(
-                item: state.templates[index],
+              return ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16,16,16,120),
+                itemCount: state.templates.length,
+                itemBuilder: (context, index) {
+                  return TemplateItemCard(
+                    item: state.templates[index],
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+
+          /// BOTTOM BUTTON
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: _buildCreateButton(context),
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildCreateButton(BuildContext context) {
+    final primary = Theme.of(context).primaryColor;
+
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        elevation: 8,
+      ),
+      onPressed: () {
+        // 🔥 Navigate to create template screen
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (_) => const CreateTemplateScreen(),
+        //   ),
+        // );
+      },
+      icon: const Icon(Icons.add, size: 22),
+      label: const Text(
+        "Create Template",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
 }
 
 
