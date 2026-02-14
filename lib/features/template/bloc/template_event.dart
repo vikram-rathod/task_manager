@@ -1,3 +1,6 @@
+import '../model/account_model.dart';
+import '../model/create_template_insert_request.dart';
+
 abstract class TemplateEvent {}
 
 class LoadTemplates extends TemplateEvent {
@@ -23,3 +26,11 @@ class TemplateApprovalEvent extends TemplateEvent {
     required this.authorityId,
   });
 }
+class FetchAccounts extends TemplateEvent {}
+
+class InsertTemplate extends TemplateEvent {
+  final CreateTemplateRequest request;
+
+  InsertTemplate({required this.request});
+}
+

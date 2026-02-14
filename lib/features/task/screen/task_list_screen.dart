@@ -273,7 +273,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                     builder: (_) => BlocProvider(
                       create: (_) => sl<TemplateBloc>()
                         ..add(LoadTemplates(tabId: tabId)),
-                      child: const TemplateListScreen(),
+                      child:TemplateListScreen(tabId: tabId,),
                     ),
                   ),
                 );

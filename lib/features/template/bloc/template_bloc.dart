@@ -39,6 +39,37 @@ class TemplateBloc extends Bloc<TemplateEvent, TemplateState> {
       }
     });
 
+
+    on<FetchAccounts>(_fetchAccounts);
+
+
+    on<InsertTemplate>((event, emit) async {
+      emit(state.copyWith(isLoading: true));
+
+      try {
+        final success =
+        await repository.insertTemplate(request: event.request);
+
+        if (success) {
+          emit(state.copyWith(
+            isLoading: false,
+            approveSuccess: true,
+            insertSuccess: true,
+          ));
+        } else {
+          emit(state.copyWith(
+            isLoading: false,
+            error: "Template creation failed",
+          ));
+        }
+      } catch (e) {
+        emit(state.copyWith(
+          isLoading: false,
+          error: e.toString(),
+        ));
+      }
+    });
+
   }
 
   Future<void> _onLoadTemplates(
@@ -63,4 +94,19 @@ class TemplateBloc extends Bloc<TemplateEvent, TemplateState> {
       ));
     }
   }
+
+  Future<void> _fetchAccounts(
+      FetchAccounts event,
+      Emitter<TemplateState> emit,
+      ) async {
+    emit(state.copyWith(isAccountsLoading: true));
+
+    final accounts = await repository.getAccounts();
+
+    emit(state.copyWith(
+      isAccountsLoading: false,
+      accounts: accounts,
+    ));
+  }
+
 }

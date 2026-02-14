@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../core/network/dio_client.dart';
+import '../model/account_model.dart';
 import '../model/authority_model.dart';
 import '../model/template_models.dart';
 
@@ -75,6 +76,35 @@ class TemplateService {
       options: Options(
         contentType: Headers.formUrlEncodedContentType,
       ),
+    );
+
+    return response.data["status"] == true;
+  }
+
+
+  Future<List<AccountModel>> fetchAccounts({
+    required String userFixId,
+  }) async {
+    final response = await _dio.post(
+      "task_list/task_template_permision_auth.php",
+      data: {
+        "user_fix_id": userFixId,
+      },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+
+    final List data = response.data["data"] ?? [];
+    return data.map((e) => AccountModel.fromJson(e)).toList();
+  }
+
+  Future<bool> insertTemplate({
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await _dio.post(
+      "task_list/task_template_insert.php",
+      data: body,
     );
 
     return response.data["status"] == true;

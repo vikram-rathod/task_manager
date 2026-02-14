@@ -4,9 +4,11 @@ import 'package:task_manager/features/template/screen/widget/template_item_card.
 import '../bloc/template_bloc.dart';
 import '../bloc/template_state.dart';
 import '../model/template_models.dart';
+import 'create_template_screen.dart';
 
 class TemplateListScreen extends StatelessWidget {
-  const TemplateListScreen({super.key});
+  final String tabId;
+  const TemplateListScreen({super.key,required this.tabId,});
 
   @override
   Widget build(BuildContext context) {
@@ -72,13 +74,16 @@ class TemplateListScreen extends StatelessWidget {
         elevation: 8,
       ),
       onPressed: () {
-        // 🔥 Navigate to create template screen
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (_) => const CreateTemplateScreen(),
-        //   ),
-        // );
+        // 🔥
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => BlocProvider.value(
+              value: context.read<TemplateBloc>(),
+              child: CreateTemplateScreen(tabId: tabId),
+            ),
+          ),
+        );
       },
       icon: const Icon(Icons.add, size: 22),
       label: const Text(
@@ -90,7 +95,6 @@ class TemplateListScreen extends StatelessWidget {
       ),
     );
   }
-
 }
 
 
