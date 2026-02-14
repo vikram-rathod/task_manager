@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:task_manager/features/AllTasks/bloc/all_task_bloc.dart';
 import 'package:task_manager/features/createtask/bloc/task_create_bloc.dart';
+import 'package:task_manager/features/employeetasks/bloc/employee_task_bloc.dart';
 import 'package:task_manager/features/home/bloc/home_bloc.dart';
 import 'package:task_manager/features/home/repository/task_repository.dart';
 import 'package:task_manager/features/home/services/home_service.dart';
@@ -9,7 +10,10 @@ import 'package:task_manager/features/home/services/home_service.dart';
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/repository/auth_repository.dart';
 import '../../features/createtask/services/task_service.dart';
+import '../../features/duetodaytasks/bloc/due_today_bloc.dart';
 import '../../features/home/repository/home_repository.dart';
+import '../../features/overdue/bloc/over_due_bloc.dart';
+import '../../features/task_details/bloc/task_details_bloc.dart';
 import '../network/dio_client.dart';
 import '../storage/secure_storage_service.dart';
 import '../storage/storage_service.dart';
@@ -126,6 +130,43 @@ Future<void> initializeDependencies() async {
         () =>
         HomeBloc(
           sl<HomeRepository>(),
+        ),
+  );
+
+  sl.registerFactory<EmployeeTaskBloc>(
+        () =>
+        EmployeeTaskBloc(
+          sl<TaskRepository>(),
+          sl<StorageService>(),
+        ),
+  );
+  // ======================================================
+  //  OverDue Feature
+  // ======================================================
+  sl.registerFactory<OverDueBloc>(
+        () =>
+        OverDueBloc(
+          sl<TaskRepository>(),
+          sl<StorageService>(),
+        ),
+  );
+  sl.registerFactory<DueTodayBloc>(
+        () =>
+        DueTodayBloc(
+          sl<TaskRepository>(),
+          sl<StorageService>(),
+        ),
+  );
+
+  // ======================================================
+  //  Task Details Feature
+  // ======================================================
+
+  sl.registerFactory<TaskDetailsBloc>(
+        () =>
+        TaskDetailsBloc(
+          sl<TaskRepository>(),
+          sl<StorageService>(),
         ),
   );
 }

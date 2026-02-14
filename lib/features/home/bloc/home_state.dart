@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:task_manager/features/home/model/employee_count_model.dart';
 import 'package:task_manager/features/home/model/project_count_model.dart';
 
+import '../../../core/models/task_model.dart';
 import '../model/quick_action_model.dart';
 import '../model/task_history_model.dart';
 
@@ -29,6 +30,19 @@ class HomeState extends Equatable {
   final List<TaskHistoryModel> taskHistory;
   final String? taskHistoryError;
 
+  // Today's Tasks - My Tasks
+  final bool isMyTasksLoading;
+  final List<TMTasksModel> myTasks;
+  final String? myTasksError;
+  final int myTasksPage;
+  final bool hasMoreMyTasks;
+
+  // Today's Tasks - Other Tasks
+  final bool isOtherTasksLoading;
+  final List<TMTasksModel> otherTasks;
+  final String? otherTasksError;
+  final int otherTasksPage;
+  final bool hasMoreOtherTasks;
 
   const HomeState({
 
@@ -51,6 +65,21 @@ class HomeState extends Equatable {
     this.isTaskHistoryLoading = false,
     this.taskHistory = const [],
     this.taskHistoryError,
+
+    // Today's Tasks - My Tasks
+    this.isMyTasksLoading = false,
+    this.myTasks = const [],
+    this.myTasksError,
+    this.myTasksPage = 1,
+    this.hasMoreMyTasks = true,
+
+    // Today's Tasks - Other Tasks
+    this.isOtherTasksLoading = false,
+    this.otherTasks = const [],
+    this.otherTasksError,
+    this.otherTasksPage = 1,
+    this.hasMoreOtherTasks = true,
+
   });
 
   HomeState copyWith({
@@ -73,6 +102,22 @@ class HomeState extends Equatable {
     bool? isTaskHistoryLoading,
     List<TaskHistoryModel>? taskHistory,
     String? taskHistoryError,
+
+
+    // Today's Tasks - My Tasks
+    bool? isMyTasksLoading,
+    List<TMTasksModel>? myTasks,
+    String? myTasksError,
+    int? myTasksPage,
+    bool? hasMoreMyTasks,
+
+    // Today's Tasks - Other Tasks
+    bool? isOtherTasksLoading,
+    List<TMTasksModel>? otherTasks,
+    String? otherTasksError,
+    int? otherTasksPage,
+    bool? hasMoreOtherTasks,
+
   }) {
     return HomeState(
 
@@ -91,6 +136,19 @@ class HomeState extends Equatable {
       isTaskHistoryLoading: isTaskHistoryLoading ?? this.isTaskHistoryLoading,
       taskHistory: taskHistory ?? this.taskHistory,
       taskHistoryError: taskHistoryError,
+
+      isMyTasksLoading: isMyTasksLoading ?? this.isMyTasksLoading,
+      myTasks: myTasks ?? this.myTasks,
+      myTasksError: myTasksError,
+      myTasksPage: myTasksPage ?? this.myTasksPage,
+      hasMoreMyTasks: hasMoreMyTasks ?? this.hasMoreMyTasks,
+
+      isOtherTasksLoading: isOtherTasksLoading ?? this.isOtherTasksLoading,
+      otherTasks: otherTasks ?? this.otherTasks,
+      otherTasksError: otherTasksError,
+      otherTasksPage: otherTasksPage ?? this.otherTasksPage,
+      hasMoreOtherTasks: hasMoreOtherTasks ?? this.hasMoreOtherTasks,
+
     );
   }
 
@@ -108,5 +166,15 @@ class HomeState extends Equatable {
     isEmployeeWiseTaskListLoading,
     employeeWiseTaskList,
     employeeWiseTaskListError,
+    isMyTasksLoading,
+    myTasks,
+    myTasksError,
+    myTasksPage,
+    hasMoreMyTasks,
+    isOtherTasksLoading,
+    otherTasks,
+    otherTasksError,
+    otherTasksPage,
+    hasMoreOtherTasks,
   ];
 }

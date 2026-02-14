@@ -100,10 +100,21 @@ class QuickActionSection extends StatelessWidget {
                         case 'addTask':
                           break;
                         case 'prochat':
+                          Navigator.pushNamed(context, '/prochat');
                           break;
                         case 'dueToday':
+                          Navigator.pushNamed(
+                            context,
+                            '/dueToday',
+                            arguments: action,
+                          );
                           break;
                         case 'overDue':
+                          Navigator.pushNamed(
+                            context,
+                            '/overdue',
+                            arguments: action,
+                          );
                           break;
                       }
                     },

@@ -9,6 +9,7 @@ import 'package:task_manager/features/home/model/employee_count_model.dart';
 import 'package:task_manager/features/home/model/task_history_model.dart';
 
 import '../../../core/constants/api_constants.dart';
+import '../../../core/models/task_model.dart';
 import '../../../core/network/dio_client.dart';
 import '../../auth/models/user_model.dart';
 import '../model/project_count_model.dart';
@@ -236,4 +237,44 @@ class HomeApiService {
       ),
     );
   }
+
+  Future<ApiResponse<List<TMTasksModel>>> getTodaysTmTasks({
+    required String userId,
+    required String companyId,
+    required String userType,
+    required int page,
+    int size = 10,
+    required bool isMyTasks,
+  }) async {
+
+
+    final response = await _dio.post(
+      ApiConstants.todaysTask,
+      data: {
+        'user_id': userId,
+        'comp_id': companyId,
+        'user_type': userType,
+        'type': isMyTasks ? '0' : '1', // self 0 , 1 other
+        'page': page.toString(),
+        'size': size.toString(),
+      },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+
+    debugPrint("homeApi RAW TodaysTasks (isMyTasks: $isMyTasks, page: $page) => ${response.data}");
+
+    final apiResponse = ApiResponse<List<TMTasksModel>>.fromJson(
+      response.data as Map<String, dynamic>,
+          (data) => (data as List)
+          .map((e) => TMTasksModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+    );
+
+    debugPrint("homeApi Parsed TodaysTasks => $apiResponse");
+
+    return apiResponse;
+  }
 }
+

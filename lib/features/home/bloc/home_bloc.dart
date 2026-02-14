@@ -22,6 +22,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<ClearProjectList>(_onClearProjectList);
     on<LoadEmployeeWiseTaskList>(_fetchEmployeeWiseTaskList);
     on<ClearEmployeeWiseTaskListError>(_clearEmployeeWiseTaskListError);
+    on<FetchTodaysTasks>(_fetchTodaysTasks);
+    on<ClearTodaysTasksError>(_clearTodaysTasksError);
   }
 
   //  fetch quick actions data for dashboard
@@ -205,5 +207,119 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(state.copyWith(employeeWiseTaskList: []));
   }
 
+  static const String _tag = "HomeBlocTodayTasks";
 
+// Fetch today's tasks
+  Future<void> _fetchTodaysTasks(
+      FetchTodaysTasks event,
+      Emitter<HomeState> emit,
+      ) async {
+    final isMyTasks = event.isMyTasks;
+    final page = event.page;
+
+    debugPrint("[$_tag] ===== FetchTodaysTasks START =====");
+    debugPrint("[$_tag] Type : ${isMyTasks ? "MyTasks" : "OtherTasks"} | Page : $page");
+
+    if (isMyTasks) {
+      if (page == 1) {
+        debugPrint("[$_tag] MyTasks Loading = true");
+        emit(state.copyWith(isMyTasksLoading: true, myTasksError: null));
+      }
+
+      try {
+        debugPrint("[$_tag] Calling API (MyTasks) → page=$page");
+
+        final tasks = await repository.getTodaysTmTasks(
+          page: page,
+          isMyTasks: true,
+          size: 10,
+        );
+
+        debugPrint("[$_tag] API SUCCESS (MyTasks) | Count: ${tasks.length}");
+
+        final updatedTasks =
+        page == 1 ? tasks : [...state.myTasks, ...tasks];
+
+        final hasMore = tasks.length >= 10;
+
+        debugPrint("[$_tag] Updated Total: ${updatedTasks.length} | HasMore: $hasMore");
+
+        emit(state.copyWith(
+          isMyTasksLoading: false,
+          myTasks: updatedTasks,
+          myTasksPage: page,
+          hasMoreMyTasks: hasMore,
+          myTasksError: null,
+        ));
+
+        debugPrint("[$_tag] State Updated (MyTasks)");
+      } catch (e, stackTrace) {
+        debugPrint("[$_tag] API ERROR (MyTasks) → $e");
+        debugPrint("[$_tag] StackTrace → $stackTrace");
+
+        emit(state.copyWith(
+          isMyTasksLoading: false,
+          myTasksError: e.toString(),
+        ));
+      }
+    } else {
+      if (page == 1) {
+        debugPrint("[$_tag] OtherTasks Loading = true");
+        emit(state.copyWith(isOtherTasksLoading: true, otherTasksError: null));
+      }
+
+      try {
+        debugPrint("[$_tag] Calling API (OtherTasks) → page=$page");
+
+        final tasks = await repository.getTodaysTmTasks(
+          page: page,
+          isMyTasks: false,
+          size: 10,
+        );
+
+        debugPrint("[$_tag] API SUCCESS (OtherTasks) | Count: ${tasks.length}");
+
+        final updatedTasks =
+        page == 1 ? tasks : [...state.otherTasks, ...tasks];
+
+        final hasMore = tasks.length >= 10;
+
+        debugPrint("[$_tag] Updated Total: ${updatedTasks.length} | HasMore: $hasMore");
+
+        emit(state.copyWith(
+          isOtherTasksLoading: false,
+          otherTasks: updatedTasks,
+          otherTasksPage: page,
+          hasMoreOtherTasks: hasMore,
+          otherTasksError: null,
+        ));
+
+        debugPrint("[$_tag] State Updated (OtherTasks)");
+      } catch (e, stackTrace) {
+        debugPrint("[$_tag] API ERROR (OtherTasks) → $e");
+        debugPrint("[$_tag] StackTrace → $stackTrace");
+
+        emit(state.copyWith(
+          isOtherTasksLoading: false,
+          otherTasksError: e.toString(),
+        ));
+      }
+    }
+
+    debugPrint("[$_tag] ===== FetchTodaysTasks END =====\n");
+  }
+
+
+
+  void _clearTodaysTasksError(
+      ClearTodaysTasksError event,
+      Emitter<HomeState> emit,
+      ) {
+    emit(state.copyWith(
+      myTasksError: null,
+      otherTasksError: null,
+    ));
+  }
 }
+
+

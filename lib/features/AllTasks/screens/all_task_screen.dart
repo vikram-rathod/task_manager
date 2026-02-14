@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/models/task_model.dart';
+import '../../../reusables/task_card.dart';
 import '../bloc/all_task_bloc.dart';
 
 class AllTaskScreen extends StatelessWidget {
@@ -74,7 +74,7 @@ class _AllTasksViewState extends State<AllTasksView> {
     );
   }
 
-  /// 🔍 Search Bar
+  ///  Search Bar
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
@@ -85,14 +85,14 @@ class _AllTasksViewState extends State<AllTasksView> {
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    context
-                        .read<AllTaskBloc>()
-                        .add(SearchQueryChanged(''));
-                  },
-                )
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              _searchController.clear();
+              context
+                  .read<AllTaskBloc>()
+                  .add(SearchQueryChanged(''));
+            },
+          )
               : null,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -105,7 +105,7 @@ class _AllTasksViewState extends State<AllTasksView> {
     );
   }
 
-  /// 📋 Task List
+  ///  Task List
   Widget _buildTaskList(AllTaskState state) {
     // Initial loading
     if (state.isLoading && state.tasks.isEmpty) {
@@ -120,10 +120,10 @@ class _AllTasksViewState extends State<AllTasksView> {
     final filteredTasks = state.searchQuery.isEmpty
         ? state.tasks
         : state.tasks.where((task) {
-            return task.taskDescription
-                .toLowerCase()
-                .contains(state.searchQuery.toLowerCase());
-          }).toList();
+      return task.taskDescription
+          .toLowerCase()
+          .contains(state.searchQuery.toLowerCase());
+    }).toList();
 
     // Empty
     if (filteredTasks.isEmpty) {
@@ -153,99 +153,19 @@ class _AllTasksViewState extends State<AllTasksView> {
             );
           }
 
-          return _buildTaskCard(filteredTasks[index]);
-        },
-      ),
-    );
-  }
-
-  /// 🧾 Task Card
-  Widget _buildTaskCard(TMTasksModel task) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Task ${task.taskId} clicked')),
+          //  Using the reusable TaskCard widget
+          return TaskCard(
+            task: filteredTasks[index],
+            onTap: () {
+              // Custom action when card is tapped
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Task ${filteredTasks[index].taskId} clicked'),
+                ),
+              );
+            },
           );
         },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      task.taskDescription,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  _buildStatusChip(task.taskStatus),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _buildInfoRow(Icons.person, 'Maker', task.makerName),
-              const SizedBox(height: 8),
-              _buildInfoRow(Icons.check_circle, 'Checker', task.checkerName),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String? value) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            '$label: ${value ?? 'N/A'}',
-            style: const TextStyle(fontSize: 14),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatusChip(String? status) {
-    final s = status?.toLowerCase() ?? '';
-    Color color = Colors.grey;
-    String text = 'N/A';
-
-    if (s.contains('complete')) {
-      color = Colors.green;
-      text = 'Completed';
-    } else if (s.contains('progress')) {
-      color = Colors.orange;
-      text = 'In Progress';
-    } else if (s.contains('pending')) {
-      color = Colors.blue;
-      text = 'Pending';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(color: color, fontSize: 12),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/features/home/screens/project_section.dart';
 import 'package:task_manager/features/home/screens/quick_action_section.dart';
 import 'package:task_manager/features/home/screens/task_history_section.dart';
+import 'package:task_manager/features/home/screens/todays_task_section.dart';
 
 import '../bloc/home_bloc.dart';
 import '../bloc/home_state.dart';
@@ -25,6 +26,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     bloc.add(FetchTaskHistory());
     bloc.add(LoadProjectList());
     bloc.add(LoadEmployeeWiseTaskList());
+
   }
 
 
@@ -47,6 +49,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
           ),
           const SliverToBoxAdapter(child: EmployeeSection()),
           const SliverToBoxAdapter(child: ProjectSection()),
+          const SliverToBoxAdapter(child: TodaysTaskSection()),
           const SliverToBoxAdapter(child: TaskHistorySection()),
         ],
       ),

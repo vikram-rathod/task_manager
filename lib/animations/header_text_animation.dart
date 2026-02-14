@@ -25,6 +25,17 @@ class _HeaderTextAnimationState extends State<HeaderTextAnimation> {
     _loop();
   }
 
+  @override
+  void didUpdateWidget(HeaderTextAnimation oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.designation != widget.designation ||
+        oldWidget.companyText != widget.companyText) {
+      setState(() {
+        _texts = [widget.designation, widget.companyText];
+      });
+    }
+  }
+
   void _loop() async {
     while (mounted) {
       await Future.delayed(const Duration(seconds: 3));
@@ -38,39 +49,81 @@ class _HeaderTextAnimationState extends State<HeaderTextAnimation> {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 600),
-        switchInCurve: Curves.easeInOutCubic,
-        switchOutCurve: Curves.easeInOutCubic,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(
-            opacity: Tween<double>(
-              begin: 0.0,
-              end: 1.0,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOutCubic,
-            )),
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.15),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
+    return ClipRect(
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          switchInCurve: Curves.easeInOutCubic,
+          switchOutCurve: Curves.easeInOutCubic,
+          layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+            return Stack(
+              alignment: Alignment.centerLeft,
+              clipBehavior: Clip.hardEdge,
+              children: <Widget>[
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            );
+          },
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            final slideAnimation = Tween<Offset>(
+              begin: const Offset(0, 0.3),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
                 parent: animation,
                 curve: Curves.easeOutCubic,
-              )),
-              child: child,
+              ),
+            );
+
+            final fadeAnimation = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              ),
+            );
+
+            return FadeTransition(
+              opacity: fadeAnimation,
+              child: SlideTransition(
+                position: slideAnimation,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: child,
+                ),
+              ),
+            );
+          },
+          child: Container(
+            key: ValueKey<String>(_texts[_index]),
+            alignment: Alignment.centerLeft,
+            constraints: const BoxConstraints(
+              minWidth: 0,
+              maxWidth: double.infinity,
             ),
-          );
-        },
-        child: Text(
-          _texts[_index],
-          key: ValueKey(_texts[_index]),
-          style: const TextStyle(fontSize: 12),
+            child: Text(
+              _texts[_index],
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                height: 1.2,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              textAlign: TextAlign.left,
+            ),
+          ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

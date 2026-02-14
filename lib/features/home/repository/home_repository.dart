@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/features/home/model/dash_board_count_model.dart';
 import 'package:task_manager/features/home/model/task_history_model.dart';
 
@@ -186,6 +187,45 @@ class HomeRepository {
       return response.data!;
     } else {
       throw Exception(response.message ?? 'Failed to load projects');
+    }
+  }
+
+  // today's tasks with pagination
+  Future<List<TMTasksModel>> getTodaysTmTasks({
+    required int page,
+    required bool isMyTasks,
+    int size = 10,
+  }) async {
+    final userId = await _storageService.read(StorageKeys.userId) ?? "";
+    final companyId = await _storageService.read(StorageKeys.companyId) ?? "";
+    final userType = await _storageService.read(StorageKeys.userType) ?? "";
+
+    debugPrint("getTodaysTmTasks: userId=$userId, companyId=$companyId, userType=$userType, page=$page, isMyTasks=$isMyTasks");
+
+    final ApiResponse<List<TMTasksModel>> response =
+    await _homeService.getTodaysTmTasks(
+      userId: userId,
+      companyId: companyId,
+      userType: userType,
+      page: page,
+      isMyTasks: isMyTasks,
+      size: size,
+    );
+
+    debugPrint("getTodaysTmTasks response: $response");
+
+    // Handle the response based on status
+    if (response.status == true) {
+      // Success - return data (even if empty)
+      return response.data ?? [];
+    } else if (response.status == false ||
+        (response.message?.toLowerCase().contains('no task') ?? false)) {
+      // "No tasks found" is not an error - return empty list
+      debugPrint("getTodaysTmTasks: No tasks found, returning empty list");
+      return [];
+    } else {
+      // Actual error occurred
+      throw Exception(response.message ?? 'Failed to load today\'s tasks');
     }
   }
 }

@@ -56,6 +56,4 @@ class EmployeeModel {
   String toString() {
     return 'EmployeeModel(candidateRefId: $candidateRefId, userId: $userId, userName: $userName, totalTaskCount: $totalTaskCount, completedTaskCount: $completedTaskCount, inProgressTaskCount: $inProgressTaskCount, userProfileUrl: $userProfileUrl, pendingAtMe: $pendingAtMe, pendingAtOther: $pendingAtOther, totalPendingTask: $totalPendingTask)';
   }
-
-
 }

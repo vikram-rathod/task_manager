@@ -46,7 +46,11 @@ class EmployeeSection extends StatelessWidget {
                     return InkWell(
                       borderRadius: BorderRadius.circular(14),
                       onTap: () {
-                        // Navigate to employee task list
+                        Navigator.pushNamed(
+                          context,
+                          '/employeeTask',
+                          arguments: employee,
+                        );
                       },
                       child: Container(
                         width: 200,
@@ -232,6 +236,7 @@ class EmployeeSection extends StatelessWidget {
           TextButton(
             onPressed: () {
               // Navigate to all employees
+
             },
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),

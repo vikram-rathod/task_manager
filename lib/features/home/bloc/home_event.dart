@@ -23,4 +23,17 @@ class LoadEmployeeWiseTaskList extends HomeEvent {}
 
 class ClearEmployeeWiseTaskListError extends HomeEvent {}
 
+class FetchTodaysTasks extends HomeEvent {
+  final int page;
+  final bool isMyTasks;
 
+  const FetchTodaysTasks({
+    required this.page,
+    required this.isMyTasks,
+  });
+
+  @override
+  List<Object?> get props => [page,isMyTasks];
+}
+
+class ClearTodaysTasksError extends HomeEvent {}

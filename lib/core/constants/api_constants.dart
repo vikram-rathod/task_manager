@@ -27,6 +27,8 @@ class ApiConstants {
       '${baseUrl}dashboard_employee_wise.php';
   static const String taskHistory = '${baseUrl}dashboard_history.php';
   static const String tmDashboardCount = '${baseUrl}tm_dashboard_count.php';
+  static const String todaysTask = '${baseUrl}todays_task.php';
+
 
   /* ───────────────── Task API Endpoints ───────────────── */
 

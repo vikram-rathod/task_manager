@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
-import '../../auth/models/api_response.dart';
 import '../../../core/models/task_model.dart';
+import '../../auth/models/api_response.dart';
 import '../../createtask/models/task_request.dart';
 import '../../createtask/services/task_service.dart';
 
@@ -16,8 +16,62 @@ class TaskRepository {
 
 
   Future<ApiResponse<TMTasksModel>> fetchTaskDetails(int taskId) =>
-      _api.getTaskDetails(taskId);    
+      _api.getTaskDetails(taskId);
 
+  Future<ApiResponse<List<TMTasksModel>>> fetchEmployeeWiseTasks({
+    required String tabId,
+    required String userId,
+    required String compId,
+    required String userType,
+    int page = 1,
+    int size = 10,
+    String? employeeId,
+    String? search,
+  }) =>
+      _api.getAllTaskEmployeeWise(
+          tabId: tabId, userId: userId, compId: compId, userType: userType,employeeId: employeeId, search: search, page: page, size: size);
+
+
+  // overdue Task
+  Future<ApiResponse<List<TMTasksModel>>> fetchOverdueTasks({
+    required String type,
+    required String userId,
+    required String compId,
+    required String userType,
+    int page = 1,
+    int size = 10,
+    String? search,
+  }) =>
+      _api.getOverDueTasks(
+        compId: compId,
+        type: type,
+        userId: userId,
+        userType: userType,
+        page: page,
+        size: size,
+        search: search,
+
+      );
+
+  // overdue Task
+  Future<ApiResponse<List<TMTasksModel>>> fetchDueTodayTasks({
+    required String type,
+    required String userId,
+    required String compId,
+    required String userType,
+    int page = 1,
+    int size = 10,
+    String? search,
+  }) =>
+      _api.getDueTodayTasks(
+        compId: compId,
+        type: type,
+        userId: userId,
+        userType: userType,
+        page: page,
+        size: size,
+        search: search,
+      );
 
   Future<ApiResponse<void>> createTask({
     required int? makerId,

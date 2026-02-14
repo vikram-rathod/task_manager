@@ -110,6 +110,16 @@ class TaskApiService {
     String? employeeId,
     String? search,
   }) async {
+    debugPrint('getAllTaskEmployeeWise called with:');
+    debugPrint(' tabId: $tabId');
+    debugPrint(' userId: $userId');
+    debugPrint(' compId: $compId');
+    debugPrint(' userType: $userType');
+    debugPrint(' page: $page');
+    debugPrint(' size: $size');
+    debugPrint(' employeeId: $employeeId');
+    debugPrint(' search: $search');
+
     final response = await _dio.post(
       ApiConstants.employeeWiseTaskList,
       data: {
@@ -122,6 +132,9 @@ class TaskApiService {
         'employee_id': employeeId,
         'search': search,
       },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
     );
 
     return ApiResponse.fromJson(
@@ -130,6 +143,7 @@ class TaskApiService {
           (data as List).map((e) => TMTasksModel.fromJson(e)).toList(),
     );
   }
+
 
   /* ───────────────── Task By User ───────────────── */
 
@@ -181,6 +195,9 @@ class TaskApiService {
     int size = 10,
     String? search,
   }) async {
+    debugPrint('getOverDueTasks called with: userId: $userId, compId: $compId, userType: $userType, type: $type'
+        ', page: $page, size: $size, search: $search' );
+
     final response = await _dio.post(
       ApiConstants.taskListOverDue,
       data: {
@@ -192,6 +209,9 @@ class TaskApiService {
         'search': search,
         'type': type,
       },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
     );
 
     return ApiResponse.fromJson(
@@ -210,6 +230,11 @@ class TaskApiService {
     int size = 10,
     String? search,
   }) async {
+
+    debugPrint('getDueTodayTasks called with: userId: $userId, compId: $compId, userType: $userType'
+        ', type: $type, page: $page, size: $size, search: $search');
+
+
     final response = await _dio.post(
       ApiConstants.taskListDueToday,
       data: {
@@ -221,6 +246,9 @@ class TaskApiService {
         'search': search,
         'type': type,
       },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
     );
 
     return ApiResponse.fromJson(

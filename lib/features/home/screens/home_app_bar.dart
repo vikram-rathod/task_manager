@@ -28,171 +28,187 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
-        child: Row(
-          children: [
-            if (user != null)
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: Colors.white,
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundImage: user!.userProfileUrl.isNotEmpty
-                      ? NetworkImage(user!.userProfileUrl)
-                      : const AssetImage('assets/images/app_logo.png')
-                          as ImageProvider,
-                ),
-              ),
-            const SizedBox(width: 8),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.2),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: TitleSection(
-                key: ValueKey(user?.designation),
-                user: user!,
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        // Notification Icon with Badge
-        Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () {
-                // Navigate to notifications page
-                Navigator.pushNamed(context, '/notifications');
-              },
-            ),
-            if (notificationCount > 0)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(
-                    minWidth: 18,
-                    minHeight: 18,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Text(
-                    notificationCount > 99 ? '99+' : '$notificationCount',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        // Menu Dropdown
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert),
-          offset: const Offset(0, 50),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          onSelected: (value) {
-            switch (value) {
-              case 'theme':
-                context.read<ThemeCubit>().toggle();
-                break;
-              case 'switch':
-                _handleSwitchAccount(context);
-                break;
-              case 'logout':
-                _showLogoutConfirmation(context);
-                break;
-            }
-          },
-          itemBuilder: (BuildContext context) {
-            final theme = Theme.of(context);
-            final isDark = theme.brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
 
-            return [
-              PopupMenuItem<String>(
-                value: 'theme',
-                child: Row(
-                  children: [
-                    Icon(
-                      isDark ? Icons.light_mode : Icons.dark_mode,
-                      size: 20,
-                      color: Colors.grey.shade700,
+    return Column(
+
+      children: [
+        AppBar(
+          title: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
+            child: Row(
+              children: [
+                if (user != null)
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Colors.white,
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundImage: user!.userProfileUrl.isNotEmpty
+                          ? NetworkImage(user!.userProfileUrl)
+                          : const AssetImage('assets/images/app_logo.png')
+                              as ImageProvider,
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      isDark ? 'Light Mode' : 'Dark Mode',
-                      style: const TextStyle(fontSize: 14),
+                  ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.2),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: TitleSection(
+                      key: ValueKey(user?.designation),
+                      user: user!,
                     ),
-                  ],
-                ),
-              ),
-              if (showSwitchAccount)
-                PopupMenuItem<String>(
-                  value: 'switch',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.switch_account,
-                        size: 20,
-                        color: Colors.grey.shade700,
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Switch Account',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ],
                   ),
                 ),
-              const PopupMenuDivider(),
-              PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.logout,
-                      size: 20,
-                      color: Colors.red.shade600,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Logout',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.red.shade600,
+              ],
+            ),
+          ),
+          actions: [
+            // Notification Icon with Badge
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () {
+                    // Navigate to notifications page
+                    Navigator.pushNamed(context, '/notifications');
+                  },
+                ),
+                if (notificationCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Text(
+                        notificationCount > 99 ? '99+' : '$notificationCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+              ],
+            ),
+            // Menu Dropdown
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              offset: const Offset(0, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-            ];
-          },
+              onSelected: (value) {
+                switch (value) {
+                  case 'theme':
+                    context.read<ThemeCubit>().toggle();
+                    break;
+                  case 'switch':
+                    _handleSwitchAccount(context);
+                    break;
+                  case 'logout':
+                    _showLogoutConfirmation(context);
+                    break;
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                final theme = Theme.of(context);
+                final isDark = theme.brightness == Brightness.dark;
+
+                return [
+                  PopupMenuItem<String>(
+                    value: 'theme',
+                    child: Row(
+                      children: [
+                        Icon(
+                          isDark ? Icons.light_mode : Icons.dark_mode,
+                          size: 20,
+                          color: Colors.grey.shade700,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          isDark ? 'Light Mode' : 'Dark Mode',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (showSwitchAccount)
+                    PopupMenuItem<String>(
+                      value: 'switch',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.switch_account,
+                            size: 20,
+                            color: Colors.grey.shade700,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Switch Account',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.logout,
+                          size: 20,
+                          color: Colors.red.shade600,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Logout',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.red.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ];
+              },
+            ),
+          ],
+        ),
+        Divider(
+          color: scheme.primary.withAlpha(
+            scheme.brightness == Brightness.dark ? 100 : 60,
+          ),
+          thickness: 1,
+          height: 1
         ),
       ],
     );
