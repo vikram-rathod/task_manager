@@ -8,6 +8,7 @@ import '../../createtask/bloc/taskcreate_event.dart';
 import '../../createtask/bloc/taskcreate_state.dart';
 import '../../template/bloc/template_bloc.dart';
 import '../../template/bloc/template_event.dart';
+import '../../template/screen/assign_task_screen.dart';
 import '../../template/screen/template_list_screen.dart';
 import '../bloc/task_list_bloc.dart';
 import '../bloc/task_list_event.dart';
@@ -281,12 +282,40 @@ class _TaskListScreenState extends State<TaskListScreen> {
             ),
 
           /// ASSIGN TASK
+          /// ASSIGN TASK
           if (_isFabOpen)
             _buildMiniOption(
               icon: Icons.assignment,
               label: "Assign Task",
               onTap: () {
                 setState(() => _isFabOpen = false);
+
+                final tabId = (_selectedTabIndex + 1).toString();
+
+                final selectedProject =
+                    context.read<CreateTaskBloc>().state.selectedProject;
+
+                if (selectedProject == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Please select project first")),
+                  );
+                  return;
+                }
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider(
+                      create: (_) => sl<TemplateBloc>()
+                        ..add(LoadTemplates(tabId: tabId)),
+                      child: AssignTaskScreen(
+                        tabId: tabId,
+                        projectName: selectedProject.projectName,
+                        projectId: selectedProject.projectId.toString(),
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
 

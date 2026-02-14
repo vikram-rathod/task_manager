@@ -70,6 +70,35 @@ class TemplateBloc extends Bloc<TemplateEvent, TemplateState> {
       }
     });
 
+    on<AssignTasks>((event, emit) async {
+      emit(state.copyWith(isLoading: true));
+
+      try {
+        final response = await repository.assignTasks(event.request);
+
+        if (response["status"] == true) {
+          emit(state.copyWith(
+            isLoading: false,
+            assignSuccess: true,
+            message: response["message"],
+          ));
+        } else {
+          emit(state.copyWith(
+            isLoading: false,
+            assignSuccess: false,
+            message: response["message"],
+          ));
+        }
+      } catch (e) {
+        emit(state.copyWith(
+          isLoading: false,
+          assignSuccess: false,
+          message: "Something went wrong",
+        ));
+      }
+    });
+
+
   }
 
   Future<void> _onLoadTemplates(

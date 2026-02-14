@@ -14,7 +14,8 @@ class TemplateState {
   final bool isAccountsLoading;
   final List<AccountModel> accounts;
   final bool insertSuccess;
-
+  final bool assignSuccess;
+  final String? message;
 
   TemplateState({
     this.isLoading = false,
@@ -28,6 +29,8 @@ class TemplateState {
     this.isAccountsLoading = false,
     this.accounts = const [],
     this.insertSuccess = false,
+    this.assignSuccess = false,
+    this.message,
   });
 
   TemplateState copyWith({
@@ -43,6 +46,9 @@ class TemplateState {
     List<AccountModel>? accounts,
 
     bool? insertSuccess,
+    bool? assignSuccess,
+    String? message,
+
   }) {
     return TemplateState(
       isLoading: isLoading ?? this.isLoading,
@@ -57,6 +63,9 @@ class TemplateState {
       isAccountsLoading: isAccountsLoading ?? this.isAccountsLoading,
       accounts: accounts ?? this.accounts,
       insertSuccess: insertSuccess ?? false,
+      assignSuccess: assignSuccess ?? false,
+
+      message: message ?? this.message,
     );
   }
 }

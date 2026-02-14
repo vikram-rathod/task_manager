@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../../core/network/dio_client.dart';
 import '../model/account_model.dart';
+import '../model/assign_task_request.dart';
 import '../model/authority_model.dart';
 import '../model/template_models.dart';
 
@@ -108,6 +109,18 @@ class TemplateService {
     );
 
     return response.data["status"] == true;
+  }
+
+  Future<Map<String, dynamic>> assignTasks({
+    required Map<String, dynamic> body,
+  }) async {
+
+    final response = await _dio.post(
+      "task_list/task_template_assign.php",
+      data: body,
+    );
+
+    return response.data;
   }
 
 }

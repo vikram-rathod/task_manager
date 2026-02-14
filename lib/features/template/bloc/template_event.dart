@@ -1,4 +1,5 @@
 import '../model/account_model.dart';
+import '../model/assign_task_request.dart';
 import '../model/create_template_insert_request.dart';
 
 abstract class TemplateEvent {}
@@ -34,3 +35,8 @@ class InsertTemplate extends TemplateEvent {
   InsertTemplate({required this.request});
 }
 
+class AssignTasks extends TemplateEvent {
+  final AssignTaskRequest request;
+
+  AssignTasks({required this.request});
+}

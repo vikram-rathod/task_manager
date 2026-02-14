@@ -3,6 +3,7 @@ import 'package:task_manager/core/storage/storage_keys.dart';
 
 import '../../../core/storage/storage_service.dart';
 import '../model/account_model.dart';
+import '../model/assign_task_request.dart';
 import '../model/authority_model.dart';
 import '../model/create_template_insert_request.dart';
 import '../model/template_models.dart';
@@ -85,6 +86,23 @@ class TemplateRepository {
 
     return service.insertTemplate(body: body);
   }
+
+
+
+  Future<Map<String, dynamic>> assignTasks(
+      AssignTaskRequest request) async {
+
+    final userId = await storage.read(StorageKeys.userId) ?? "";
+    final compId = await storage.read(StorageKeys.companyId) ?? "";
+
+    final body = request.toJson(
+      userId: userId,
+      compId: compId,
+    );
+
+    return await service.assignTasks(body: body);
+  }
+
 
 }
 
