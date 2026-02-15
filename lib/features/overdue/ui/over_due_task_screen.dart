@@ -461,14 +461,10 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
                 child: TaskCard(
                   task: taskModel,
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Task ${taskModel.taskId} clicked'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
+                    Navigator.pushNamed(
+                      context,
+                      '/taskDetails',
+                      arguments: taskModel,
                     );
                   },
                 ),

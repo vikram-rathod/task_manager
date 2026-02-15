@@ -1,11 +1,15 @@
+import 'dart:ffi';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import '../../../core/constants/api_constants.dart';
+import '../../../core/models/task_detail_response.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/storage_keys.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../AllTasks/bloc/all_task_bloc.dart';
 import '../../auth/models/api_response.dart';
+import '../models/chat_insert_data.dart';
 import '../models/insert_data_model.dart';
 import '../../../core/models/task_model.dart';
 
@@ -80,7 +84,7 @@ class TaskApiService {
     );
   }
 
-  Future<ApiResponse<TMTasksModel>> getTaskDetails(int taskId) async {
+  Future<ApiResponse<TaskDetailsResponse>> getTaskDetails(int taskId) async {
     final response = await _dio.post(
       ApiConstants.taskDetails,
       data: {
@@ -89,11 +93,14 @@ class TaskApiService {
         'comp_id': await _storageService.read(StorageKeys.companyId),
         'user_type': await _storageService.read(StorageKeys.userType),
       },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
     );
 
     return ApiResponse.fromJson(
       response.data,
-          (data) => TMTasksModel.fromJson(data as Map<String, dynamic>),
+          (data) => TaskDetailsResponse.fromJson(data as Map<String, dynamic>),
     );
   }
 
@@ -257,4 +264,55 @@ class TaskApiService {
           (data as List).map((e) => TMTasksModel.fromJson(e)).toList(),
     );
   }
+
+  Future<ApiResponse<List<TMTasksModel>>> getTaskChat({
+    required int taskId,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.getTaskChat,
+      data: {
+        'work_id': taskId,
+      },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        ),
+    );
+    return ApiResponse.fromJson(
+      response.data,
+          (data) =>
+          (data as List).map((e) => TMTasksModel.fromJson(e)).toList(), // change this to valid return type of model here
+    );
+
+  }
+
+  Future<ApiResponse<ChatInsertData>> insertTaskChat({
+    required int? workId,
+    required int? userId,
+    required int? compId,
+    required String chatMessage,
+    List<MultipartFile>? files,
+     String? replyTo,
+  }) async {
+    final formData = FormData.fromMap({
+      'work_id': workId,
+      'user_id': userId,
+      'comp_id': compId,
+      'chat_message': chatMessage,
+      'reply_to': replyTo,
+      if (files != null) 'file': files,
+    });
+
+    final response =
+    await _dio.post(ApiConstants.insertTaskChat, data: formData);
+
+    return ApiResponse.fromJson(
+      response.data,
+          (dataJson) => ChatInsertData.fromJson(dataJson as Map<String, dynamic>),
+    );
+
+
+
+  }
+
+
 }

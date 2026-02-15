@@ -20,4 +20,3 @@ class ResetTaskState extends TaskDetailsEvent {
   @override
   List<Object?> get props => [];
 }
-

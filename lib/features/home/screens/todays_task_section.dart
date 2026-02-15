@@ -411,6 +411,7 @@ class _TodaysTaskSectionState extends State<TodaysTaskSection>
         child: InkWell(
           onTap: () {
             // Handle task tap
+            Navigator.pushNamed(context, '/taskDetails', arguments: task);
           },
           borderRadius: BorderRadius.circular(14),
           child: Padding(

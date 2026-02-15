@@ -131,4 +131,9 @@ class TMTasksModel {
       'task_type': taskType,
     };
   }
+  @override
+  String toString() {
+    return 'TMTasksModel(projectId: $projectId, projectName: $projectName, taskId: $taskId, taskDescription: $taskDescription, taskPriority: $taskPriority, userId: $userId, userName: $userName, checkerId: $checkerId, checkerName: $checkerName, makerId: $makerId, makerName: $makerName, pcEngrId: $pcEngrId, pcEngrName: $pcEngrName, taskStatus: $taskStatus, teamMembers: $teamMembers, taskRegisteredDate: $taskRegisteredDate, taskStartDate: $taskStartDate, taskEndDate: $taskEndDate, targetedDate: $targetedDate, prochatTaskId: $prochatTaskId, createdByName: $createdByName, dueDate: $dueDate, priority: $priority, prochatRemark: $prochatRemark, createdAt: $createdAt, updatedAt: $updatedAt, taskType: $taskType)';
+  }
+
 }

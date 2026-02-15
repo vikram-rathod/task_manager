@@ -37,6 +37,22 @@ class ApiConstants {
   static const String taskList = '${baseUrl}task_list.php';
   static const String taskDetails = '${baseUrl}get_task_details.php';
 
+  // Task Chat
+  static const String getTaskChat = '${baseUrl}get_task_chat.php';
+  static const String insertTaskChat = '${baseUrl}insert_chat.php';
+
+  // Task manager approval
+  static const String taskManagerApproval = '${baseUrl}task_manager_approval.php';
+  static const String taskManagerAcknowdge = '${baseUrl}taskManagerAcknowdge.php';
+
+  //ProChat
+  static const String prochatTaskList = '${baseUrl}prochat_task_list.php';
+  static const String prochatTaskTransfer = '${baseUrl}transfer_prochat_task.php';
+  static const String prochatTaskInsert = '${baseUrl}prochat_task_insert.php';
+
+
+
+
   // Task list filters
   static const String taskListByUserId =
       '${baseUrl}task_list_by_user_id.php';

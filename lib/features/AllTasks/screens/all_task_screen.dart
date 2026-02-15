@@ -157,11 +157,10 @@ class _AllTasksViewState extends State<AllTasksView> {
           return TaskCard(
             task: filteredTasks[index],
             onTap: () {
-              // Custom action when card is tapped
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Task ${filteredTasks[index].taskId} clicked'),
-                ),
+              Navigator.pushNamed(
+                context,
+                '/taskDetails',
+                arguments: filteredTasks[index],
               );
             },
           );
