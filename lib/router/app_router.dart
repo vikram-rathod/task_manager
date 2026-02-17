@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/features/home/model/quick_action_model.dart';
+import 'package:task_manager/features/modulenotification/ui/module_notification_screen.dart';
 import 'package:task_manager/features/overdue/ui/over_due_task_screen.dart';
+import 'package:task_manager/features/prochattaks/prochat_task_screen.dart';
+import 'package:task_manager/features/taskChat/ui/screens/task_chat_screen.dart';
 
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/splash_screen.dart';
@@ -50,8 +53,16 @@ class AppRouter {
         );
 
       case '/prochat':
-        return MaterialPageRoute(builder: (_) => const Placeholder());
+        final quickActionModel = settings.arguments as QuickActionModel;
+        return MaterialPageRoute(builder: (_) => ProChatTaskScreen(quickActionModel: quickActionModel));
 
+      case '/taskChat':
+        final task = settings.arguments as TMTasksModel;
+        return MaterialPageRoute(builder: (_) => TaskChatScreen(task: task));
+
+      case '/notifications':
+        // final quickActionModel = settings.arguments as QuickActionModel;
+        return MaterialPageRoute(builder: (_) => ModuleNotificationScreen());
 
       default:
         return MaterialPageRoute(

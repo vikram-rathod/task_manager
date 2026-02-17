@@ -4,19 +4,23 @@ import 'package:task_manager/features/AllTasks/bloc/all_task_bloc.dart';
 import 'package:task_manager/features/createtask/bloc/task_create_bloc.dart';
 import 'package:task_manager/features/employeetasks/bloc/employee_task_bloc.dart';
 import 'package:task_manager/features/home/bloc/home_bloc.dart';
-import 'package:task_manager/features/home/repository/app_notification_repository.dart';
-import 'package:task_manager/features/home/repository/prochat_task_repository.dart';
+import 'package:task_manager/features/modulenotification/app_notification_repository.dart';
 import 'package:task_manager/features/home/repository/task_repository.dart';
-import 'package:task_manager/features/home/services/app_notification_service.dart';
+import 'package:task_manager/features/modulenotification/app_notification_service.dart';
 import 'package:task_manager/features/home/services/home_service.dart';
+import 'package:task_manager/features/modulenotification/bloc/module_notification_bloc.dart';
+import 'package:task_manager/features/prochattaks/bloc/prochat_task_bloc.dart';
+import 'package:task_manager/features/prochattaks/repository/prochat_task_repository.dart';
+import 'package:task_manager/features/taskChat/bloc/task_chat_bloc.dart';
 
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/repository/auth_repository.dart';
 import '../../features/createtask/services/task_service.dart';
 import '../../features/duetodaytasks/bloc/due_today_bloc.dart';
 import '../../features/home/repository/home_repository.dart';
-import '../../features/home/services/prochat_service.dart';
 import '../../features/overdue/bloc/over_due_bloc.dart';
+import '../../features/prochattaks/repository/prochat_service.dart';
+import '../../features/profile/bloc/profile_bloc.dart';
 import '../../features/task_details/bloc/task_details_bloc.dart';
 import '../network/dio_client.dart';
 import '../storage/secure_storage_service.dart';
@@ -103,7 +107,7 @@ Future<void> initializeDependencies() async {
     () => EmployeeTaskBloc(sl<TaskRepository>(), sl<StorageService>()),
   );
   // ======================================================
-  //  OverDue Feature
+  //  Over-Due Feature
   // ======================================================
   sl.registerLazySingleton<OverDueBloc>(
     () => OverDueBloc(sl<TaskRepository>(), sl<StorageService>()),
@@ -120,6 +124,10 @@ Future<void> initializeDependencies() async {
     () => TaskDetailsBloc(sl<TaskRepository>(), sl<StorageService>()),
   );
 
+  sl.registerFactory<TaskChatBloc>(
+        () => TaskChatBloc(sl<TaskRepository>(), sl<StorageService>()),
+  );
+
   sl.registerLazySingleton<AppNotificationService>(
     () => AppNotificationService(sl<DioClient>()),
   );
@@ -128,10 +136,20 @@ Future<void> initializeDependencies() async {
     () => AppNotificationRepository(sl<AppNotificationService>()),
   );
 
+  sl.registerLazySingleton<ModuleNotificationBloc>(() =>
+      ModuleNotificationBloc(
+          sl<AppNotificationRepository>(), sl<StorageService>()));
+
   sl.registerLazySingleton<ProChatService>(() => ProChatService(sl<DioClient>()));
 
   sl.registerLazySingleton<ProchatTaskRepository>(() => ProchatTaskRepository(sl<ProChatService>()));
 
+  sl.registerLazySingleton<ProchatTaskBloc>(() =>
+      ProchatTaskBloc(sl<ProchatTaskRepository>(), sl<HomeRepository>(),
+          sl<StorageService>()));
+
+  sl.registerLazySingleton<ProfileBloc>(() =>
+      ProfileBloc(sl<StorageService>()));
 
 
 }

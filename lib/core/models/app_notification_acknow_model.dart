@@ -1,8 +1,8 @@
-import 'package:task_manager/core/models/task_model.dart';
+import 'package:task_manager/core/models/taskchat/bcstep_task_model.dart';
 
 class AppNotificationResponseModel {
   final String type;
-  final List<TMTasksModel> list;
+  final List<BcstepTaskModel> list;
 
   AppNotificationResponseModel({
     required this.type,
@@ -13,7 +13,7 @@ class AppNotificationResponseModel {
     return AppNotificationResponseModel(
       type: json['type']?.toString() ?? '',
       list: (json['list'] as List<dynamic>?)
-          ?.map((e) => TMTasksModel.fromJson(e))
+          ?.map((e) => BcstepTaskModel.fromJson(e))
           .toList() ??
           [],
     );

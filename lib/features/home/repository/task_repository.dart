@@ -1,9 +1,11 @@
 import 'dart:ffi';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 
 import '../../../core/models/task_detail_response.dart';
 import '../../../core/models/task_model.dart';
+import '../../../core/models/taskchat/task_chat_message.dart';
 import '../../auth/models/api_response.dart';
 import '../../createtask/models/chat_insert_data.dart';
 import '../../createtask/models/task_request.dart';
@@ -99,23 +101,25 @@ class TaskRepository {
   );
 
   //Get task Chat
-  Future<ApiResponse<List<TMTasksModel>>> getTaskChat({required int taskId}) =>
+  Future<ApiResponse<List<TimelineItem>>> getTaskChat({required String taskId}) =>
       _api.getTaskChat(taskId: taskId);
 
   // Insert Task Chat
   Future<ApiResponse<ChatInsertData>> insertTaskChat({
-    required int? workId,
-    required int? userId,
-    required int? compId,
+    required String workId,
+    required String userId,
+    required String compId,
     required String chatMessage,
-    List<MultipartFile>? files,
+    List<File>? files,
     String? replyTo,
+    required List<String> mentionUserId,
   }) => _api.insertTaskChat(
     workId: workId,
     userId: userId,
     compId: compId,
-    chatMessage: chatMessage,
+    message: chatMessage,
     files: files,
     replyTo: replyTo,
+    mentionUserIds: mentionUserId.join(','),
   );
 }

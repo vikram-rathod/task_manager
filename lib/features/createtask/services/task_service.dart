@@ -1,9 +1,11 @@
 import 'dart:ffi';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import '../../../core/constants/api_constants.dart';
 import '../../../core/models/task_detail_response.dart';
+import '../../../core/models/taskchat/task_chat_message.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/storage_keys.dart';
 import '../../../core/storage/storage_service.dart';
@@ -19,6 +21,9 @@ import '../models/task_request.dart';
 class TaskApiService {
   final DioClient _dio;
   final StorageService _storageService;
+  final String _tag = "TaskApiService";
+
+
   TaskApiService(this._dio, this._storageService);
 
   /* ───────────────── Insert New Task ───────────────── */
@@ -265,8 +270,8 @@ class TaskApiService {
     );
   }
 
-  Future<ApiResponse<List<TMTasksModel>>> getTaskChat({
-    required int taskId,
+  Future<ApiResponse<List<TimelineItem>>> getTaskChat({
+    required String taskId,
   }) async {
     final response = await _dio.post(
       ApiConstants.getTaskChat,
@@ -280,39 +285,55 @@ class TaskApiService {
     return ApiResponse.fromJson(
       response.data,
           (data) =>
-          (data as List).map((e) => TMTasksModel.fromJson(e)).toList(), // change this to valid return type of model here
+          (data as List).map((e) => TimelineItem.fromJson(e)).toList(),
     );
 
   }
 
   Future<ApiResponse<ChatInsertData>> insertTaskChat({
-    required int? workId,
-    required int? userId,
-    required int? compId,
-    required String chatMessage,
-    List<MultipartFile>? files,
-     String? replyTo,
+    required String workId,
+    required String userId,
+    required String compId,
+    required String message,
+    required String mentionUserIds,
+    List<File>? files,
+    String? replyTo,
   }) async {
-    final formData = FormData.fromMap({
-      'work_id': workId,
-      'user_id': userId,
-      'comp_id': compId,
-      'chat_message': chatMessage,
-      'reply_to': replyTo,
-      if (files != null) 'file': files,
-    });
 
-    final response =
-    await _dio.post(ApiConstants.insertTaskChat, data: formData);
+    FormData formData = FormData();
 
+    formData.fields.add(MapEntry("work_id", workId));
+    formData.fields.add(MapEntry("user_id", userId));
+    formData.fields.add(MapEntry("comp_id", compId));
+    formData.fields.add(MapEntry("chat_message", message));
+    formData.fields.add(MapEntry("reply_to", replyTo ?? ""));
+    formData.fields.add(MapEntry("mention_userids", mentionUserIds ?? ""));
+
+    if (files != null && files.isNotEmpty) {
+      for (var file in files) {
+        formData.files.add(
+          MapEntry(
+            "file[]",
+            await MultipartFile.fromFile(
+              file.path,
+              filename: file.path.split('/').last,
+            ),
+          ),
+        );
+      }
+    }
+
+    final response = await _dio.post(
+      ApiConstants.insertTaskChat,
+      data: formData,
+      options: Options(
+        contentType: "multipart/form-data",
+      ),
+    );
     return ApiResponse.fromJson(
       response.data,
-          (dataJson) => ChatInsertData.fromJson(dataJson as Map<String, dynamic>),
+          (data) => ChatInsertData.fromJson(data as Map<String, dynamic>),
     );
-
-
-
   }
-
 
 }

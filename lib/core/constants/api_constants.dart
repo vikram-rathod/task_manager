@@ -29,6 +29,9 @@ class ApiConstants {
   static const String tmDashboardCount = '${baseUrl}tm_dashboard_count.php';
   static const String todaysTask = '${baseUrl}todays_task.php';
 
+  static const String listOfUsers = '${baseUrl}list_all_users.php';
+
+
 
   /* ───────────────── Task API Endpoints ───────────────── */
 
@@ -43,7 +46,7 @@ class ApiConstants {
 
   // Task manager approval
   static const String taskManagerApproval = '${baseUrl}task_manager_approval.php';
-  static const String taskManagerAcknowdge = '${baseUrl}taskManagerAcknowdge.php';
+  static const String taskManagerAcknowdge = '${baseUrl}task_manager_acknowledge_v1.php';
 
   //ProChat
   static const String prochatTaskList = '${baseUrl}prochat_task_list.php';
@@ -87,6 +90,14 @@ class ApiConstants {
       '$taskListBase/task_template_assign.php';
   static const String taskListTemplateApproval =
       '$taskListBase/task_list_template_approval.php';
+
+
+  // Module Notification
+  static const String moduleNotificationList = '${baseUrl}task_manager_acknowledge_v1.php';
+  static const String moduleNotificationInsert = '${baseUrl}task_manager_approval.php';
+
+
+
 
   /* ───────────────── Timeouts ───────────────── */
   static const Duration connectTimeout = Duration(seconds: 30);

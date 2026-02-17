@@ -566,8 +566,6 @@ class _CreateTaskViewState extends State<CreateTaskView> {
     );
   }
 
-
-
   void _showAttachmentSourceSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -666,10 +664,6 @@ class _CreateTaskViewState extends State<CreateTaskView> {
       },
     );
   }
-
-
-
-
 
   Widget _buildSubmitButton(BuildContext context, CreateTaskState state) {
     final isLoading = state.taskCreateStatus == TaskCreateStatus.loading;

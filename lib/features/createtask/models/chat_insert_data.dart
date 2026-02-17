@@ -4,6 +4,6 @@ class ChatInsertData {
   ChatInsertData({required this.chatId});
 
   factory ChatInsertData.fromJson(Map<String, dynamic> json) {
-    return ChatInsertData(chatId: json['insert_id']);
+    return ChatInsertData(chatId: json['chat_id']);
   }
 }

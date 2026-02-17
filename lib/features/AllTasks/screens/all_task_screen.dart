@@ -163,6 +163,13 @@ class _AllTasksViewState extends State<AllTasksView> {
                 arguments: filteredTasks[index],
               );
             },
+            onChatTap: () {
+              Navigator.pushNamed(
+                context,
+                '/taskChat',
+                arguments: filteredTasks[index],
+              );
+            }
           );
         },
       ),

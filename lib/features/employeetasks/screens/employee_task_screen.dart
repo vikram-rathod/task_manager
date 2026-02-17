@@ -564,6 +564,13 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
                       ),
                     );
                   },
+                  onChatTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/taskChat',
+                      arguments: taskModel,
+                    );
+                  },
                 ),
               );
             },

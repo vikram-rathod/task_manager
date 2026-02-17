@@ -461,6 +461,13 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
                   onTap: () {
                     Navigator.pushNamed(context, '/taskDetails', arguments: taskModel);
                   },
+                  onChatTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/taskChat',
+                      arguments: taskModel,
+                    );
+                  },
                 ),
               );
             },

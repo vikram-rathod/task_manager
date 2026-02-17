@@ -467,6 +467,13 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
                       arguments: taskModel,
                     );
                   },
+                  onChatTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/taskChat',
+                      arguments: taskModel,
+                    );
+                  },
                 ),
               );
             },

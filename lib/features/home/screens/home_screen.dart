@@ -6,7 +6,7 @@ import 'package:task_manager/features/auth/bloc/auth_event.dart';
 import 'package:task_manager/features/auth/bloc/auth_state.dart';
 import 'package:task_manager/features/auth/models/user_model.dart';
 import 'package:task_manager/features/home/screens/home_app_bar.dart';
-import 'package:task_manager/features/home/screens/profile_page.dart';
+import 'package:task_manager/features/profile/profile_page.dart';
 
 import '../../../animations/header_text_animation.dart';
 import '../../../core/device/device_info_service.dart';
