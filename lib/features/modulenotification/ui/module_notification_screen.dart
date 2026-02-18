@@ -17,6 +17,7 @@ class ModuleNotificationScreen extends StatefulWidget {
 
 class _ModuleNotificationScreenState extends State<ModuleNotificationScreen> {
   final Set<String> _collapsed = {};
+  ScaffoldMessengerState? _scaffoldMessenger;
 
   @override
   void initState() {
@@ -24,12 +25,23 @@ class _ModuleNotificationScreenState extends State<ModuleNotificationScreen> {
     context.read<ModuleNotificationBloc>().add(const NotificationFetched());
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scaffoldMessenger = ScaffoldMessenger.of(context);
+  }
+
+  @override
+  void dispose() {
+    _scaffoldMessenger?.hideCurrentSnackBar();
+    super.dispose();
+  }
+
   Future<void> _onRefresh() async {
     context
         .read<ModuleNotificationBloc>()
         .add(const NotificationRefreshed());
   }
-
 
   void _toggleGroup(String type) => setState(() {
     _collapsed.contains(type)
@@ -165,35 +177,33 @@ class _ModuleNotificationScreenState extends State<ModuleNotificationScreen> {
       backgroundColor: ntfSurfaceAlt(context),
       appBar: _buildAppBar(context),
       body: BlocConsumer<ModuleNotificationBloc, ModuleNotificationState>(
+        listenWhen: (prev, curr) =>
+        curr.isError && curr.errorMessage != prev.errorMessage,
         listener: (context, state) {
-          if (!state.isError) return;
-          ScaffoldMessenger.of(context)
-              .showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage),
-              backgroundColor: NotificationDt.negative,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(NotificationDt.r12),
+          _scaffoldMessenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage),
+                backgroundColor: NotificationDt.negative,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(NotificationDt.r12),
+                ),
+                margin: const EdgeInsets.all(NotificationDt.sp12),
+                action: SnackBarAction(
+                  label: 'Dismiss',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    _scaffoldMessenger?.hideCurrentSnackBar();
+                    context
+                        .read<ModuleNotificationBloc>()
+                        .add(const NotificationErrorCleared());
+                  },
+                ),
               ),
-              margin: const EdgeInsets.all(NotificationDt.sp12),
-              action: SnackBarAction(
-                label: 'Dismiss',
-                textColor: Colors.white,
-                onPressed: () => context
-                    .read<ModuleNotificationBloc>()
-                    .add(const NotificationErrorCleared()),
-              ),
-            ),
-          )
-              .closed
-              .then((_) {
-            if (mounted) {
-              context
-                  .read<ModuleNotificationBloc>()
-                  .add(const NotificationErrorCleared());
-            }
-          });
+            );
         },
         builder: _buildBody,
       ),

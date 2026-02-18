@@ -8,226 +8,205 @@ import '../../../core/storage/storage_keys.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../auth/models/api_response.dart';
 import '../../auth/models/user_model.dart';
+import '../../utils/app_exception.dart';
 import '../model/employee_count_model.dart';
 import '../model/project_count_model.dart';
 import '../services/home_service.dart';
 
 class HomeRepository {
-
   final HomeApiService _homeService;
-
   final StorageService _storageService;
-
 
   HomeRepository(this._homeService, this._storageService);
 
-  Future<List<ProjectModel>> getProjectsList() async {
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
-    debugPrint("getProjectsList: start");
-    final userId = await _storageService.read(StorageKeys.userId) ?? "";
-    final companyId = await _storageService.read(StorageKeys.companyId) ?? "";
-    final userType = await _storageService.read(StorageKeys.userType) ?? "";
-    debugPrint("getProjectsList: userId=$userId, companyId=$companyId, userType=$userType");
-
-    final ApiResponse<List<ProjectModel>> response =
-    await _homeService.getProjectsList(
-      userId: userId,
-      companyId : companyId ,
-      userType: userType,
+  Future<({String userId, String companyId, String userType})>
+  _getCredentials() async {
+    return (
+    userId: await _storageService.read(StorageKeys.userId) ?? '',
+    companyId: await _storageService.read(StorageKeys.companyId) ?? '',
+    userType: await _storageService.read(StorageKeys.userType) ?? '',
     );
-    debugPrint("getProjectsList: $response");
-
-    if (response.status == true && response.data != null) {
-      return response.data!;
-    } else {
-      throw Exception(response.message ?? 'Failed to load projects');
-    }
   }
 
+  /// Throws [ApiException] when the response status is false or data is null.
+  T _requireData<T>(ApiResponse<T> response, String fallbackMessage) {
+    if (response.status == true && response.data != null) {
+      return response.data as T;
+    }
+    throw ApiException(
+      message: response.message?.isNotEmpty == true
+          ? response.message!
+          : fallbackMessage,
+    );
+  }
+
+  // ── Projects ───────────────────────────────────────────────────────────────
+
+  Future<List<ProjectModel>> getProjectsList() async {
+    try {
+      final c = await _getCredentials();
+      debugPrint('getProjectsList: userId=${c.userId}');
+      final response = await _homeService.getProjectsList(
+        userId: c.userId,
+        companyId: c.companyId,
+        userType: c.userType,
+      );
+      return _requireData(response, 'Failed to load projects.');
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppExceptionMapper.from(e);
+    }
+  }
 
   Future<List<ProjectCountModel>> getProjectsCountList() async {
-
-    final userId = await _storageService.read(StorageKeys.userId) ?? "";
-    final companyId = await _storageService.read(StorageKeys.companyId) ?? "";
-    final userType = await _storageService.read(StorageKeys.userType) ?? "";
-    debugPrint("getProjectsCountList: userId=$userId, companyId=$companyId, userType=$userType");
-
-    final ApiResponse<List<ProjectCountModel>> response =
-    await _homeService.getProjectsCountList(
-      userId: userId,
-      companyId : companyId ,
-      userType: userType,
-    );
-
-    if (response.status == true && response.data != null) {
-      return response.data!;
-    } else {
-      throw Exception(response.message);
+    try {
+      final c = await _getCredentials();
+      debugPrint('getProjectsCountList: userId=${c.userId}');
+      final response = await _homeService.getProjectsCountList(
+        userId: c.userId,
+        companyId: c.companyId,
+        userType: c.userType,
+      );
+      return _requireData(response, 'Failed to load project counts.');
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppExceptionMapper.from(e);
     }
   }
+
+  // ── Employees ──────────────────────────────────────────────────────────────
 
   Future<List<EmployeeModel>> getEmployeeWiseTaskList() async {
-
-    final userId = await _storageService.read(StorageKeys.userId) ?? "";
-    final companyId = await _storageService.read(StorageKeys.companyId) ?? "";
-    final userType = await _storageService.read(StorageKeys.userType) ?? "";
-    debugPrint("EmployeeModel: userId=$userId, companyId=$companyId, userType=$userType");
-
-    final ApiResponse<List<EmployeeModel>> response =
-    await _homeService.getEmployeeWiseTaskList(
-      userId: userId,
-      companyId : companyId ,
-      userType: userType,
-    );
-
-    debugPrint("EmployeeModel response: $response");
-
-    if (response.status == true && response.data != null) {
-      return response.data!;
-    } else {
-      throw Exception(response.message); 
+    try {
+      final c = await _getCredentials();
+      debugPrint('getEmployeeWiseTaskList: userId=${c.userId}');
+      final response = await _homeService.getEmployeeWiseTaskList(
+        userId: c.userId,
+        companyId: c.companyId,
+        userType: c.userType,
+      );
+      return _requireData(response, 'Failed to load employee task list.');
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppExceptionMapper.from(e);
     }
   }
 
-// ===================== TASK MANAGER USER LIST =====================
+  // ── Users ──────────────────────────────────────────────────────────────────
+
   Future<List<UserModel>> getTaskManagerUserList({
     required String projectId,
   }) async {
-    final userId = await _storageService.read(StorageKeys.userId) ?? "";
-    final companyId =
-        await _storageService.read(StorageKeys.companyId) ?? "";
-    final userType =
-        await _storageService.read(StorageKeys.userType) ?? "";
-
-    debugPrint(
-        "getTaskManagerUserList: userId=$userId, companyId=$companyId, userType=$userType, projectId=$projectId");
-
-    final ApiResponse<List<UserModel>> response =
-    await _homeService.getTaskManagerUserList(
-      userId: userId,
-      companyId: companyId,
-      userType: userType,
-      projectId: projectId,
-    );
-
-    debugPrint("getTaskManagerUserList response => $response");
-
-    if (response.status == true && response.data != null) {
-      return response.data!;
-    } else {
-      throw Exception(response.message ?? 'Failed to load users');
+    try {
+      final c = await _getCredentials();
+      debugPrint('getTaskManagerUserList: projectId=$projectId');
+      final response = await _homeService.getTaskManagerUserList(
+        userId: c.userId,
+        companyId: c.companyId,
+        userType: c.userType,
+        projectId: projectId,
+      );
+      return _requireData(response, 'Failed to load users.');
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppExceptionMapper.from(e);
     }
   }
 
-  // ===================== PROJECT COORDINATOR USER LIST =====================
   Future<List<UserModel>> getProjectCoordinatorUserList({
     required String projectId,
   }) async {
-    final userId = await _storageService.read(StorageKeys.userId) ?? "";
-    final companyId =
-        await _storageService.read(StorageKeys.companyId) ?? "";
-    final userType =
-        await _storageService.read(StorageKeys.userType) ?? "";
-
-    debugPrint(
-        "getProjectCoordinatorUserList: userId=$userId, companyId=$companyId, userType=$userType, projectId=$projectId");
-
-    final ApiResponse<List<UserModel>> response =
-    await _homeService.getProjectCoordinatorUserList(
-      userId: userId,
-      companyId: companyId,
-      userType: userType,
-      projectId: projectId,
-    );
-
-    debugPrint("getProjectCoordinatorUserList response => $response");
-
-    if (response.status == true && response.data != null) {
-      return response.data!;
-    } else {
-      throw Exception(response.message ?? 'Failed to load coordinators');
+    try {
+      final c = await _getCredentials();
+      debugPrint('getProjectCoordinatorUserList: projectId=$projectId');
+      final response = await _homeService.getProjectCoordinatorUserList(
+        userId: c.userId,
+        companyId: c.companyId,
+        userType: c.userType,
+        projectId: projectId,
+      );
+      return _requireData(response, 'Failed to load coordinators.');
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppExceptionMapper.from(e);
     }
   }
 
-
-  Future<List<TaskHistoryModel>> getTaskHistory() async {
-    final userId = await _storageService.read(StorageKeys.userId) ?? "";
-    final companyId = await _storageService.read(StorageKeys.companyId) ?? "";
-    final userType = await _storageService.read(StorageKeys.userType) ?? "";
-    debugPrint("getTaskHistory: userId=$userId, companyId=$companyId, userType=$userType");
-
-    final ApiResponse<List<TaskHistoryModel>> response =
-    await _homeService.getTaskHistory(
-      userId: userId,
-      companyId : companyId ,
-      userType: userType,
-    );
-    debugPrint("getTaskHistory: $response");
-    if (response.status == true && response.data != null) {
-      return response.data!;
-    } else {
-      throw Exception(response.message ?? 'Failed to load projects');
-    }
-  }
+  // ── Dashboard ──────────────────────────────────────────────────────────────
 
   Future<DashboardCountModel> getDashboardCounts() async {
-    final userId = await _storageService.read(StorageKeys.userId) ?? "";
-    final companyId = await _storageService.read(StorageKeys.companyId) ?? "";
-    final userType = await _storageService.read(StorageKeys.userType) ?? "";
-    debugPrint("getDashboardCounts: userId=$userId, companyId=$companyId, userType=$userType");
-
-    final ApiResponse<DashboardCountModel> response =
-    await _homeService.getDashboardCounts(
-      userId: userId,
-      companyId : companyId ,
-      userType: userType,
-    );
-    debugPrint("getDashboardCounts: $response");
-    if (response.status == true && response.data != null) {
-      return response.data!;
-    } else {
-      throw Exception(response.message ?? 'Failed to load projects');
+    try {
+      final c = await _getCredentials();
+      debugPrint('getDashboardCounts: userId=${c.userId}');
+      final response = await _homeService.getDashboardCounts(
+        userId: c.userId,
+        companyId: c.companyId,
+        userType: c.userType,
+      );
+      return _requireData(response, 'Failed to load dashboard counts.');
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppExceptionMapper.from(e);
     }
   }
 
-  // today's tasks with pagination
+  Future<List<TaskHistoryModel>> getTaskHistory() async {
+    try {
+      final c = await _getCredentials();
+      debugPrint('getTaskHistory: userId=${c.userId}');
+      final response = await _homeService.getTaskHistory(
+        userId: c.userId,
+        companyId: c.companyId,
+        userType: c.userType,
+      );
+      return _requireData(response, 'Failed to load task history.');
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppExceptionMapper.from(e);
+    }
+  }
+
+  // ── Today's Tasks ──────────────────────────────────────────────────────────
+
   Future<List<TMTasksModel>> getTodaysTmTasks({
     required int page,
     required bool isMyTasks,
     int size = 10,
   }) async {
-    final userId = await _storageService.read(StorageKeys.userId) ?? "";
-    final companyId = await _storageService.read(StorageKeys.companyId) ?? "";
-    final userType = await _storageService.read(StorageKeys.userType) ?? "";
+    try {
+      final c = await _getCredentials();
+      debugPrint('getTodaysTmTasks: page=$page, isMyTasks=$isMyTasks');
+      final response = await _homeService.getTodaysTmTasks(
+        userId: c.userId,
+        companyId: c.companyId,
+        userType: c.userType,
+        page: page,
+        isMyTasks: isMyTasks,
+        size: size,
+      );
 
-    debugPrint("getTodaysTmTasks: userId=$userId, companyId=$companyId, userType=$userType, page=$page, isMyTasks=$isMyTasks");
+      if (response.status == true) return response.data ?? [];
 
-    final ApiResponse<List<TMTasksModel>> response =
-    await _homeService.getTodaysTmTasks(
-      userId: userId,
-      companyId: companyId,
-      userType: userType,
-      page: page,
-      isMyTasks: isMyTasks,
-      size: size,
-    );
+      // "No tasks found" is a valid empty state, not an error.
+      final msg = response.message?.toLowerCase() ?? '';
+      if (msg.contains('no task') || msg.contains('no data')) return [];
 
-    debugPrint("getTodaysTmTasks response: $response");
-
-    // Handle the response based on status
-    if (response.status == true) {
-      // Success - return data (even if empty)
-      return response.data ?? [];
-    } else if (response.status == false ||
-        (response.message?.toLowerCase().contains('no task') ?? false)) {
-      // "No tasks found" is not an error - return empty list
-      debugPrint("getTodaysTmTasks: No tasks found, returning empty list");
-      return [];
-    } else {
-      // Actual error occurred
-      throw Exception(response.message ?? 'Failed to load today\'s tasks');
+      throw ApiException(
+        message: response.message ?? 'Failed to load today\'s tasks.',
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppExceptionMapper.from(e);
     }
   }
 }
-
-

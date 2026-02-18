@@ -35,7 +35,7 @@ class AuthRequest {
       'device_token': deviceToken,
       'isForce': isForce,
       'isSwitch': isSwitch,
-      'app_type': appType,
+      'app_type': appType ?? "2",
       'user_id': selectedUserId,
     };
   }

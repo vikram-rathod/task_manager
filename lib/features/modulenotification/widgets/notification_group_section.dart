@@ -6,10 +6,6 @@ import '../notification_design_tokens.dart';
 import '../notification_type_config.dart';
 import 'notification_card.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Group Section — sliver with collapsible header + card list
-// ─────────────────────────────────────────────────────────────────────────────
-
 class NotificationGroupSection extends StatelessWidget {
   final AppNotificationResponseModel group;
   final ModuleNotificationState state;
@@ -66,7 +62,6 @@ class NotificationGroupSection extends StatelessWidget {
                       type: type,
                       tc: tc,
                       actionStatus: state.actionFor(task.notificationId),
-                      isSubmitting: state.isSubmitting(task.notificationId),
                     ),
                   );
                 },
@@ -78,10 +73,6 @@ class NotificationGroupSection extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Group Header — dot · label · count · chevron
-// ─────────────────────────────────────────────────────────────────────────────
 
 class NotificationGroupHeader extends StatelessWidget {
   final NotificationTypeConfig tc;

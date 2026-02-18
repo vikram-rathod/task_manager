@@ -48,6 +48,7 @@ dependencies:
   permission_handler:
   intl:
   flutter_slidable:
+  shimmer:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -57,7 +58,15 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  bloc_test:   
+
+  bloc_test:
+  flutter_launcher_icons:
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_logo.png"
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

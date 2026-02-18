@@ -378,6 +378,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
 
             // Reusable Tabs Section with Counts
             ReusableTabsSection(
+              height:MediaQuery.of(context).size.height * 0.75,
               tabs: state.tabs
                   .map(
                     (tab) => Tab(
@@ -405,6 +406,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
                 widget.action.pendingAtOthers,
               ],
             ),
+            const SizedBox(height: 20),
           ],
         );
       },

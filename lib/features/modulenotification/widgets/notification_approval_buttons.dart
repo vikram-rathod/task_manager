@@ -7,16 +7,15 @@ import '../notification_design_tokens.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Three-action button row  (Complete · Hold · Cancelled)
+// Each button independently tracks its own loading state via notificationId_taskStatus
 // ─────────────────────────────────────────────────────────────────────────────
 
 class NotificationApprovalButtons extends StatelessWidget {
   final BcstepTaskModel task;
-  final bool isSubmitting;
 
   const NotificationApprovalButtons({
     super.key,
     required this.task,
-    required this.isSubmitting,
   });
 
   void _dispatch(BuildContext context, String status) {
@@ -31,56 +30,79 @@ class NotificationApprovalButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // ── Complete ────────────────────────────────────────────────────────
-        Expanded(
-          child: _ActionButton(
-            label: 'Complete',
-            icon: Icons.check_rounded,
-            backgroundColor: NotificationDt.positive,
-            foregroundColor: Colors.white,
-            isSubmitting: isSubmitting,
-            isFilled: true,
-            onTap: () => _dispatch(context, '1'),
-          ),
-        ),
-        const SizedBox(width: NotificationDt.sp8),
+    return BlocBuilder<ModuleNotificationBloc, ModuleNotificationState>(
+      // Rebuild only when the submitting state for THIS task changes
+      buildWhen: (p, c) =>
+      p.submittingId != c.submittingId &&
+          (p.submittingId?.startsWith(task.notificationId) == true ||
+              c.submittingId?.startsWith(task.notificationId) == true),
+      builder: (context, state) {
+        // Each status maps to its own key — only the tapped button is loading
+        final isCompletingSubmitting = state.isSubmitting(task.notificationId, '1');
+        final isHoldSubmitting = state.isSubmitting(task.notificationId, '3');
+        final isCancelledSubmitting = state.isSubmitting(task.notificationId, '2');
 
-        // ── Hold ────────────────────────────────────────────────────────────
-        Expanded(
-          child: _ActionButton(
-            label: 'Hold',
-            icon: Icons.pause_rounded,
-            backgroundColor: const Color(0xFFD97706), // amber
-            foregroundColor: Colors.white,
-            isSubmitting: isSubmitting,
-            isFilled: true,
-            onTap: () => _dispatch(context, '3'),
-          ),
-        ),
-        const SizedBox(width: NotificationDt.sp8),
+        // Disable all buttons while any one of them is in-flight
+        final anySubmitting =
+            isCompletingSubmitting || isHoldSubmitting || isCancelledSubmitting;
 
-        // ── Cancelled ───────────────────────────────────────────────────────
-        Expanded(
-          child: _ActionButton(
-            label: 'Cancelled',
-            icon: Icons.close_rounded,
-            backgroundColor: Colors.transparent,
-            foregroundColor: NotificationDt.negative,
-            borderColor: NotificationDt.negative,
-            isSubmitting: isSubmitting,
-            isFilled: false,
-            onTap: () => _dispatch(context, '2'),
-          ),
-        ),
-      ],
+        return Row(
+          children: [
+            // ── Complete ──────────────────────────────────────────────────
+            Expanded(
+              child: _ActionButton(
+                label: 'Complete',
+                icon: Icons.check_rounded,
+                backgroundColor: NotificationDt.positive,
+                foregroundColor: Colors.white,
+                isSubmitting: isCompletingSubmitting,
+                isDisabled: anySubmitting,
+                isFilled: true,
+                onTap: () => _dispatch(context, '1'),
+              ),
+            ),
+            const SizedBox(width: NotificationDt.sp8),
+
+            // ── Hold ──────────────────────────────────────────────────────
+            Expanded(
+              child: _ActionButton(
+                label: 'Hold',
+                icon: Icons.pause_rounded,
+                backgroundColor: const Color(0xFFD97706),
+                foregroundColor: Colors.white,
+                isSubmitting: isHoldSubmitting,
+                isDisabled: anySubmitting,
+                isFilled: true,
+                onTap: () => _dispatch(context, '3'),
+              ),
+            ),
+            const SizedBox(width: NotificationDt.sp8),
+
+            // ── Cancelled ─────────────────────────────────────────────────
+            Expanded(
+              child: _ActionButton(
+                label: 'Cancelled',
+                icon: Icons.close_rounded,
+                backgroundColor: Colors.transparent,
+                foregroundColor: NotificationDt.negative,
+                borderColor: NotificationDt.negative,
+                isSubmitting: isCancelledSubmitting,
+                isDisabled: anySubmitting,
+                isFilled: false,
+                onTap: () => _dispatch(context, '2'),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Reusable single action button
+// isSubmitting  → shows spinner on THIS button only
+// isDisabled    → disables all buttons while any one is in-flight
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ActionButton extends StatelessWidget {
@@ -90,6 +112,7 @@ class _ActionButton extends StatelessWidget {
   final Color foregroundColor;
   final Color? borderColor;
   final bool isSubmitting;
+  final bool isDisabled;
   final bool isFilled;
   final VoidCallback onTap;
 
@@ -99,6 +122,7 @@ class _ActionButton extends StatelessWidget {
     required this.backgroundColor,
     required this.foregroundColor,
     required this.isSubmitting,
+    required this.isDisabled,
     required this.isFilled,
     required this.onTap,
     this.borderColor,
@@ -148,7 +172,7 @@ class _ActionButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6),
             shape: shape,
           ),
-          onPressed: isSubmitting ? null : onTap,
+          onPressed: isDisabled ? null : onTap,
           child: child,
         ),
       );
@@ -163,7 +187,7 @@ class _ActionButton extends StatelessWidget {
           side: BorderSide(color: borderColor ?? foregroundColor),
           shape: shape,
         ),
-        onPressed: isSubmitting ? null : onTap,
+        onPressed: isDisabled ? null : onTap,
         child: child,
       ),
     );

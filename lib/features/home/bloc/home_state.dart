@@ -44,6 +44,9 @@ class HomeState extends Equatable {
   final int otherTasksPage;
   final bool hasMoreOtherTasks;
 
+  final int notificationCount;
+
+
   const HomeState({
 
     //quick actions
@@ -79,6 +82,7 @@ class HomeState extends Equatable {
     this.otherTasksError,
     this.otherTasksPage = 1,
     this.hasMoreOtherTasks = true,
+    this.notificationCount = 0,
 
   });
 
@@ -118,6 +122,8 @@ class HomeState extends Equatable {
     int? otherTasksPage,
     bool? hasMoreOtherTasks,
 
+    int? notificationCount,
+
   }) {
     return HomeState(
 
@@ -148,7 +154,7 @@ class HomeState extends Equatable {
       otherTasksError: otherTasksError,
       otherTasksPage: otherTasksPage ?? this.otherTasksPage,
       hasMoreOtherTasks: hasMoreOtherTasks ?? this.hasMoreOtherTasks,
-
+      notificationCount: notificationCount ?? this.notificationCount,
     );
   }
 
@@ -176,5 +182,6 @@ class HomeState extends Equatable {
     otherTasksError,
     otherTasksPage,
     hasMoreOtherTasks,
+    notificationCount,
   ];
 }

@@ -6,6 +6,7 @@ import 'package:task_manager/features/auth/models/api_response.dart';
 import 'package:task_manager/features/auth/models/device_data.dart';
 
 import '../../../core/constants/api_constants.dart';
+import '../../../core/enums/session_check_result.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/storage_keys.dart';
 import '../../../core/storage/storage_service.dart';
@@ -109,32 +110,27 @@ class AuthRepository {
     }
   }
 
-  Future<bool> checkSessionWithBackend() async {
+  Future<SessionCheckResult> checkSessionWithBackend() async {
     try {
-
       final email = await _storage.read(StorageKeys.userEmail);
       final deviceUniqueId = await _storage.read(StorageKeys.deviceUniqueId);
       final storedSessionId = await _storage.read(StorageKeys.loginSessionId);
 
-      if (email == null ||
-          email.isEmpty ||
-          deviceUniqueId == null ||
-          deviceUniqueId.isEmpty ||
-          storedSessionId == null ||
-          storedSessionId.isEmpty) {
-        return false;
+      if (email == null || email.isEmpty ||
+          deviceUniqueId == null || deviceUniqueId.isEmpty ||
+          storedSessionId == null || storedSessionId.isEmpty) {
+        return SessionCheckResult.invalid;
       }
-
 
       final response = await _dioClient.get(
         ApiConstants.sessionCheck,
         queryParameters: {
           'email_id': email,
           'device_unique_id': deviceUniqueId,
+          'app_type' :"2"
         },
       );
 
-      // ApiResponse with SessionData
       final apiResponse = ApiResponse.fromJson(
         response.data,
             (data) => SessionData.fromJson(data),
@@ -142,44 +138,50 @@ class AuthRepository {
 
       if (apiResponse.status && apiResponse.data != null) {
         final backendSessionId = apiResponse.data!.loginSessionId.toString();
-
-        // Compare session IDs
-        if (backendSessionId == storedSessionId) {
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
+        return backendSessionId == storedSessionId
+            ? SessionCheckResult.valid
+            : SessionCheckResult.invalid;
       }
-    } on DioException {
-      return false;
+
+      return SessionCheckResult.invalid;
+
+    } on DioException catch (e) {
+      // Network error — don't treat as invalid session
+      final isNetworkError =
+          e.type == DioExceptionType.connectionError ||
+              e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout;
+
+      return isNetworkError
+          ? SessionCheckResult.networkError
+          : SessionCheckResult.invalid;
     } catch (e) {
-      return false;
+      return SessionCheckResult.networkError;
     }
   }
 
   Future<bool> isSessionValid() async {
     try {
-      // First check local storage
       final isLoggedIn = await _storage.read(StorageKeys.isLoggedIn);
       final sessionId = await _storage.read(StorageKeys.loginSessionId);
-      debugPrint(
-         " session check : ->"  "isLoggedIn: $isLoggedIn, sessionId: $sessionId"
-      );
+      debugPrint(" session check : ->isLoggedIn: $isLoggedIn, sessionId: $sessionId");
 
       if (isLoggedIn != 'true' || sessionId == null || sessionId.isEmpty) {
         return false;
       }
 
-      // Validate with backend
-      final isBackendValid = await checkSessionWithBackend();
+      final result = await checkSessionWithBackend();
 
-      if (!isBackendValid) {
-        return false;
+      switch (result) {
+        case SessionCheckResult.valid:
+          return true;
+        case SessionCheckResult.invalid:
+          return false;
+        case SessionCheckResult.networkError:
+          debugPrint(" session check : -> network error, trusting local session");
+          return true;
       }
-
-      return true;
     } catch (e) {
       return false;
     }
@@ -227,6 +229,7 @@ class AuthRepository {
       ApiConstants.logout,
       queryParameters: {
         'session_id': sessionId,
+        'app_type' :"2"
       },
     );
 

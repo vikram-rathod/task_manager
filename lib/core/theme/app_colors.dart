@@ -37,8 +37,8 @@ class AppColors {
   static const darkPrimaryContainer = Color(0xFF1B3A1F);
   static const darkOnPrimaryContainer = Color(0xFFB9F0B8);
 
-  static const darkSecondary = Color(0xFF90CAF9);
-  static const darkOnSecondary = Color(0xFF0D1B29);
+  static const darkSecondary = Color(0xFFDCDCEA);
+  static const darkOnSecondary = Color(0xFF262728);
   static const darkSecondaryContainer = Color(0xFF1E3A5A);
   static const darkOnSecondaryContainer = Color(0xFFE3F2FD);
 

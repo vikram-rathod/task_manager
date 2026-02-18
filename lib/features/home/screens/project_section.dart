@@ -1,28 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../bloc/home_bloc.dart';
 import '../bloc/home_state.dart';
+import '../model/project_count_model.dart';
 
 class ProjectSection extends StatelessWidget {
   const ProjectSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return BlocBuilder<HomeBloc, HomeState>(
       buildWhen: (prev, curr) =>
-          prev.isProjectsLoading != curr.isProjectsLoading ||
+      prev.isProjectsLoading != curr.isProjectsLoading ||
           prev.projects != curr.projects,
       builder: (context, state) {
-        if (state.isProjectsLoading) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (state.projects.isEmpty) {
+        if (!state.isProjectsLoading && state.projects.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -31,149 +25,13 @@ class ProjectSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _header(context, state.projects.length),
+              _ProjectHeader(count: state.projects.length),
               const SizedBox(height: 12),
               SizedBox(
-                height: 160,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  itemCount: state.projects.length.clamp(0, 10),
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (context, index) {
-                    final project = state.projects[index];
-                    final progressPercent = project.totalTaskCount > 0
-                        ? (project.completedTaskCount / project.totalTaskCount)
-                        : 0.0;
-
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(14),
-                      onTap: () {
-                        // Navigate to project details
-                      },
-                      child: Container(
-                        width: 200,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: scheme.surface,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: Colors.grey.shade200,
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(7),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(Icons.folder_outlined, size: 22),
-                                ),
-                                const Spacer(),
-                                Icon(
-                                  Icons.chevron_right,
-                                  size: 18,
-                                  color: Colors.grey.shade400,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              project.projectName,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: scheme.onSurface,
-                                height: 1.2,
-                              ),
-                            ),
-                            const Spacer(),
-                            Wrap(
-                              spacing: 5,
-                              runSpacing: 5,
-                              children: [
-                                _buildStatusChip(
-                                  '${project.completedTaskCount}',
-                                  'Done',
-                                  Colors.green.shade600,
-                                  Colors.green.shade50,
-                                ),
-                                _buildStatusChip(
-                                  '${project.inProgressTaskCount}',
-                                  'Active',
-                                  Colors.orange.shade600,
-                                  Colors.orange.shade50,
-                                ),
-                                _buildStatusChip(
-                                  '${project.totalTaskCount}',
-                                  'Total',
-                                  Colors.blue.shade600,
-                                  Colors.blue.shade50,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Progress',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    Text(
-                                      '${(progressPercent * 100).toInt()}%',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: _getProjectColor(context, index),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: LinearProgressIndicator(
-                                    value: progressPercent,
-                                    backgroundColor: Colors.grey.shade200,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      _getProjectColor(context, index),
-                                    ),
-                                    minHeight: 5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                height: 140,
+                child: state.isProjectsLoading
+                    ? const _ProjectShimmerList()
+                    : _ProjectList(projects: state.projects),
               ),
             ],
           ),
@@ -181,13 +39,252 @@ class ProjectSection extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildStatusChip(
-    String count,
-    String label,
-    Color textColor,
-    Color bgColor,
-  ) {
+// ── Shimmer List ─────────────────────────────────────────────────────────────
+
+class _ProjectShimmerList extends StatelessWidget {
+  const _ProjectShimmerList();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      itemCount: 4,
+      separatorBuilder: (_, __) => const SizedBox(width: 10),
+      itemBuilder: (_, __) => const _ProjectShimmerCard(),
+    );
+  }
+}
+
+class _ProjectShimmerCard extends StatelessWidget {
+  const _ProjectShimmerCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Shimmer.fromColors(
+      baseColor: scheme.surfaceContainerHighest,
+      highlightColor: scheme.surfaceContainerLowest,
+      child: Container(
+        width: 200,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: scheme.outlineVariant, width: 1.2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: scheme.onSurface,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: 120,
+              height: 12,
+              decoration: BoxDecoration(
+                color: scheme.onSurface,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              width: 80,
+              height: 10,
+              decoration: BoxDecoration(
+                color: scheme.onSurface,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const Spacer(),
+            Row(
+              children: List.generate(
+                3,
+                    (_) => Padding(
+                  padding: const EdgeInsets.only(right: 5),
+                  child: Container(
+                    width: 44,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: scheme.onSurface,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Real Project List ─────────────────────────────────────────────────────────
+
+class _ProjectList extends StatelessWidget {
+  final List projects;
+
+  const _ProjectList({required this.projects});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      itemCount: projects.length.clamp(0, 10),
+      separatorBuilder: (_, __) => const SizedBox(width: 10),
+      itemBuilder: (context, index) => _ProjectCard(
+        project: projects[index],
+        index: index,
+      ),
+    );
+  }
+}
+
+// ── Reusable Project Card ────────────────────────────────────────────────────
+
+class _ProjectCard extends StatelessWidget {
+  final ProjectCountModel project;
+  final int index;
+
+  const _ProjectCard({required this.project, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final projectColor = _getProjectColor(context, index);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {
+        // Navigate to project details
+      },
+      child: Container(
+        width: 200,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: scheme.outlineVariant.withOpacity(0.2), width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withOpacity(0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: projectColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.folder_outlined,
+                    size: 20,
+                    color: projectColor,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              // ✅ Expanded instead of Spacer — lets text take available space
+              child: Text(
+                project.projectName,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface,
+                  height: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 5,
+              runSpacing: 4,
+              children: [
+                _ProjectStatusChip(
+                  count: '${project.completedTaskCount}',
+                  label: 'Done',
+                  textColor: Colors.green.shade700,
+                  bgColor: Colors.green.shade50,
+                ),
+                _ProjectStatusChip(
+                  count: '${project.inProgressTaskCount}',
+                  label: 'Progress',
+                  textColor: Colors.orange.shade700,
+                  bgColor: Colors.orange.shade50,
+                ),
+                _ProjectStatusChip(
+                  count: '${project.totalTaskCount}',
+                  label: 'To Client',
+                  textColor: Colors.blue.shade700,
+                  bgColor: Colors.blue.shade50,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getProjectColor(BuildContext context, int index) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = [
+      scheme.primary,
+      scheme.secondary,
+      scheme.tertiary,
+      Colors.orange.shade600,
+      Colors.red.shade600,
+    ];
+    return colors[index % colors.length];
+  }
+}
+
+// ── Reusable Status Chip ─────────────────────────────────────────────────────
+
+class _ProjectStatusChip extends StatelessWidget {
+  final String count;
+  final String label;
+  final Color textColor;
+  final Color bgColor;
+
+  const _ProjectStatusChip({
+    required this.count,
+    required this.label,
+    required this.textColor,
+    required this.bgColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
@@ -218,56 +315,53 @@ class ProjectSection extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _header(BuildContext context, int count) {
+// ── Header ───────────────────────────────────────────────────────────────────
+
+class _ProjectHeader extends StatelessWidget {
+  final int count;
+
+  const _ProjectHeader({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Row(
         children: [
-          // Icon + Title (together)
-          Row(
-            children: [
-              Icon(Icons.folder_open_rounded, size: 20, color: scheme.primary),
-              const SizedBox(width: 6),
-              const Text(
-                "Projects",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ],
-          ),
-
-          const Spacer(),
-
-          // Count badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              "$count",
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
-          ),
-
+          Icon(Icons.folder_open_rounded, size: 20, color: scheme.primary),
           const SizedBox(width: 6),
-
-          // View all
+          Text(
+            "Projects",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+              color: scheme.onSurface,
+            ),
+          ),
+          const Spacer(),
+          // Container(
+          //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          //   decoration: BoxDecoration(
+          //     color: scheme.surfaceContainerHighest,
+          //     borderRadius: BorderRadius.circular(12),
+          //   ),
+          //   child: Text(
+          //     "$count",
+          //     style: TextStyle(
+          //       fontSize: 12,
+          //       fontWeight: FontWeight.w600,
+          //       color: scheme.onSurfaceVariant,
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(width: 6),
           TextButton(
-            onPressed: () {
-              // Navigate to all projects
-            },
+            onPressed: () {},
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               minimumSize: const Size(0, 32),
@@ -278,26 +372,12 @@ class ProjectSection extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: scheme.primary,
+                color: scheme.onSurface,
               ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  Color _getProjectColor(BuildContext context, int index) {
-    final scheme = Theme.of(context).colorScheme;
-
-    final colors = [
-      scheme.primaryContainer,
-      scheme.secondaryContainer,
-      scheme.tertiaryContainer,
-      scheme.surfaceVariant,
-      scheme.errorContainer,
-    ];
-
-    return colors[index % colors.length];
   }
 }

@@ -492,6 +492,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
                   .toList(),
               views: state.tabs.map((tab) => _buildTasksList(tab.id)).toList(),
               onTabChanged: _onTabChanged,
+              height:MediaQuery.of(context).size.height * 0.75,
               tabCounts: [
                 widget.employee.pendingAtMe,
                 widget.employee.pendingAtOther,

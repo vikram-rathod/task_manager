@@ -1,55 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/models/taskchat/bcstep_task_model.dart';
 import '../bloc/module_notification_bloc.dart';
 import '../notification_design_tokens.dart';
 
 class NotificationMarkReadButton extends StatelessWidget {
-  final String notificationId;
+  final BcstepTaskModel task;
+  final String groupType;
   final String seenUrl;
 
   const NotificationMarkReadButton({
     super.key,
-    required this.notificationId,
+    required this.task,
+    required this.groupType,
     required this.seenUrl,
   });
 
   @override
   Widget build(BuildContext context) {
+    // readKey is unique per item within its type: '{groupType}_{workId|chatId}'
+    final readKey = task.readKey(groupType);
+
     return BlocBuilder<ModuleNotificationBloc, ModuleNotificationState>(
-      buildWhen: (p, c) =>
-      p.markingReadId != c.markingReadId ||
-          p.readMap != c.readMap,
+      buildWhen: (p, c) => p.isMarkingRead(readKey) != c.isMarkingRead(readKey),
       builder: (context, state) {
-        final isLoading = state.isMarkingRead(notificationId);
-        final isRead = state.isRead(notificationId);
+        final isLoading = state.isMarkingRead(readKey);
 
         return GestureDetector(
-          onTap: (isLoading || isRead)
+          onTap: isLoading
               ? null
               : () {
             context.read<ModuleNotificationBloc>().add(
               NotificationMarkedAsRead(
-                notificationId: notificationId,
+                readKey: readKey,
+                groupType: groupType,
                 seenUrl: seenUrl,
               ),
             );
           },
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(
               horizontal: NotificationDt.sp12,
               vertical: 6,
             ),
             decoration: BoxDecoration(
-              color: isRead
-                  ? NotificationDt.positive.withOpacity(0.08)
-                  : ntfSurfaceAlt(context),
+              color: ntfSurfaceAlt(context),
               borderRadius: BorderRadius.circular(NotificationDt.r8),
-              border: Border.all(
-                color: isRead
-                    ? NotificationDt.positive.withOpacity(0.25)
-                    : ntfBorder(context),
-              ),
+              border: Border.all(color: ntfBorder(context)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -65,27 +64,17 @@ class NotificationMarkReadButton extends StatelessWidget {
                   )
                 else
                   Icon(
-                    isRead
-                        ? Icons.check_circle_outline_rounded
-                        : Icons.done_outline_rounded,
+                    Icons.done_outline_rounded,
                     size: 14,
-                    color: isRead
-                        ? NotificationDt.positive
-                        : ntfInk2(context),
+                    color: ntfInk2(context),
                   ),
                 const SizedBox(width: 6),
                 Text(
-                  isLoading
-                      ? 'Marking…'
-                      : isRead
-                      ? 'Read'
-                      : 'Mark as read',
+                  isLoading ? 'Marking...' : 'Mark as read',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: isRead
-                        ? NotificationDt.positive
-                        : ntfInk2(context),
+                    color: ntfInk2(context),
                   ),
                 ),
               ],

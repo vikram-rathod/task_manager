@@ -166,12 +166,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (isValid) {
         final user = await repo.getSavedUser();
-        final isMultipleAccounts =
-        await repo.getSavedIsMultipleAccounts();
+        final isMultipleAccounts = await repo.getSavedIsMultipleAccounts();
 
         if (user != null) {
           emit(AuthAuthenticated(
-              user: user, isMultipleAccounts: isMultipleAccounts));
+            user: user,
+            isMultipleAccounts: isMultipleAccounts,
+          ));
         } else {
           emit(AuthSessionExpired("Not a valid session. Please login again."));
         }
@@ -179,6 +180,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthSessionExpired("Session expired. Please login again."));
       }
     } catch (e) {
+      // Don't log out on unexpected errors — show error instead
       emit(AuthError(e.toString()));
     }
   }

@@ -5,14 +5,12 @@ import 'package:task_manager/features/auth/bloc/auth_bloc.dart';
 import 'package:task_manager/features/auth/bloc/auth_event.dart';
 import 'package:task_manager/features/auth/bloc/auth_state.dart';
 import 'package:task_manager/features/auth/models/user_model.dart';
+import 'package:task_manager/features/home/bloc/home_bloc.dart';
 import 'package:task_manager/features/home/screens/home_app_bar.dart';
 import 'package:task_manager/features/profile/profile_page.dart';
 
-import '../../../animations/header_text_animation.dart';
-import '../../../core/device/device_info_service.dart';
-import '../../../core/theme/theme_cubit.dart';
 import '../../auth/dialogs/multi_account_dialog.dart';
-import '../../createtask/screen/create_task_screen.dart';
+import '../bloc/home_state.dart';
 import 'home_bottom_nav.dart';
 import 'home_dash_board_page.dart';
 import 'home_fab.dart';
@@ -59,6 +57,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme
+        .of(context)
+        .colorScheme;
+
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         // Handle navigation here
@@ -111,32 +113,46 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
       },
-      builder: (context, state) {
+
+      builder: (context, authState) {
+
         final bool showSwitchAccount =
-            state is AuthAuthenticated && state.isMultipleAccounts;
-        // Get user info if authenticated
+            authState is AuthAuthenticated && authState.isMultipleAccounts;
+
         UserModel? user;
-        if (state is AuthAuthenticated) {
-          user = state.user;
+        if (authState is AuthAuthenticated) {
+          user = authState.user;
         }
-        // Build UI here
-        return Scaffold(
-          appBar: HomeAppBar(
-            user: user,
-            showSwitchAccount: showSwitchAccount,
-            state: state,
-            notificationCount: 5, 
-          ),
-          body: IndexedStack(index: _currentIndex, children: _pages),
-          bottomNavigationBar: HomeBottomNav(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-          ),
-          floatingActionButton: const HomeFab(),
+
+        return BlocBuilder<HomeBloc, HomeState>(
+          buildWhen: (previous, current) =>
+          previous.notificationCount != current.notificationCount,
+          builder: (context, homeState) {
+            print("UI notificationCount: ${homeState.notificationCount}");
+
+            return Scaffold(
+              appBar: HomeAppBar(
+                user: user,
+                showSwitchAccount: showSwitchAccount,
+                state: authState,
+                notificationCount: homeState.notificationCount,
+              ),
+              body: IndexedStack(
+                index: _currentIndex,
+                children: _pages,
+              ),
+              bottomNavigationBar:
+              HomeBottomNav(
+                currentIndex: _currentIndex,
+                onTap: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+              ),
+              floatingActionButton: const HomeFab(),
+            );
+          },
         );
       },
     );

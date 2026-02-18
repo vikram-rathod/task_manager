@@ -18,7 +18,7 @@ class ModuleNotificationBloc
   final StorageService _storageService;
 
   ModuleNotificationBloc(this._repository, this._storageService)
-    : super(const ModuleNotificationState()) {
+      : super(const ModuleNotificationState()) {
     on<NotificationFetched>(_onFetched);
     on<NotificationRefreshed>(_onRefreshed);
     on<NotificationApprovalSubmitted>(_onApprovalSubmitted);
@@ -27,26 +27,27 @@ class ModuleNotificationBloc
   }
 
   Future<void> _onFetched(
-    NotificationFetched event,
-    Emitter<ModuleNotificationState> emit,
-  ) async {
+      NotificationFetched event,
+      Emitter<ModuleNotificationState> emit,
+      ) async {
     emit(state.copyWith(isLoading: true, isError: false, errorMessage: ''));
     await _fetch(emit);
   }
 
   Future<void> _onRefreshed(
-    NotificationRefreshed event,
-    Emitter<ModuleNotificationState> emit,
-  ) async {
+      NotificationRefreshed event,
+      Emitter<ModuleNotificationState> emit,
+      ) async {
     emit(state.copyWith(isRefreshing: true, isError: false, errorMessage: ''));
     await _fetch(emit);
   }
 
   Future<void> _onApprovalSubmitted(
-    NotificationApprovalSubmitted event,
-    Emitter<ModuleNotificationState> emit,
-  ) async {
-    emit(state.copyWith(submittingId: event.notificationId));
+      NotificationApprovalSubmitted event,
+      Emitter<ModuleNotificationState> emit,
+      ) async {
+    // Key = '{notificationId}_{taskStatus}' — notificationId is unique per approval item
+    emit(state.copyWith(submittingId: '${event.notificationId}_${event.taskStatus}'));
     try {
       final userId = await _storageService.read(StorageKeys.userId) ?? '';
 
@@ -58,9 +59,14 @@ class ModuleNotificationBloc
       );
 
       if (response.status == true) {
-        final updated = Map<String, String>.from(state.approvedMap)
-          ..[event.notificationId] = event.taskStatus;
-        emit(state.copyWith(clearSubmittingId: true, approvedMap: updated));
+        // Remove by notificationId — unique per action_notification item
+        final updatedGroups = state.groupsWithoutActionNotification(
+          event.notificationId,
+        );
+        emit(state.copyWith(
+          clearSubmittingId: true,
+          groups: updatedGroups,
+        ));
       } else {
         emit(
           state.copyWith(
@@ -82,9 +88,9 @@ class ModuleNotificationBloc
   }
 
   void _onErrorCleared(
-    NotificationErrorCleared event,
-    Emitter<ModuleNotificationState> emit,
-  ) => emit(state.copyWith(isError: false, errorMessage: ''));
+      NotificationErrorCleared event,
+      Emitter<ModuleNotificationState> emit,
+      ) => emit(state.copyWith(isError: false, errorMessage: ''));
 
   Future<void> _fetch(Emitter<ModuleNotificationState> emit) async {
     try {
@@ -98,6 +104,7 @@ class ModuleNotificationBloc
             isRefreshing: false,
             isError: false,
             groups: response.data!,
+            wasEverLoaded: true,
           ),
         );
       } else {
@@ -126,68 +133,42 @@ class ModuleNotificationBloc
       NotificationMarkedAsRead event,
       Emitter<ModuleNotificationState> emit,
       ) async {
-    const String tag = "ModuleNotificationBloc";
-
-    debugPrint("[$tag] MarkAsRead started");
-    debugPrint("[$tag] NotificationId: ${event.notificationId}");
-    debugPrint("[$tag] SeenUrl: ${event.seenUrl}");
-
-    // Emit loading state
-    emit(state.copyWith(markingReadId: event.notificationId));
+    // Use readKey as the loading state key (type_workId or type_chatId)
+    emit(state.copyWith(markingReadId: event.readKey));
 
     try {
-      debugPrint("[$tag] Calling repository.markAsReadFromUrl");
-
-      final response =
-      await _repository.markAsReadFromUrl(event.seenUrl);
-
-      debugPrint("[$tag] Response received");
-      debugPrint("[$tag] Status: ${response.status}");
-      debugPrint("[$tag] Message: ${response.message}");
+      final response = await _repository.markAsReadFromUrl(event.seenUrl);
 
       if (response.status) {
-        final updatedReadMap = Map<String, bool>.from(state.readMap)
-          ..[event.notificationId] = true;
-
-        debugPrint("[$tag] Updating local readMap");
-        debugPrint("[$tag] Updated readMap: $updatedReadMap");
+        final updatedGroups = state.groupsWithoutItem(
+          groupType: event.groupType,
+          itemReadKey: event.readKey,
+        );
 
         emit(state.copyWith(
-          readMap: updatedReadMap,
+          groups: updatedGroups,
           clearMarkingReadId: true,
         ));
-
-        debugPrint("[$tag] Success state emitted");
       } else {
-        debugPrint("[$tag] API returned failure");
-
         emit(
           state.copyWith(
             clearMarkingReadId: true,
             isError: true,
-            errorMessage: response.message ?? "Failed",
+            errorMessage: response.message?.isNotEmpty == true
+                ? response.message!
+                : 'Failed to mark as read. Please try again.',
           ),
         );
-
-        debugPrint("[$tag] Error state emitted");
       }
-    } catch (e, stackTrace) {
-      debugPrint("[$tag] Exception occurred");
-      debugPrint("[$tag] Error: $e");
-      debugPrint("[$tag] StackTrace: $stackTrace");
-
+    } catch (e) {
       emit(
         state.copyWith(
           clearMarkingReadId: true,
           isError: true,
-          errorMessage: e.toString(),
+          errorMessage: 'Network error. Please check your connection.',
         ),
       );
-
-      debugPrint("[$tag] Exception state emitted");
     }
-
-    debugPrint("[$tag] MarkAsRead finished");
   }
 
 }

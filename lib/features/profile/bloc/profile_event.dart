@@ -14,3 +14,4 @@ class LoadProfile extends ProfileEvent {
   @override
   List<Object?> get props => [];
 }
+

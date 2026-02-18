@@ -26,103 +26,88 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<ClearTodaysTasksError>(_clearTodaysTasksError);
   }
 
-  //  fetch quick actions data for dashboard
   Future<void> _fetchQuickActions(
       FetchQuickActions event,
       Emitter<HomeState> emit,
       ) async {
-    emit(state.copyWith(isQuickActionsLoading: true));
+    final staticActions = [
+      QuickActionModel(
+        id: 'addTask',
+        icon: Icons.add,
+        label: 'Add Task-List',
+        isHighlighted: true,
+        onTap: () {},
+      ),
+      QuickActionModel(
+        id: 'prochat',
+        icon: Icons.chat_bubble_outline,
+        label: 'Prochat Tasks',
+        count: 0,
+        onTap: () {},
+      ),
+      QuickActionModel(
+        id: 'dueToday',
+        icon: Icons.today,
+        label: 'Due Today',
+        count: 0,
+        pendingAtMe: 0,
+        pendingAtOthers: 0,
+        onTap: () {},
+      ),
+      QuickActionModel(
+        id: 'overDue',
+        icon: Icons.error_outline,
+        label: 'Over Due',
+        count: 0,
+        pendingAtMe: 0,
+        pendingAtOthers: 0,
+        onTap: () {},
+      ),
+    ];
+
+    emit(state.copyWith(
+      isQuickActionsLoading: true,
+      quickActions: staticActions,
+      notificationCount: 0
+    ));
 
     try {
       final data = await repository.getDashboardCounts();
 
-      final actions = [
-        QuickActionModel(
-          id: 'addTask',
-          icon: Icons.add,
-          label: 'Add Task-List',
-          isHighlighted: true,
-          onTap: () {},
-        ),
-        QuickActionModel(
-          id: 'prochat',
-          icon: Icons.chat_bubble,
-          label: 'Prochat Tasks',
-          count: data.proChatCount,
-          onTap: () {},
-        ),
-        QuickActionModel(
-          id: 'dueToday',
-          icon: Icons.today,
-          label: 'Due Today',
-          count: data.todayDueCount,
-          pendingAtMe: data.todayDuePendingAtMe,
-          pendingAtOthers: data.todayDuePendingAtOthers,
-          onTap: () {},
-        ),
-        QuickActionModel(
-          id: 'overDue',
-          icon: Icons.error_outline,
-          label: 'Over Due',
-          count: data.overDueCount,
-          pendingAtMe: data.overduePendingAtMe,
-          pendingAtOthers: data.overduePendingAtOther,
-          onTap: () {},
-        ),
-      ];
+      final updatedActions = staticActions.map((action) {
+        switch (action.id) {
+          case 'prochat':
+            return action.copyWith(count: data.proChatCount);
+          case 'dueToday':
+            return action.copyWith(
+              count: data.todayDueCount,
+              pendingAtMe: data.todayDuePendingAtMe,
+              pendingAtOthers: data.todayDuePendingAtOthers,
+            );
+          case 'overDue':
+            return action.copyWith(
+              count: data.overDueCount,
+              pendingAtMe: data.overduePendingAtMe,
+              pendingAtOthers: data.overduePendingAtOther,
+            );
+          default:
+            return action;
+        }
+      }).toList();
 
-      emit(
-        state.copyWith(
-          isQuickActionsLoading: false,
-          quickActions: actions,
-        ),
-      );
+      emit(state.copyWith(
+        isQuickActionsLoading: false,
+        quickActions: updatedActions,
+          notificationCount: data.notificationCount
+      ));
     } catch (e, stackTrace) {
       debugPrint('[HomeBloc] Error in FetchQuickActions: $e');
       debugPrint(stackTrace.toString());
-
-      final defaultActions = [
-        QuickActionModel(
-          id: 'addTask',
-          icon: Icons.add,
-          label: 'Add Task-List',
-          isHighlighted: true,
-          onTap: () {},
-        ),
-        QuickActionModel(
-          id: 'prochat',
-          icon: Icons.chat_bubble,
-          label: 'Prochat Tasks',
-          count: 0,
-          onTap: () {},
-        ),
-        QuickActionModel(
-          id: 'dueToday',
-          icon: Icons.today,
-          label: 'Due Today',
-          count: 0,
-          pendingAtMe: 0,
-          pendingAtOthers: 0,
-          onTap: () {},
-        ),
-        QuickActionModel(
-          id: 'overDue',
-          icon: Icons.error_outline,
-          label: 'Over Due',
-          count: 0,
-          pendingAtMe: 0,
-          pendingAtOthers: 0,
-          onTap: () {},
-        ),
-      ];
-
-      emit(
-        state.copyWith(
-          isQuickActionsLoading: false,
-          quickActions: defaultActions,
-          quickActionsError: e.toString(),
-        ),
-      );
+      emit(state.copyWith(
+        isQuickActionsLoading: false,
+        quickActionsError: e.toString(),
+          notificationCount: 0
+      ));
     }
   }
  
@@ -308,7 +293,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     debugPrint("[$_tag] ===== FetchTodaysTasks END =====\n");
   }
-
 
 
   void _clearTodaysTasksError(

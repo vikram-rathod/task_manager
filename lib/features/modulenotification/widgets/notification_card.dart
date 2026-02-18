@@ -8,16 +8,11 @@ import 'notification_card_bodies.dart';
 import 'notification_mark_read_button.dart';
 import 'notification_primitives.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Card
-// ─────────────────────────────────────────────────────────────────────────────
-
 class NotificationCard extends StatelessWidget {
   final BcstepTaskModel task;
   final TaskNotificationType? type;
   final NotificationTypeConfig tc;
   final String? actionStatus;
-  final bool isSubmitting;
 
   const NotificationCard({
     super.key,
@@ -25,16 +20,12 @@ class NotificationCard extends StatelessWidget {
     required this.type,
     required this.tc,
     required this.actionStatus,
-    required this.isSubmitting,
   });
 
-  /// actionNotification uses Approve/Hold/Cancel — it never has a seenUrl.
-  /// Every other type shows "Mark as read" when seenUrl is present.
   bool get _showMarkRead =>
       type != TaskNotificationType.actionNotification &&
           (task.seenStatusUrl?.isNotEmpty ?? false);
 
-  /// Left-edge strip color — reflects resolved state or type dot.
   Color _edgeColor() {
     return switch (actionStatus) {
       'Completed'  => NotificationDt.positive,
@@ -93,7 +84,6 @@ class NotificationCard extends StatelessWidget {
                       const SizedBox(height: NotificationDt.sp12),
                       NotificationApprovalButtons(
                         task: task,
-                        isSubmitting: isSubmitting,
                       ),
                     ],
 
@@ -103,9 +93,10 @@ class NotificationCard extends StatelessWidget {
                       Container(height: 1, color: ntfBorder(context)),
                       const SizedBox(height: NotificationDt.sp12),
                       NotificationMarkReadButton(
-                        notificationId: task.notificationId,
+                        task: task,
+                        groupType: type?.value ?? '',
                         seenUrl: task.seenStatusUrl!,
-                      )
+                      ),
                     ],
                   ],
                 ),
@@ -117,10 +108,6 @@ class NotificationCard extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Card Header
-// ─────────────────────────────────────────────────────────────────────────────
 
 class NotificationCardHeader extends StatelessWidget {
   final BcstepTaskModel task;
@@ -139,7 +126,6 @@ class NotificationCardHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // icon · type label ········ timestamp · [badge]
         Row(
           children: [
             Icon(tc.icon, size: 13, color: ntfInk2(context)),

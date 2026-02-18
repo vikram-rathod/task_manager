@@ -14,8 +14,10 @@ class NotificationRefreshed extends ModuleNotificationEvent {
   const NotificationRefreshed();
 }
 
-/// Dispatched for all three action buttons.
-/// [taskStatus] is one of: 'Completed' | 'Cancelled' | 'Hold'
+class NotificationErrorCleared extends ModuleNotificationEvent {
+  const NotificationErrorCleared();
+}
+
 class NotificationApprovalSubmitted extends ModuleNotificationEvent {
   final String workId;
   final String notificationId;
@@ -31,20 +33,24 @@ class NotificationApprovalSubmitted extends ModuleNotificationEvent {
   List<Object?> get props => [workId, notificationId, taskStatus];
 }
 
-class NotificationErrorCleared extends ModuleNotificationEvent {
-  const NotificationErrorCleared();
-}
-
 class NotificationMarkedAsRead extends ModuleNotificationEvent {
-  final String notificationId;
+  /// Unique key for this item: '{groupType}_{workId}' or '{groupType}_{chatId}'
+  /// Built from BcstepTaskModel.readKey(groupType).
+  final String readKey;
+
+  /// The notification type string (e.g. 'status_change', 'mentioned_message').
+  /// Used to scope removal to the correct group only.
+  final String groupType;
+
+  /// The API URL to call to mark this item as read.
   final String seenUrl;
 
   const NotificationMarkedAsRead({
-    required this.notificationId,
+    required this.readKey,
+    required this.groupType,
     required this.seenUrl,
   });
 
   @override
-  List<Object?> get props => [notificationId, seenUrl];
+  List<Object?> get props => [readKey, groupType, seenUrl];
 }
-

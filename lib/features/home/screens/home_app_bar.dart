@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:task_manager/animations/header_text_animation.dart';
 import 'package:task_manager/core/device/device_info_service.dart';
 import 'package:task_manager/core/theme/theme_cubit.dart';
 import 'package:task_manager/features/auth/bloc/auth_bloc.dart';
@@ -9,11 +8,13 @@ import 'package:task_manager/features/auth/bloc/auth_state.dart';
 import 'package:task_manager/features/auth/models/user_model.dart';
 import 'package:task_manager/features/home/screens/title_section.dart';
 
+import '../../../reusables/logout_confirmation.dart';
+
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final UserModel? user;
   final bool showSwitchAccount;
   final AuthState state;
-  final int notificationCount; 
+  final int notificationCount;
 
   const HomeAppBar({
     super.key,
@@ -31,7 +32,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Column(
-
       children: [
         AppBar(
           title: Padding(
@@ -78,46 +78,49 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           actions: [
             // Notification Icon with Badge
-            Stack(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
-                  onPressed: () {
-                    // Navigate to notifications page
-                    Navigator.pushNamed(context, '/notifications');
-                  },
-                ),
-                if (notificationCount > 0)
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      constraints: const BoxConstraints(
-                        minWidth: 18,
-                        minHeight: 18,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          width: 1.5,
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/notifications');
+              },
+              child: Stack(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Icon(Icons.notifications_outlined),
+                  ),
+                  if (notificationCount > 0)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
                         ),
-                      ),
-                      child: Text(
-                        notificationCount > 99 ? '99+' : '$notificationCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            width: 1.5,
+                          ),
                         ),
-                        textAlign: TextAlign.center,
+                        child: Text(
+                          notificationCount > 99 ? '99+' : '$notificationCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
+
             // Menu Dropdown
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),
@@ -250,64 +253,21 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Future<void> _showLogoutConfirmation(BuildContext context) async {
-    final result = await showDialog<bool>(
+    showDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Row(
-            children: [
-              Icon(Icons.logout, color: Colors.red),
-              SizedBox(width: 12),
-              Text(
-                'Logout',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          content: const Text(
-            'Are you sure you want to logout?',
-            style: TextStyle(fontSize: 14),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Logout',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
+      builder: (_) {
+        return LogoutConfirmationDialog(
+          onConfirm: () {
+            if (state is AuthAuthenticated) {
+              final user = (state as AuthAuthenticated).user;
+              context.read<AuthBloc>().add(
+                LogoutRequested(sessionId: user.loginSessionId),
+              );
+            }
+          },
         );
       },
     );
-
-    if (result == true && context.mounted) {
-      if (state is AuthAuthenticated) {
-        final user = (state as AuthAuthenticated).user;
-        context.read<AuthBloc>().add(
-              LogoutRequested(sessionId: user.loginSessionId),
-            );
-      }
-    }
   }
+
 }

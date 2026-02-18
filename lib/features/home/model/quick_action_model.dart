@@ -23,6 +23,23 @@ class QuickActionModel extends Equatable {
     this.pendingAtOthers = 0,
   });
 
+  QuickActionModel copyWith({
+    int? count,
+    int? pendingAtMe,
+    int? pendingAtOthers,
+  }) {
+    return QuickActionModel(
+      id: id,
+      icon: icon,
+      label: label,
+      isHighlighted: isHighlighted,
+      onTap: onTap,
+      count: count ?? this.count,
+      pendingAtMe: pendingAtMe ?? this.pendingAtMe,
+      pendingAtOthers: pendingAtOthers ?? this.pendingAtOthers,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,

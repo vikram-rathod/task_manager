@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../bloc/home_bloc.dart';
 import '../bloc/home_state.dart';
@@ -13,15 +14,9 @@ class QuickActionSection extends StatelessWidget {
 
     return BlocBuilder<HomeBloc, HomeState>(
       buildWhen: (p, c) =>
-          p.quickActions != c.quickActions ||
+      p.quickActions != c.quickActions ||
           p.isQuickActionsLoading != c.isQuickActionsLoading,
       builder: (context, state) {
-        if (state.isQuickActionsLoading) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
 
         if (state.quickActions.isEmpty) {
           return const SizedBox.shrink();
@@ -34,7 +29,6 @@ class QuickActionSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Row(
                 children: [
-                  // Icon + Label 
                   Row(
                     children: [
                       Icon(
@@ -43,42 +37,39 @@ class QuickActionSection extends StatelessWidget {
                         size: 20,
                       ),
                       const SizedBox(width: 6),
-                      const Text(
+                      Text(
                         "Quick Actions",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.3,
+                          color: scheme.onSurface,
                         ),
                       ),
                     ],
                   ),
-
                   const Spacer(),
-
-                  // Count badge at end
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      "${state.quickActions.length}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ),
+                  // Container(
+                  //   padding: const EdgeInsets.symmetric(
+                  //     horizontal: 8,
+                  //     vertical: 2,
+                  //   ),
+                  //   decoration: BoxDecoration(
+                  //     color: Colors.grey.shade100,
+                  //     borderRadius: BorderRadius.circular(12),
+                  //   ),
+                  //   child: Text(
+                  //     "${state.quickActions.length}",
+                  //     style: TextStyle(
+                  //       fontSize: 12,
+                  //       fontWeight: FontWeight.w600,
+                  //       color: Colors.grey.shade700,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
-
             const SizedBox(height: 8),
             SizedBox(
               height: 70,
@@ -91,7 +82,7 @@ class QuickActionSection extends StatelessWidget {
                   final action = state.quickActions[index];
                   final showPendingBreakdown =
                       (action.id == 'dueToday' || action.id == 'overDue') &&
-                      action.count > 0;
+                          action.count > 0;
 
                   return InkWell(
                     borderRadius: BorderRadius.circular(12),
@@ -103,18 +94,10 @@ class QuickActionSection extends StatelessWidget {
                           Navigator.pushNamed(context, '/prochat', arguments: action);
                           break;
                         case 'dueToday':
-                          Navigator.pushNamed(
-                            context,
-                            '/dueToday',
-                            arguments: action,
-                          );
+                          Navigator.pushNamed(context, '/dueToday', arguments: action);
                           break;
                         case 'overDue':
-                          Navigator.pushNamed(
-                            context,
-                            '/overdue',
-                            arguments: action,
-                          );
+                          Navigator.pushNamed(context, '/overdue', arguments: action);
                           break;
                       }
                     },
@@ -170,7 +153,28 @@ class QuickActionSection extends StatelessWidget {
                                   height: 1.1,
                                 ),
                               ),
-                              if (showPendingBreakdown) ...[
+
+                              // ✅ CHANGED: shimmer on count area when loading
+                              if (state.isQuickActionsLoading &&
+                                  action.id != 'addTask') ...[
+                                const SizedBox(height: 3),
+                                Shimmer.fromColors(
+                                  baseColor: action.isHighlighted
+                                      ? Colors.white.withOpacity(0.3)
+                                      : Colors.grey.shade300,
+                                  highlightColor: action.isHighlighted
+                                      ? Colors.white.withOpacity(0.6)
+                                      : Colors.grey.shade100,
+                                  child: Container(
+                                    width: 48,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                ),
+                              ] else if (showPendingBreakdown) ...[
                                 const SizedBox(height: 3),
                                 _buildPendingCount(
                                   action.pendingAtMe,
@@ -188,10 +192,7 @@ class QuickActionSection extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: action.isHighlighted
                                         ? scheme.primary
-                                        : _getIconBackgroundColor(
-                                            context,
-                                            action.id,
-                                          ),
+                                        : _getIconBackgroundColor(context, action.id),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -222,11 +223,11 @@ class QuickActionSection extends StatelessWidget {
   }
 
   Widget _buildPendingCount(
-    int pendingAtMe,
-    int total,
-    bool isHighlighted,
-    String actionId,
-  ) {
+      int pendingAtMe,
+      int total,
+      bool isHighlighted,
+      String actionId,
+      ) {
     return RichText(
       text: TextSpan(
         children: [

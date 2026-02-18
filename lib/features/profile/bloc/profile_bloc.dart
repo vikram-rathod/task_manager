@@ -10,9 +10,9 @@ part 'profile_event.dart';
 part 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  final StorageService _storageService;
+  final StorageService storageService;
 
-  ProfileBloc(this._storageService,) : super(const ProfileState()) {
+  ProfileBloc(this.storageService,) : super(const ProfileState()) {
 
     on<LoadProfile>(_onLoadProfile);
   }
@@ -24,39 +24,39 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(state.copyWith(isProfileLoading: true));
 
     try {
-      final userId = await _storageService.read(StorageKeys.userId);
-      final userType = await _storageService.read(StorageKeys.userType);
-      final companyId = await _storageService.read(StorageKeys.companyId);
+      final userId = await storageService.read(StorageKeys.userId);
+      final userType = await storageService.read(StorageKeys.userType);
+      final companyId = await storageService.read(StorageKeys.companyId);
       final refCandidateId =
-      await _storageService.read(StorageKeys.refCandidateId);
-      final userFixId = await _storageService.read(StorageKeys.userFixId);
+      await storageService.read(StorageKeys.refCandidateId);
+      final userFixId = await storageService.read(StorageKeys.userFixId);
       final userAccAutoCreate =
-      await _storageService.read(StorageKeys.userAccAutoCreate);
+      await storageService.read(StorageKeys.userAccAutoCreate);
 
       final user = UserModel(
         userName:
-        await _storageService.read(StorageKeys.userName) ?? '',
+        await storageService.read(StorageKeys.userName) ?? '',
         userId: int.tryParse(userId ?? '') ?? 0,
         userType: int.tryParse(userType ?? '') ?? 0,
         userTypeName:
-        await _storageService.read(StorageKeys.userTypeName) ?? '',
+        await storageService.read(StorageKeys.userTypeName) ?? '',
         companyId: int.tryParse(companyId ?? '') ?? 0,
         companyName:
-        await _storageService.read(StorageKeys.companyName) ?? '',
+        await storageService.read(StorageKeys.companyName) ?? '',
         companyType:
-        await _storageService.read(StorageKeys.companyType) ?? '',
+        await storageService.read(StorageKeys.companyType) ?? '',
         companyLogoUrl:
-        await _storageService.read(StorageKeys.companyLogoUrl) ?? '',
+        await storageService.read(StorageKeys.companyLogoUrl) ?? '',
         userProfileUrl:
-        await _storageService.read(StorageKeys.userProfileUrl) ?? '',
+        await storageService.read(StorageKeys.userProfileUrl) ?? '',
         profileType:
-        await _storageService.read(StorageKeys.profileType) ?? '',
+        await storageService.read(StorageKeys.profileType) ?? '',
         userMobileNumber:
-        await _storageService.read(StorageKeys.userMobile) ?? '',
+        await storageService.read(StorageKeys.userMobile) ?? '',
         userEmail:
-        await _storageService.read(StorageKeys.userEmail) ?? '',
+        await storageService.read(StorageKeys.userEmail) ?? '',
         designation:
-        await _storageService.read(StorageKeys.designation) ?? '',
+        await storageService.read(StorageKeys.designation) ?? '',
         userAccAutoCreate:
         userAccAutoCreate == "true",
         refCandidateId:

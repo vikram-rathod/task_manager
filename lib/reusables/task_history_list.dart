@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'task_history_item.dart';
 
 /// Generic model for task history
@@ -67,10 +68,11 @@ class TaskHistoryList extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         letterSpacing: -0.3,
+                        color: scheme.onSurface,
                       ),
                     ),
                   ],
@@ -92,7 +94,7 @@ class TaskHistoryList extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: scheme.primary,
+                        color: scheme.onSurface,
                       ),
                     ),
                   ),
@@ -104,7 +106,7 @@ class TaskHistoryList extends StatelessWidget {
 
           // Content
           if (isLoading)
-            _buildLoadingState()
+            _buildLoadingState(context)
           else if (historyItems.isEmpty)
             _buildEmptyState(scheme)
           else
@@ -114,10 +116,72 @@ class TaskHistoryList extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingState() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 32),
-      child: Center(child: CircularProgressIndicator()),
+  Widget _buildLoadingState(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: scheme.onSurfaceVariant.withOpacity(0.2),
+          width: 1.2,
+        ),
+      ),
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
+        child: ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 5,
+          separatorBuilder: (_, __) => Divider(
+            height: 1,
+            color: scheme.onSurfaceVariant.withOpacity(0.2),
+          ),
+          itemBuilder: (_, __) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            child: Row(
+              children: [
+                // Icon placeholder
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Text placeholders
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: 100,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

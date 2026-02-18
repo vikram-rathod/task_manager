@@ -5,6 +5,8 @@ class ReusableTabsSection extends StatefulWidget {
   final List<Widget> views;
   final ValueChanged<int>? onTabChanged;
   final List<int>? tabCounts; // Optional counts for each tab
+  final double height;
+
 
   const ReusableTabsSection({
     super.key,
@@ -12,6 +14,7 @@ class ReusableTabsSection extends StatefulWidget {
     required this.views,
     this.onTabChanged,
     this.tabCounts,
+    this.height = 400,
   });
 
   @override
@@ -44,7 +47,6 @@ class _ReusableTabsSectionState extends State<ReusableTabsSection>
     super.dispose();
   }
 
-  // Build tab with optional count badge
   Widget _buildTabWithCount(Tab tab, int? count, bool isSelected) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -157,8 +159,12 @@ class _ReusableTabsSectionState extends State<ReusableTabsSection>
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.65,
+        // TO
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: 100,
+            maxHeight: widget.height,
+          ),
           child: TabBarView(
             controller: _controller,
             children: widget.views,

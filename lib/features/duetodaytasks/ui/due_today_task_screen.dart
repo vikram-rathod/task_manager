@@ -376,6 +376,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
 
             // Reusable Tabs Section with Counts
             ReusableTabsSection(
+              height:MediaQuery.of(context).size.height * 0.75,
               tabs: state.tabs
                   .map(
                     (tab) => Tab(

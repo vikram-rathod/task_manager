@@ -216,6 +216,7 @@ class HomeApiService {
           'user_id': userId,
           'comp_id': companyId,
           'user_type': userType,
+          'app_type' :"2"
         },
       options: Options(
         contentType: Headers.formUrlEncodedContentType,

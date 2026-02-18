@@ -53,11 +53,16 @@ class AppNotificationService {
       ),
     );
 
+    final raw = response.data is String
+        ? jsonDecode(response.data)
+        : response.data as Map<String, dynamic>;
+
     final apiResponse = ApiResponse<void>.fromJson(
-      response.data,
+      raw,
           (data) => null,
     );
     return apiResponse;
+
 
   }
 

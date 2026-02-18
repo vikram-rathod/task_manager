@@ -455,17 +455,18 @@ class _CreateTaskViewState extends State<CreateTaskView> {
   }
 
   Widget _buildAttachmentsSection(BuildContext context, CreateTaskState state) {
+    final scheme = Theme.of(context).colorScheme;
+
     if (state.selectedFiles.isEmpty) {
       return InkWell(
         onTap: () => _showAttachmentSourceSheet(context),
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
+            color: scheme.surfaceVariant.withOpacity(0.25),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-              style: BorderStyle.solid,
+              color: scheme.outline.withOpacity(0.4),
               width: 2,
             ),
           ),
@@ -473,90 +474,143 @@ class _CreateTaskViewState extends State<CreateTaskView> {
             children: [
               Icon(
                 Icons.cloud_upload_outlined,
-                size: 48,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                size: 56,
+                color: scheme.primary.withOpacity(0.7),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text(
                 'Tap to add attachments',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
-                'Upload files (optional)',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                'Supported: images, PDFs, docs, etc. (optional)',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant.withOpacity(0.75),
                 ),
               ),
             ],
           ),
         ),
-
-    );
+      );
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ...state.selectedFiles.map((file) {
           final fileName = file.path.split('/').last;
+          final extension = fileName.split('.').last.toLowerCase();
+          final isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(extension);
+
           return Container(
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-              ),
+              color: scheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: scheme.outline.withOpacity(0.3)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
+                  color: scheme.shadow.withOpacity(0.08),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+              // ── Leading: Image preview or file icon ──
+              leading: isImage
+                  ? ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 54,
+                  height: 54,
+                  child: Image.file(
+                    file,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: scheme.surfaceVariant,
+                        child: Icon(
+                          Icons.broken_image_rounded,
+                          color: scheme.onSurfaceVariant,
+                          size: 32,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              )
+                  : Container(
+                width: 54,
+                height: 54,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: scheme.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  Icons.insert_drive_file_outlined,
-                  color: Theme.of(context).colorScheme.primary,
+                  _getFileIcon(extension),
+                  color: scheme.primary,
+                  size: 28,
                 ),
               ),
+
+              // Title & subtitle
               title: Text(
                 fileName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
               ),
+              subtitle: Text(
+                '${(file.lengthSync() / 1024).toStringAsFixed(1)} KB • $extension',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+
+              // Remove button
               trailing: IconButton(
                 icon: Icon(
-                  Icons.close,
-                  color: Theme.of(context).colorScheme.error,
+                  Icons.close_rounded,
+                  color: scheme.error,
                 ),
                 onPressed: () {
                   context.read<CreateTaskBloc>().add(AttachmentRemoved(file));
                 },
               ),
+
+              // Optional: tap to preview full image
+              onTap: isImage
+                  ? () {
+                // You can navigate to full-screen image viewer here
+                // Example: Navigator.push(context, MaterialPageRoute(...))
+              }
+                  : null,
             ),
           );
-        }),
-        const SizedBox(height: 12),
+        }).toList(),
+
+        const SizedBox(height: 16),
+
         OutlinedButton.icon(
-          onPressed: () {
-            _showAttachmentSourceSheet(context);
-          },
-          icon: const Icon(Icons.add),
-          label: const Text('Add More Files'),
+          onPressed: () => _showAttachmentSourceSheet(context),
+          icon: Icon(Icons.add_rounded, color: scheme.primary),
+          label: Text(
+            'Add More Attachments',
+            style: TextStyle(color: scheme.primary),
+          ),
           style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            foregroundColor: scheme.primary,
+            side: BorderSide(color: scheme.outline),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -564,6 +618,24 @@ class _CreateTaskViewState extends State<CreateTaskView> {
         ),
       ],
     );
+  }
+
+  IconData _getFileIcon(String ext) {
+    switch (ext.toLowerCase()) {
+      case 'pdf':
+        return Icons.picture_as_pdf_outlined;
+      case 'doc':
+      case 'docx':
+        return Icons.description_outlined;
+      case 'xls':
+      case 'xlsx':
+        return Icons.table_chart_outlined;
+      case 'zip':
+      case 'rar':
+        return Icons.folder_zip_outlined;
+      default:
+        return Icons.insert_drive_file_outlined;
+    }
   }
 
   void _showAttachmentSourceSheet(BuildContext context) {

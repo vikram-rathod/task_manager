@@ -26,9 +26,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     bloc.add(FetchTaskHistory());
     bloc.add(LoadProjectList());
     bloc.add(LoadEmployeeWiseTaskList());
-
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +36,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         context.read<HomeBloc>().add(FetchTaskHistory());
         context.read<HomeBloc>().add(LoadProjectList());
         context.read<HomeBloc>().add(LoadEmployeeWiseTaskList());
+        context.read<HomeBloc>().add(const FetchTodaysTasks(page: 1, isMyTasks: true));
       },
       child: CustomScrollView(
         slivers: [
