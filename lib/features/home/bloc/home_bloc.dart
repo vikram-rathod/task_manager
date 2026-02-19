@@ -149,7 +149,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       emit(
         state.copyWith(projects: projectsCountList, isProjectsLoading: false),
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       emit(
         state.copyWith(isProjectsLoading: false, projectsError: e.toString()),
       );

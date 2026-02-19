@@ -1,6 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:task_manager/core/storage/storage_keys.dart';
 import 'package:task_manager/core/storage/storage_service.dart';
 
@@ -154,8 +153,8 @@ class ModuleNotificationBloc
           state.copyWith(
             clearMarkingReadId: true,
             isError: true,
-            errorMessage: response.message?.isNotEmpty == true
-                ? response.message!
+            errorMessage: response.message.isNotEmpty == true
+                ? response.message
                 : 'Failed to mark as read. Please try again.',
           ),
         );

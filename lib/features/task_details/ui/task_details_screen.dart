@@ -28,7 +28,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: scheme.background,
+      backgroundColor: scheme.surface,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: scheme.surface,
@@ -181,7 +181,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: scheme.surfaceVariant.withOpacity(0.4),
+                          color: scheme.surfaceContainerHighest.withOpacity(0.4),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: scheme.outline,
@@ -548,7 +548,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: scheme.surfaceVariant.withOpacity(0.5),
+            color: scheme.surfaceContainerHighest.withOpacity(0.5),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 18, color: scheme.onSurfaceVariant),
@@ -590,7 +590,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: scheme.surfaceVariant.withOpacity(0.3),
+        color: scheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: scheme.outline,width: 0.2),
       ),
@@ -725,7 +725,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       decoration: BoxDecoration(
         color: isHighlight
             ? scheme.tertiaryContainer.withOpacity(0.5)
-            : scheme.surfaceVariant.withOpacity(0.4),
+            : scheme.surfaceContainerHighest.withOpacity(0.4),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isHighlight ? scheme.tertiary : scheme.outline,

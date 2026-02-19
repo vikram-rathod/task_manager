@@ -773,7 +773,7 @@ class _CreateTaskViewState extends State<CreateTaskView> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          disabledBackgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+          disabledBackgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           disabledForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         child: isLoading

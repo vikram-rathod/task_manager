@@ -84,33 +84,27 @@ class _TaskChatScreenState extends State<TaskChatScreen> {
   List<TeamMember> _getTeamMembers() {
     final members = <String, TeamMember>{};
 
-    if (widget.task.makerId != null) {
-      members[widget.task.makerId.toString()] = TeamMember(
-        userId: widget.task.makerId.toString(),
-        userName: widget.task.makerName ?? 'Maker',
-        profileUrl: '',
-        role: 'Maker',
-      );
-    }
-
-    if (widget.task.checkerId != null) {
-      members[widget.task.checkerId.toString()] = TeamMember(
-        userId: widget.task.checkerId.toString(),
-        userName: widget.task.checkerName ?? 'Checker',
-        profileUrl: '',
-        role: 'Checker',
-      );
-    }
-
-    if (widget.task.pcEngrId != null) {
-      members[widget.task.pcEngrId.toString()] = TeamMember(
-        userId: widget.task.pcEngrId.toString(),
-        userName: widget.task.pcEngrName ?? 'PC Engineer',
-        profileUrl: '',
-        role: 'PC Engineer',
-      );
-    }
-
+    members[widget.task.makerId.toString()] = TeamMember(
+      userId: widget.task.makerId.toString(),
+      userName: widget.task.makerName ?? 'Maker',
+      profileUrl: '',
+      role: 'Maker',
+    );
+  
+    members[widget.task.checkerId.toString()] = TeamMember(
+      userId: widget.task.checkerId.toString(),
+      userName: widget.task.checkerName ?? 'Checker',
+      profileUrl: '',
+      role: 'Checker',
+    );
+  
+    members[widget.task.pcEngrId.toString()] = TeamMember(
+      userId: widget.task.pcEngrId.toString(),
+      userName: widget.task.pcEngrName ?? 'PC Engineer',
+      profileUrl: '',
+      role: 'PC Engineer',
+    );
+  
     return members.values.toList();
   }
 

@@ -260,7 +260,7 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
       ) async {
     try {
       final pickedFiles = await _imagePicker.pickMultiImage();
-      if (pickedFiles != null && pickedFiles.isNotEmpty) {
+      if (pickedFiles.isNotEmpty) {
         final files = pickedFiles.map((xfile) => File(xfile.path)).toList();
         add(AttachmentAdded(files));
       } else {

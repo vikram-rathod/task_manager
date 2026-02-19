@@ -36,8 +36,8 @@ class HomeRepository {
       return response.data as T;
     }
     throw ApiException(
-      message: response.message?.isNotEmpty == true
-          ? response.message!
+      message: response.message.isNotEmpty == true
+          ? response.message
           : fallbackMessage,
     );
   }
@@ -197,7 +197,7 @@ class HomeRepository {
       if (response.status == true) return response.data ?? [];
 
       // "No tasks found" is a valid empty state, not an error.
-      final msg = response.message?.toLowerCase() ?? '';
+      final msg = response.message.toLowerCase() ?? '';
       if (msg.contains('no task') || msg.contains('no data')) return [];
 
       throw ApiException(

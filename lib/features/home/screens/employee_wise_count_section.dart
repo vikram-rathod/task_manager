@@ -68,8 +68,8 @@ class _EmployeeShimmerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Shimmer.fromColors(
-      baseColor: Colors.grey.shade300,
-      highlightColor: Colors.grey.shade100,
+      baseColor: scheme.surfaceContainerHighest,
+      highlightColor: scheme.surfaceContainerLow,
       child: Container(
         width: 200,
         padding: const EdgeInsets.all(12),
@@ -109,7 +109,7 @@ class _EmployeeShimmerCard extends StatelessWidget {
               width: 110,
               height: 12,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: scheme.surface,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),

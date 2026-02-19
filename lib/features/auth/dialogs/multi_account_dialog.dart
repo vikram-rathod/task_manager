@@ -102,10 +102,10 @@ class _MultiAccountSheetState extends State<MultiAccountSheet> {
                             radius: 28,
                             backgroundColor: Colors.grey.shade200,
                             backgroundImage:
-                            account.companyLogoUrl?.isNotEmpty == true
-                                ? NetworkImage(account.companyLogoUrl!)
+                            account.companyLogoUrl.isNotEmpty == true
+                                ? NetworkImage(account.companyLogoUrl)
                                 : null,
-                            child: account.companyLogoUrl?.isEmpty == true
+                            child: account.companyLogoUrl.isEmpty == true
                                 ? Text(
                               account.companyName[0].toUpperCase(),
                               style: const TextStyle(

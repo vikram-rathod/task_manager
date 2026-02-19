@@ -166,7 +166,7 @@ class _TaskCardState extends State<TaskCard>
                     ),
 
                     // Project Name
-                    if (widget.task.projectName?.isNotEmpty ?? false) ...[
+                    if (widget.task.projectName.isNotEmpty ?? false) ...[
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -188,7 +188,7 @@ class _TaskCardState extends State<TaskCard>
                             const SizedBox(width: 8),
                             Flexible(
                               child: _HighlightedText(
-                                text: widget.task.projectName!,
+                                text: widget.task.projectName,
                                 query: widget.searchQuery,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -229,27 +229,27 @@ class _TaskCardState extends State<TaskCard>
                       const SizedBox(height: 16),
                       Column(
                         children: [
-                          if (widget.task.makerName?.isNotEmpty ?? false)
+                          if (widget.task.makerName.isNotEmpty ?? false)
                             _ModernTeamMember(
                               role: 'Maker',
-                              name: widget.task.makerName!,
+                              name: widget.task.makerName,
                               searchQuery: widget.searchQuery,
                               color: const Color(0xFF6366F1), // Indigo
                             ),
-                          if (widget.task.checkerName?.isNotEmpty ?? false) ...[
+                          if (widget.task.checkerName.isNotEmpty ?? false) ...[
                             const SizedBox(height: 8),
                             _ModernTeamMember(
                               role: 'Checker',
-                              name: widget.task.checkerName!,
+                              name: widget.task.checkerName,
                               searchQuery: widget.searchQuery,
                               color: const Color(0xFF8B5CF6), // Purple
                             ),
                           ],
-                          if (widget.task.pcEngrName?.isNotEmpty ?? false) ...[
+                          if (widget.task.pcEngrName.isNotEmpty ?? false) ...[
                             const SizedBox(height: 8),
                             _ModernTeamMember(
                               role: 'PC Engineer',
-                              name: widget.task.pcEngrName!,
+                              name: widget.task.pcEngrName,
                               searchQuery: widget.searchQuery,
                               color: const Color(0xFF06B6D4), // Cyan
                             ),
@@ -259,7 +259,7 @@ class _TaskCardState extends State<TaskCard>
                     ],
 
                     // Status Badge
-                    if (widget.task.taskStatus?.isNotEmpty ?? false) ...[
+                    if (widget.task.taskStatus.isNotEmpty ?? false) ...[
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -281,7 +281,7 @@ class _TaskCardState extends State<TaskCard>
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              widget.task.taskStatus!,
+                              widget.task.taskStatus,
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -312,9 +312,9 @@ class _TaskCardState extends State<TaskCard>
   }
 
   bool get _hasTeamInfo =>
-      (widget.task.makerName?.isNotEmpty ?? false) ||
-          (widget.task.checkerName?.isNotEmpty ?? false) ||
-          (widget.task.pcEngrName?.isNotEmpty ?? false);
+      (widget.task.makerName.isNotEmpty ?? false) ||
+          (widget.task.checkerName.isNotEmpty ?? false) ||
+          (widget.task.pcEngrName.isNotEmpty ?? false);
 
   Color _getPriorityColor(String? priority) {
     switch (priority) {
