@@ -8,6 +8,7 @@ import 'package:task_manager/features/modulenotification/app_notification_reposi
 import 'package:task_manager/features/home/repository/task_repository.dart';
 import 'package:task_manager/features/modulenotification/app_notification_service.dart';
 import 'package:task_manager/features/home/services/home_service.dart';
+import 'package:task_manager/features/task/service/task_list_service.dart';
 import 'package:task_manager/features/modulenotification/bloc/module_notification_bloc.dart';
 import 'package:task_manager/features/prochattaks/bloc/prochat_task_bloc.dart';
 import 'package:task_manager/features/prochattaks/repository/prochat_task_repository.dart';
@@ -18,6 +19,11 @@ import '../../features/auth/repository/auth_repository.dart';
 import '../../features/createtask/services/task_service.dart';
 import '../../features/duetodaytasks/bloc/due_today_bloc.dart';
 import '../../features/home/repository/home_repository.dart';
+import '../../features/task/bloc/task_list_bloc.dart';
+import '../../features/task/repository/task_list_repository.dart';
+import '../../features/template/bloc/template_bloc.dart';
+import '../../features/template/repository/template_repository.dart';
+import '../../features/template/service/template_service.dart';
 import '../../features/overdue/bloc/over_due_bloc.dart';
 import '../../features/prochattaks/repository/prochat_service.dart';
 import '../../features/profile/bloc/profile_bloc.dart';
@@ -39,7 +45,9 @@ Future<void> initializeDependencies() async {
     aOptions: secureStorageOptions,
   );
 
-  sl.registerLazySingleton<FlutterSecureStorage>(() => flutterSecureStorage);
+  sl.registerLazySingleton<FlutterSecureStorage>(
+        () => flutterSecureStorage,
+  );
 
   // ======================================================
   //  Core Layer
@@ -47,11 +55,13 @@ Future<void> initializeDependencies() async {
 
   // Storage
   sl.registerLazySingleton<StorageService>(
-    () => SecureStorageService(sl<FlutterSecureStorage>()),
+        () => SecureStorageService(sl<FlutterSecureStorage>()),
   );
 
   // Network
-  sl.registerLazySingleton<DioClient>(() => DioClient());
+  sl.registerLazySingleton<DioClient>(
+        () => DioClient(),
+  );
 
   // ======================================================
   //  Auth Feature
@@ -59,11 +69,20 @@ Future<void> initializeDependencies() async {
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepository(sl<DioClient>(), sl<StorageService>()),
+        () =>
+        AuthRepository(
+      sl<DioClient>(),
+      sl<StorageService>(),
+    ),
   );
 
   // Bloc
-  sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
+  sl.registerFactory<AuthBloc>(
+        () =>
+        AuthBloc(
+          sl<AuthRepository>(),
+        ),
+  );
 
   // ======================================================
   //  Home Feature
@@ -71,12 +90,18 @@ Future<void> initializeDependencies() async {
 
   // API Service
   sl.registerLazySingleton<HomeApiService>(
-    () => HomeApiService(sl<DioClient>()),
+        () =>
+        HomeApiService(
+          sl<DioClient>(),
+        ),
   );
 
   // Repository
   sl.registerLazySingleton<HomeRepository>(
-    () => HomeRepository(sl<HomeApiService>(), sl<StorageService>()),
+        () =>
+        HomeRepository(
+          sl<HomeApiService>(), sl<StorageService>(),
+        ),
   );
 
   // ======================================================
@@ -85,48 +110,94 @@ Future<void> initializeDependencies() async {
 
   // API Service
   sl.registerLazySingleton<TaskApiService>(
-    () => TaskApiService(sl<DioClient>(), sl<StorageService>()),
+        () =>
+        TaskApiService(
+          sl<DioClient>(),
+          sl<StorageService>(),
+        ),
   );
 
   // Repository
   sl.registerLazySingleton<TaskRepository>(
-    () => TaskRepository(sl<TaskApiService>()),
+        () =>
+        TaskRepository(
+          sl<TaskApiService>(),
+        ),
   );
 
   // Bloc
-  sl.registerLazySingleton<CreateTaskBloc>(
-    () => CreateTaskBloc(sl<TaskRepository>(), sl<HomeRepository>()),
+  sl.registerFactory<CreateTaskBloc>(
+        () =>
+        CreateTaskBloc(
+          sl<TaskRepository>(),
+          sl<HomeRepository>(),
+        ),
   );
 
-  sl.registerLazySingleton<AllTaskBloc>(
-    () => AllTaskBloc(sl<TaskRepository>(), sl<StorageService>()),
+  sl.registerFactory<AllTaskBloc>(
+        () =>
+        AllTaskBloc(
+          sl<TaskRepository>(),
+          sl<StorageService>(),
+        ),
   );
-  sl.registerLazySingleton<HomeBloc>(() => HomeBloc(sl<HomeRepository>()));
-
-  sl.registerLazySingleton<EmployeeTaskBloc>(
-    () => EmployeeTaskBloc(sl<TaskRepository>(), sl<StorageService>()),
-  );
-  // ======================================================
-  //  Over-Due Feature
-  // ======================================================
-  sl.registerLazySingleton<OverDueBloc>(
-    () => OverDueBloc(sl<TaskRepository>(), sl<StorageService>()),
-  );
-  sl.registerLazySingleton<DueTodayBloc>(
-    () => DueTodayBloc(sl<TaskRepository>(), sl<StorageService>()),
+  sl.registerFactory<HomeBloc>(
+        () =>
+        HomeBloc(
+          sl<HomeRepository>(),
+        ),
   );
 
-  // ======================================================
-  //  Task Details Feature
-  // ======================================================
+// ======================================================
+// Task List Feature
+// ======================================================
 
-  sl.registerFactory<TaskDetailsBloc>(
-    () => TaskDetailsBloc(sl<TaskRepository>(), sl<StorageService>()),
+// Service
+  sl.registerLazySingleton<TaskListService>(
+        () => TaskListService(
+      sl<DioClient>(),
+    ),
   );
 
-  sl.registerFactory<TaskChatBloc>(
-        () => TaskChatBloc(sl<TaskRepository>(), sl<StorageService>()),
+// Repository
+  sl.registerLazySingleton<TaskListRepository>(
+        () => TaskListRepository(
+      sl<TaskListService>(),
+      sl<StorageService>(),
+    ),
   );
+
+// Bloc
+  sl.registerFactory<TaskListBloc>(
+        () => TaskListBloc(
+      sl<TaskListRepository>(),
+      sl<TaskListService>(),
+      sl<StorageService>(),
+    ),
+  );
+
+
+
+
+  sl.registerLazySingleton<TemplateService>(
+        () => TemplateService(
+      sl<DioClient>(),   // ✅ Only DioClient
+    ),
+  );
+
+  sl.registerLazySingleton<TemplateRepository>(
+        () => TemplateRepository(
+      sl<TemplateService>(),  // ✅ Service
+      sl<StorageService>(),   // ✅ StorageService REQUIRED
+    ),
+  );
+
+  sl.registerFactory<TemplateBloc>(
+        () => TemplateBloc(
+      sl<TemplateRepository>(),
+    ),
+  );
+
 
   sl.registerLazySingleton<AppNotificationService>(
     () => AppNotificationService(sl<DioClient>()),
