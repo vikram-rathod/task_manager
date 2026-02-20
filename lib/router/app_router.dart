@@ -11,7 +11,6 @@ import 'package:task_manager/features/projecttasks/ui/projects_task_screen.dart'
 import 'package:task_manager/features/taskChat/ui/screens/task_chat_screen.dart';
 
 import '../core/di/injection_container.dart';
-import '../core/models/project_model.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/splash_screen.dart';
 import '../features/duetodaytasks/ui/due_today_task_screen.dart';
@@ -30,7 +29,7 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const AuthWrapper());
 
       case '/login':
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
+        return MaterialPageRoute(builder: (_) =>  LoginScreen());
 
       case '/home':
         return MaterialPageRoute(builder: (_) => const HomeScreen());

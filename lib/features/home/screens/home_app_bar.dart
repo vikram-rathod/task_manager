@@ -13,15 +13,15 @@ import '../../../reusables/logout_confirmation.dart';
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final UserModel? user;
   final bool showSwitchAccount;
-  final AuthState state;
+  final bool isSwitching;
   final int notificationCount;
 
   const HomeAppBar({
     super.key,
     required this.user,
     required this.showSwitchAccount,
-    required this.state,
-    this.notificationCount = 0, // Default to 0
+    this.isSwitching = false,
+    this.notificationCount = 0,
   });
 
   @override
@@ -38,55 +38,66 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
             child: Row(
               children: [
-                if (user != null)
-                  InkWell(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/profile');
-                    },
-                    child: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Colors.white,
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundImage: user!.userProfileUrl.isNotEmpty
-                            ? NetworkImage(user!.userProfileUrl)
-                            : const AssetImage('assets/images/app_logo.png')
-                                as ImageProvider,
+                if (user != null) ...[
+                  // Avatar with optional switch-in-progress spinner overlay
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      InkWell(
+                        onTap: isSwitching
+                            ? null
+                            : () => Navigator.pushNamed(context, '/profile'),
+                        child: CircleAvatar(
+                          radius: 22,
+                          backgroundColor: Colors.white,
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundImage: user!.userProfileUrl.isNotEmpty
+                                ? NetworkImage(user!.userProfileUrl)
+                                : const AssetImage('assets/images/app_logo.png')
+                            as ImageProvider,
+                          ),
+                        ),
                       ),
-                    ),
+                      if (isSwitching)
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: scheme.primary,
+                          ),
+                        ),
+                    ],
                   ),
-                const SizedBox(width: 8),
-                if(user != null)
+                  const SizedBox(width: 8),
                   Expanded(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 350),
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.2),
-                              end: Offset.zero,
-                            ).animate(animation),
-                            child: child,
-                          ),
-                        );
-                      },
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.2),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      ),
                       child: TitleSection(
                         key: ValueKey(user?.designation),
                         user: user!,
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ),
           actions: [
-            // Notification Icon with Badge
+            // Notifications
             GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/notifications');
-              },
+              onTap: () => Navigator.pushNamed(context, '/notifications'),
               child: Stack(
                 children: [
                   const Padding(
@@ -126,8 +137,17 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
 
-            // Menu Dropdown
-            PopupMenuButton<String>(
+            // Menu — disabled while switching
+            isSwitching
+                ? const Padding(
+              padding: EdgeInsets.all(12),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+                : PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),
               offset: const Offset(0, 50),
               shape: RoundedRectangleBorder(
@@ -149,83 +169,55 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     break;
                 }
               },
-              itemBuilder: (BuildContext context) {
-                final theme = Theme.of(context);
-                final isDark = theme.brightness == Brightness.dark;
-
+              itemBuilder: (context) {
+                final isDark =
+                    Theme.of(context).brightness == Brightness.dark;
                 return [
                   PopupMenuItem<String>(
                     value: 'profile',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.person,
-                          size: 20,
-                          color: Colors.grey.shade700,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          "Profile",
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
+                    child: Row(children: [
+                      Icon(Icons.person,
+                          size: 20, color: Colors.grey.shade700),
+                      const SizedBox(width: 12),
+                      const Text('Profile',
+                          style: TextStyle(fontSize: 14)),
+                    ]),
                   ),
                   PopupMenuItem<String>(
                     value: 'theme',
-                    child: Row(
-                      children: [
-                        Icon(
-                          isDark ? Icons.light_mode : Icons.dark_mode,
-                          size: 20,
-                          color: Colors.grey.shade700,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          isDark ? 'Light Mode' : 'Dark Mode',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
+                    child: Row(children: [
+                      Icon(
+                        isDark ? Icons.light_mode : Icons.dark_mode,
+                        size: 20,
+                        color: Colors.grey.shade700,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(isDark ? 'Light Mode' : 'Dark Mode',
+                          style: const TextStyle(fontSize: 14)),
+                    ]),
                   ),
                   if (showSwitchAccount)
                     PopupMenuItem<String>(
                       value: 'switch',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.switch_account,
-                            size: 20,
-                            color: Colors.grey.shade700,
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Switch Account',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
+                      child: Row(children: [
+                        Icon(Icons.switch_account,
+                            size: 20, color: Colors.grey.shade700),
+                        const SizedBox(width: 12),
+                        const Text('Switch Account',
+                            style: TextStyle(fontSize: 14)),
+                      ]),
                     ),
                   const PopupMenuDivider(),
                   PopupMenuItem<String>(
                     value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.logout,
-                          size: 20,
-                          color: Colors.red.shade600,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Logout',
+                    child: Row(children: [
+                      Icon(Icons.logout,
+                          size: 20, color: Colors.red.shade600),
+                      const SizedBox(width: 12),
+                      Text('Logout',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.red.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
+                              fontSize: 14, color: Colors.red.shade600)),
+                    ]),
                   ),
                 ];
               },
@@ -233,11 +225,13 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           ],
         ),
         Divider(
-          color: scheme.primary.withAlpha(
-            scheme.brightness == Brightness.dark ? 100 : 60,
+          color: Theme.of(context).colorScheme.primary.withAlpha(
+            Theme.of(context).colorScheme.brightness == Brightness.dark
+                ? 100
+                : 60,
           ),
           thickness: 1,
-          height: 1
+          height: 1,
         ),
       ],
     );
@@ -245,9 +239,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   Future<void> _handleSwitchAccount(BuildContext context) async {
     final authBloc = context.read<AuthBloc>();
-    final repo = authBloc.repo;
     final deviceInfo = await DeviceInfoService.getDeviceInfo();
-    final creds = await repo.getLastLoginCredentials();
+    final creds = await authBloc.repo.getLastLoginCredentials();
 
     if (!context.mounted) return;
 
@@ -263,36 +256,39 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       return;
     }
 
-    context.read<AuthBloc>().add(
-          LoginRequested(
-            username: creds["username"]!,
-            password: creds["password"]!,
-            deviceName: deviceInfo.deviceName,
-            deviceType: deviceInfo.deviceType,
-            deviceUniqueId: deviceInfo.deviceUniqueId,
-            deviceToken: deviceInfo.deviceToken,
-            isSwitch: true,
-            isForce: false,
-          ),
-        );
+    authBloc.add(LoginRequested(
+      username: creds["username"]!,
+      password: creds["password"]!,
+      deviceName: deviceInfo.deviceName,
+      deviceType: deviceInfo.deviceType,
+      deviceUniqueId: deviceInfo.deviceUniqueId,
+      deviceToken: deviceInfo.deviceToken,
+      isSwitch: true,
+      isForce: false,
+    ));
   }
 
   Future<void> _showLogoutConfirmation(BuildContext context) async {
+    // Read state fresh from context — do NOT use a stored `state` parameter
+    // because it can be stale (captured at widget creation time).
+    final authState = context.read<AuthBloc>().state;
+
     showDialog(
       context: context,
-      builder: (_) {
-        return LogoutConfirmationDialog(
-          onConfirm: () {
-            if (state is AuthAuthenticated) {
-              final user = (state as AuthAuthenticated).user;
-              context.read<AuthBloc>().add(
-                LogoutRequested(sessionId: user.loginSessionId),
-              );
-            }
-          },
-        );
-      },
+      builder: (_) => LogoutConfirmationDialog(
+        onConfirm: () {
+          if (authState is AuthAuthenticated) {
+            context.read<AuthBloc>().add(
+              LogoutRequested(sessionId: authState.user.loginSessionId),
+            );
+          } else if (authState is AuthSwitching) {
+            context.read<AuthBloc>().add(
+              LogoutRequested(
+                  sessionId: authState.currentUser.loginSessionId),
+            );
+          }
+        },
+      ),
     );
   }
-
 }

@@ -7,6 +7,7 @@ import 'package:task_manager/features/auth/bloc/auth_event.dart';
 import 'package:task_manager/features/auth/bloc/auth_state.dart';
 import 'package:task_manager/features/auth/models/auth_request.dart';
 import 'package:task_manager/features/auth/models/login_response.dart';
+import 'package:task_manager/features/auth/models/user_model.dart';
 import 'package:task_manager/features/auth/repository/auth_repository.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
@@ -20,23 +21,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<VerifyOtpEvent>(_verifyOtp);
     on<LogoutRequested>(_logout);
     on<ResetAuthState>(_resetAuthState);
-
+    on<RestoreAuthenticatedUser>(_restoreAuthenticatedUser);
   }
 
-
   Future<void> _login(LoginRequested event, Emitter<AuthState> emit) async {
-    debugPrint("[_login] Start login process"
-        "Name: ${event.username}, Password: ${event
-        .password}, DeviceName: ${event.deviceName}, DeviceType: ${event
-        .deviceType},"
-        " DeviceUniqueId: ${event.deviceUniqueId}, DeviceToken: ${event
-        .deviceToken}, isForce: ${event.isForce},"
-        " isSwitch: ${event.isSwitch}, selectedUserId: ${event.selectedUserId}"
-        "");
+    debugPrint(
+      "[_login] username=${event.username} isSwitch=${event.isSwitch} "
+          "isForce=${event.isForce} selectedUserId=${event.selectedUserId}",
+    );
 
-    emit(AuthLoading("Checking account..."));
+    // ── Capture current user BEFORE emitting any loading state ──────────────
+    // After we emit, state changes and we can no longer read the old user.
+    UserModel? currentUser;
+    if (state is AuthAuthenticated) {
+      currentUser = (state as AuthAuthenticated).user;
+    } else if (state is AuthSwitching) {
+      currentUser = (state as AuthSwitching).currentUser;
+    }
 
-    debugPrint("[_login] Emitted AuthLoading state");
+    // ── Emit appropriate loading state ───────────────────────────────────────
+    // AuthSwitching keeps the user visible in the AppBar during a switch.
+    // AuthLoading is for fresh login where there's no current user.
+    if (event.isSwitch && currentUser != null) {
+      emit(AuthSwitching(currentUser: currentUser, message: 'Switching account…'));
+    } else {
+      emit(AuthLoading("Checking account..."));
+    }
 
     final request = AuthRequest(
       selectedUserId: event.selectedUserId,
@@ -52,63 +62,50 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     debugPrint(
-        "[_login] AuthRequest prepared:\n${const JsonEncoder.withIndent('  ')
-            .convert(request.toJson())}");
+      "[_login] Request:\n${const JsonEncoder.withIndent('  ').convert(request.toJson())}",
+    );
 
     try {
       final apiResponse = await repo.login(request);
-      debugPrint("[_login] Received API response: status=${apiResponse
-          .status}, message='${apiResponse.message}'");
+      debugPrint(
+        "[_login] Response: status=${apiResponse.status} msg='${apiResponse.message}'",
+      );
 
       if (apiResponse.status) {
         final loginResponse = apiResponse.data as LoginResponse;
-        debugPrint("[_login] LoginResponse received: isMulti=${loginResponse
-            .isMulti}");
 
         if (loginResponse.isMulti) {
-          debugPrint(
-              "[_login] Multiple accounts found, emitting AuthMultipleAccountsFound");
-          // save isMultiple as true here
+          debugPrint("[_login] Multiple accounts — emitting AuthMultipleAccountsFound "
+              "(isSwitch=${event.isSwitch}, currentUser=${currentUser?.userName})");
           await repo.saveIsMultipleAccounts(true);
-          emit(
-            AuthMultipleAccountsFound(
-              accounts: loginResponse.accountList,
-              username: event.username,
-              password: event.password,
-              deviceName: event.deviceName,
-              deviceType: event.deviceType,
-              deviceUniqueId: event.deviceUniqueId,
-              deviceToken: event.deviceToken,
-            ),
-          );
+          emit(AuthMultipleAccountsFound(
+            accounts: loginResponse.accountList,
+            username: event.username,
+            password: event.password,
+            deviceName: event.deviceName,
+            deviceType: event.deviceType,
+            deviceUniqueId: event.deviceUniqueId,
+            deviceToken: event.deviceToken,
+            isSwitch: event.isSwitch,
+            currentUser: currentUser, // ← key: passed in so sheet can highlight it
+          ));
           return;
         }
 
+        // Single account success
         final user = loginResponse.userInfo!;
-        debugPrint(
-            "[_login] Single account found, saving user with deviceUniqueId: ${event
-                .deviceUniqueId}");
         await repo.saveUser(user, deviceUniqueId: event.deviceUniqueId);
         await repo.saveLastLoginCredentials(
           username: event.username,
           password: event.password,
         );
-
-
-        debugPrint(
-            "[_login] User saved successfully, emitting AuthAuthenticated");
         final isMultipleAccounts = await repo.getSavedIsMultipleAccounts();
-
-        emit(AuthAuthenticated(
-          user: user,
-          isMultipleAccounts: isMultipleAccounts,
-        ));
+        debugPrint("[_login] Authenticated as ${user.userName}");
+        emit(AuthAuthenticated(user: user, isMultipleAccounts: isMultipleAccounts));
 
       } else {
         if (apiResponse.message == "Already Logged In on another device") {
-          debugPrint(
-              "[_login] User already logged in on another device ${apiResponse
-                  .message}");
+          debugPrint("[_login] Already logged in on another device");
           emit(LoggedInAnotherDevice(
             message: apiResponse.message,
             username: event.username,
@@ -121,41 +118,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             isSwitch: event.isSwitch,
             selectedUserId: event.selectedUserId,
           ));
-          return;
         } else {
-          debugPrint(
-              "[_login] Login failed with message: ${apiResponse.message}");
+          debugPrint("[_login] Login failed: ${apiResponse.message}");
           emit(AuthError(apiResponse.message));
         }
       }
     } catch (error) {
-      debugPrint("[_login] Exception caught during login: ${error.toString()}");
+      debugPrint("[_login] Exception: ${error.toString()}");
       emit(AuthError(error.toString()));
     }
   }
 
-  void _onAccountSelected(
-      AccountSelected event,
-      Emitter<AuthState> emit,
-      ) {
+  void _onAccountSelected(AccountSelected event, Emitter<AuthState> emit) {
     if (state is! AuthMultipleAccountsFound) return;
-
     final current = state as AuthMultipleAccountsFound;
 
-    // Auto-login with selected account
-    add(
-      LoginRequested(
-        username: current.username,
-        password: current.password,
-        selectedUserId: event.selectedAccount.userId,
-        deviceName: current.deviceName,
-        deviceType: current.deviceType,
-        deviceUniqueId: current.deviceUniqueId,
-        deviceToken: current.deviceToken,
-        isForce: event.isForce,
-        isSwitch: event.isSwitch,
-      ),
-    );
+    add(LoginRequested(
+      username: current.username,
+      password: current.password,
+      selectedUserId: event.selectedAccount.userId,
+      deviceName: current.deviceName,
+      deviceType: current.deviceType,
+      deviceUniqueId: current.deviceUniqueId,
+      deviceToken: current.deviceToken,
+      isSwitch: event.isSwitch,
+    ));
   }
 
   Future<void> _sessionCheck(
@@ -163,19 +150,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       Emitter<AuthState> emit,
       ) async {
     emit(AuthLoading("Checking session..."));
-
     try {
       final isValid = await repo.isSessionValid();
-
       if (isValid) {
         final user = await repo.getSavedUser();
         final isMultipleAccounts = await repo.getSavedIsMultipleAccounts();
-
         if (user != null) {
-          emit(AuthAuthenticated(
-            user: user,
-            isMultipleAccounts: isMultipleAccounts,
-          ));
+          emit(AuthAuthenticated(user: user, isMultipleAccounts: isMultipleAccounts));
         } else {
           emit(AuthSessionExpired("Not a valid session. Please login again."));
         }
@@ -183,44 +164,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthSessionExpired("Session expired. Please login again."));
       }
     } catch (e) {
-      // Don't log out on unexpected errors — show error instead
       emit(AuthError(e.toString()));
     }
   }
 
-  Future<void> _requestOtp(RequestOtpEvent event,
-      Emitter<AuthState> emit) async {
+  Future<void> _requestOtp(
+      RequestOtpEvent event,
+      Emitter<AuthState> emit,
+      ) async {
+    debugPrint("[_requestOtp] Requesting OTP for: ${event.email}");
     try {
-      debugPrint("[_requestOtp] Requesting OTP for email: ${event.email}");
-
       final apiResponse = await repo.requestOtp(event.email);
-
       if (apiResponse.status) {
-        debugPrint("[_requestOtp] OTP sent successfully");
         emit(OtpSentSuccess("OTP sent successfully"));
       } else {
-        emit(OtpError("Failed to send OTP:"));
+        emit(OtpError(apiResponse.message.isNotEmpty
+            ? apiResponse.message
+            : "Failed to send OTP"));
       }
     } catch (error) {
-      debugPrint("[_requestOtp] Exception: ${error.toString()}");
       emit(OtpError(error.toString()));
     }
   }
 
-  Future<void> _verifyOtp(VerifyOtpEvent event, Emitter<AuthState> emit) async {
+  Future<void> _verifyOtp(
+      VerifyOtpEvent event,
+      Emitter<AuthState> emit,
+      ) async {
+    debugPrint("[_verifyOtp] Verifying OTP for: ${event.email}");
+    emit(AuthLoading("Verifying OTP..."));
     try {
-      debugPrint("[_verifyOtp] Verifying OTP for email: ${event
-          .email} with OTP: ${event.otp}");
-      emit(AuthLoading("Verifying OTP..."));
-
       final apiResponse = await repo.verifyOtp(event.email, event.otp);
-
       if (apiResponse.status) {
-        debugPrint(
-            "[_verifyOtp] OTP verified successfully, proceeding with force login");
         emit(OtpVerifiedSuccess(apiResponse.message));
-
-        // Now perform force login
+        // Force-login after successful OTP
         add(LoginRequested(
           username: event.username,
           password: event.password,
@@ -229,34 +206,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           deviceUniqueId: event.deviceUniqueId,
           deviceToken: event.deviceToken,
           isForce: true,
-          isSwitch: false,
+          isSwitch: event.isSwitch,
           selectedUserId: event.selectedUserId,
         ));
       } else {
-        debugPrint(
-            "[_verifyOtp] OTP verification failed: ${apiResponse.message}");
-        emit(OtpError(apiResponse.message));
+        emit(OtpError(apiResponse.message.isNotEmpty
+            ? apiResponse.message
+            : "Invalid OTP. Please try again."));
       }
     } catch (error) {
-      debugPrint("[_verifyOtp] Exception: ${error.toString()}");
       emit(OtpError(error.toString()));
     }
   }
 
   Future<void> _logout(LogoutRequested event, Emitter<AuthState> emit) async {
-
     emit(AuthLoading("Logging out..."));
-
     await repo.logout(sessionId: event.sessionId);
-
     await repo.saveIsMultipleAccounts(false);
-
     emit(AuthSessionExpired("Session Expired...Log out Successfully."));
-
   }
 
-  FutureOr<void> _resetAuthState(ResetAuthState event,
-      Emitter<AuthState> emit) {
+  FutureOr<void> _resetAuthState(
+      ResetAuthState event,
+      Emitter<AuthState> emit,
+      ) {
     emit(AuthInitial());
+  }
+
+  FutureOr<void> _restoreAuthenticatedUser(
+      RestoreAuthenticatedUser event,
+      Emitter<AuthState> emit,
+      ) {
+    emit(AuthAuthenticated(
+      user: event.user,
+      isMultipleAccounts: event.isMultipleAccounts,
+    ));
   }
 }

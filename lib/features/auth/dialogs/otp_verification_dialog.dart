@@ -14,7 +14,6 @@ class OtpVerificationSheet extends StatefulWidget {
   final String deviceType;
   final String deviceUniqueId;
   final String deviceToken;
-  final bool isForce;
   final bool isSwitch;
   final int? selectedUserId;
 
@@ -27,7 +26,6 @@ class OtpVerificationSheet extends StatefulWidget {
     required this.deviceType,
     required this.deviceUniqueId,
     required this.deviceToken,
-    required this.isForce,
     required this.isSwitch,
     this.selectedUserId,
   });
@@ -37,9 +35,17 @@ class OtpVerificationSheet extends StatefulWidget {
 }
 
 class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
-  final _otpController = TextEditingController();
-  bool _isOtpSent = false;
+  // ⚠️ Do NOT pass this to PinCodeTextField — the package disposes it
+  // internally when the widget unmounts, causing a double-dispose crash.
+  String _otpValue = '';
   bool _isResending = false;
+
+  // Inline feedback — null means no message shown
+  String? _errorMessage;
+  String? _successMessage;
+
+  // Key to force PinCodeTextField to clear on error
+  Key _pinKey = UniqueKey();
 
   @override
   void initState() {
@@ -48,79 +54,92 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
   }
 
   void _requestOtp() {
-    setState(() => _isResending = true);
+    if (!mounted) return;
+    setState(() {
+      _isResending = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
     context.read<AuthBloc>().add(RequestOtpEvent(email: widget.email));
   }
 
   void _verifyOtp() {
-    if (_otpController.text.length == 4) {
-      context.read<AuthBloc>().add(
-        VerifyOtpEvent(
-          email: widget.email,
-          otp: _otpController.text,
-          username: widget.username,
-          password: widget.password,
-          deviceName: widget.deviceName,
-          deviceType: widget.deviceType,
-          deviceUniqueId: widget.deviceUniqueId,
-          deviceToken: widget.deviceToken,
-          isForce: widget.isForce,
-          isSwitch: widget.isSwitch,
-          selectedUserId: widget.selectedUserId,
-        ),
-      );
-    }
+    if (_otpValue.length != 4) return;
+    setState(() {
+      _errorMessage = null;
+      _successMessage = null;
+    });
+    context.read<AuthBloc>().add(
+      VerifyOtpEvent(
+        email: widget.email,
+        otp: _otpValue,
+        username: widget.username,
+        password: widget.password,
+        deviceName: widget.deviceName,
+        deviceType: widget.deviceType,
+        deviceUniqueId: widget.deviceUniqueId,
+        deviceToken: widget.deviceToken,
+        isSwitch: widget.isSwitch,
+        selectedUserId: widget.selectedUserId,
+      ),
+    );
   }
 
-  @override
-  void dispose() {
-    _otpController.dispose();
-    super.dispose();
+  void _setError(String message) {
+    if (!mounted) return;
+    setState(() {
+      _errorMessage = message;
+      _successMessage = null;
+      // Reset the pin field so user can re-enter cleanly
+      _otpValue = '';
+      _pinKey = UniqueKey();
+    });
+  }
+
+  void _setSuccess(String message) {
+    if (!mounted) return;
+    setState(() {
+      _successMessage = message;
+      _errorMessage = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
+        if (!mounted) return;
+
         if (state is OtpSentSuccess) {
-          setState(() {
-            _isOtpSent = true;
-            _isResending = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.green,
-            ),
-          );
+          setState(() => _isResending = false);
+          _setSuccess(state.message.isNotEmpty ? state.message : 'OTP sent to ${widget.email}');
         }
+
         if (state is OtpError) {
           setState(() => _isResending = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
-          );
+          _setError(state.message.isNotEmpty
+              ? state.message
+              : 'Invalid OTP. Please check and try again.');
         }
+
         if (state is OtpVerifiedSuccess) {
-          debugPrint("[OtpVerificationSheet] OTP verified successfully");
-        }
-        if (state is AuthAuthenticated) {
-          debugPrint("[OtpVerificationSheet] AuthAuthenticated - navigating to home");
-          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+          _setSuccess('OTP verified! Logging in…');
+          // Do NOT pop — AuthFlowHandler navigates via pushNamedAndRemoveUntil
+          // when AuthAuthenticated fires, dismissing all sheets automatically.
         }
       },
       child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 16, 24, bottomInset + 16),
+        padding: EdgeInsets.fromLTRB(
+          24, 16, 24,
+          MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle + Close button row
+              // ── Handle bar + close button ──────────────────────────────────
               Row(
                 children: [
                   const Spacer(),
@@ -143,11 +162,8 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                             color: scheme.surfaceVariant.withOpacity(0.5),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            Icons.close,
-                            size: 18,
-                            color: scheme.onSurfaceVariant,
-                          ),
+                          child: Icon(Icons.close,
+                              size: 18, color: scheme.onSurfaceVariant),
                         ),
                       ),
                     ),
@@ -156,24 +172,20 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
               ),
               const SizedBox(height: 20),
 
-              // Icon
+              // ── Icon ──────────────────────────────────────────────────────
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: scheme.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.shield_outlined,
-                  size: 40,
-                  color: scheme.primary,
-                ),
+                child: Icon(Icons.shield_outlined,
+                    size: 40, color: scheme.primary),
               ),
               const SizedBox(height: 16),
 
-              // Title
               Text(
-                "Verify Your Identity",
+                'Verify Your Identity',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -181,23 +193,19 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                 ),
               ),
               const SizedBox(height: 8),
-
-              // Subtitle
               Text(
                 "We've sent a 4-digit code to\n${widget.email}",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: scheme.onSurfaceVariant,
-                ),
+                style:
+                TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
 
-              // OTP Input
+              // ── PIN input ─────────────────────────────────────────────────
               PinCodeTextField(
+                key: _pinKey, // rebuilt on error to clear the field
                 appContext: context,
                 length: 4,
-                controller: _otpController,
                 keyboardType: TextInputType.number,
                 animationType: AnimationType.fade,
                 pinTheme: PinTheme(
@@ -208,32 +216,65 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                   activeFillColor: scheme.surface,
                   inactiveFillColor: scheme.surfaceVariant.withOpacity(0.4),
                   selectedFillColor: scheme.surface,
-                  activeColor: scheme.primary,
-                  inactiveColor: scheme.outline.withOpacity(0.5),
-                  selectedColor: scheme.primary,
+                  // Red border when there's an error
+                  activeColor: _errorMessage != null
+                      ? scheme.error
+                      : scheme.primary,
+                  inactiveColor: _errorMessage != null
+                      ? scheme.error.withOpacity(0.4)
+                      : scheme.outline.withOpacity(0.5),
+                  selectedColor: _errorMessage != null
+                      ? scheme.error
+                      : scheme.primary,
                 ),
                 enableActiveFill: true,
-                onCompleted: (code) => _verifyOtp(),
-                onChanged: (value) {},
+                onChanged: (value) {
+                  _otpValue = value;
+                  // Clear error as user starts re-typing
+                  if (_errorMessage != null) {
+                    setState(() => _errorMessage = null);
+                  }
+                },
+                onCompleted: (_) => _verifyOtp(),
               ),
+
+              // ── Inline error message ──────────────────────────────────────
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: _errorMessage != null
+                    ? _FeedbackBanner(
+                  key: ValueKey(_errorMessage),
+                  message: _errorMessage!,
+                  isError: true,
+                  scheme: scheme,
+                )
+                    : _successMessage != null
+                    ? _FeedbackBanner(
+                  key: ValueKey(_successMessage),
+                  message: _successMessage!,
+                  isError: false,
+                  scheme: scheme,
+                )
+                    : const SizedBox.shrink(key: ValueKey('none')),
+              ),
+
               const SizedBox(height: 12),
 
-              // Resend OTP
+              // ── Resend ────────────────────────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     "Didn't receive the code? ",
                     style: TextStyle(
-                      fontSize: 13,
-                      color: scheme.onSurfaceVariant,
-                    ),
+                        fontSize: 13, color: scheme.onSurfaceVariant),
                   ),
                   TextButton(
                     onPressed: _isResending ? null : _requestOtp,
                     style: TextButton.styleFrom(
                       minimumSize: Size.zero,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 4),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     child: _isResending
@@ -246,10 +287,11 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                       ),
                     )
                         : Text(
-                      "Resend",
+                      'Resend',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
+                        color: scheme.primary,
                       ),
                     ),
                   ),
@@ -257,15 +299,16 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
               ),
               const SizedBox(height: 12),
 
-              // Verify Button
+              // ── Verify button ─────────────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
-                    final isVerifying = state is AuthLoading;
+                    final isLoading =
+                        state is AuthLoading || state is OtpVerifiedSuccess;
                     return ElevatedButton(
-                      onPressed: isVerifying ? null : _verifyOtp,
+                      onPressed: isLoading ? null : _verifyOtp,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: scheme.primary,
                         foregroundColor: scheme.onPrimary,
@@ -273,30 +316,80 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: isVerifying
+                      child: isLoading
                           ? const SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white),
                         ),
                       )
                           : const Text(
-                        "Verify OTP",
+                        'Verify OTP',
                         style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600),
                       ),
                     );
                   },
                 ),
               ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Inline banner shown directly beneath the PIN field.
+class _FeedbackBanner extends StatelessWidget {
+  final String message;
+  final bool isError;
+  final ColorScheme scheme;
+
+  const _FeedbackBanner({
+    super.key,
+    required this.message,
+    required this.isError,
+    required this.scheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isError ? scheme.error : Colors.green.shade600;
+    final bgColor = isError
+        ? scheme.error.withOpacity(0.08)
+        : Colors.green.withOpacity(0.08);
+    final icon =
+    isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

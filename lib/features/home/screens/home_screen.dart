@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/features/AllTasks/screens/all_task_screen.dart';
 import 'package:task_manager/features/auth/bloc/auth_bloc.dart';
-import 'package:task_manager/features/auth/bloc/auth_event.dart';
 import 'package:task_manager/features/auth/bloc/auth_state.dart';
 import 'package:task_manager/features/auth/models/user_model.dart';
 import 'package:task_manager/features/home/bloc/home_bloc.dart';
@@ -10,13 +9,12 @@ import 'package:task_manager/features/home/screens/home_app_bar.dart';
 import 'package:task_manager/features/profile/profile_page.dart';
 
 import '../../../core/di/injection_container.dart';
-import '../../../core/navigation/route_observer.dart';
 import '../../AllTasks/bloc/all_task_bloc.dart';
-import '../../auth/dialogs/multi_account_dialog.dart';
-import '../bloc/home_state.dart';
-import 'home_bottom_nav.dart';
-import 'home_dash_board_page.dart';
-import 'home_fab.dart';
+import '../../auth/auth_flow_handler.dart';
+import '../../home/bloc/home_state.dart';
+import '../../home/screens/home_bottom_nav.dart';
+import '../../home/screens/home_dash_board_page.dart';
+import '../../home/screens/home_fab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,154 +23,88 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with RouteAware {
+class _HomeScreenState extends State<HomeScreen>
+    with RouteAware, AuthFlowHandler {
+
+  @override
+  bool get isHomeContext => true;
+
   int _currentIndex = 0;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  /// Cached user so the AppBar never goes blank during loading/switching states.
+  UserModel? _cachedUser;
+
+  UserModel? _userFrom(AuthState state) {
+    if (state is AuthAuthenticated) {
+      _cachedUser = state.user;
+      return state.user;
+    }
+    if (state is AuthSwitching) {
+      _cachedUser = state.currentUser;
+      return state.currentUser;
+    }
+    if (state is AuthMultipleAccountsFound) {
+      // currentUser may be null if this is a fresh login multi-account flow
+      final user = state.currentUser ?? _cachedUser;
+      if (user != null) _cachedUser = user;
+      return _cachedUser;
+    }
+    // AuthLoading, AuthError, or any other transient state — keep showing last known user
+    return _cachedUser;
   }
 
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
+  bool _showSwitchFrom(AuthState state) =>
+      state is AuthAuthenticated && state.isMultipleAccounts;
 
-  @override
-  void didPopNext() {
-    debugPrint("Returned to HomeScreen → refreshing data");
-    context.read<HomeBloc>().add(RefreshHomeData());
-  }
-  void showMultiAccountSheet(
-    BuildContext context,
-    List<UserModel> accounts,
-    UserModel? currentUser,
-    Function(UserModel) onSelected,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      isDismissible: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => BlocProvider.value(
-        value: context.read<AuthBloc>(),
-        child: MultiAccountSheet(
-          accounts: accounts,
-          currentUser: currentUser,
-          onAccountSelected: onSelected,
-        ),
-      ),
-    );
-  }
+  bool _isSwitching(AuthState state) =>
+      state is AuthSwitching ||
+          state is AuthMultipleAccountsFound ||
+          // Show the switching spinner in AppBar while the API call is in-flight
+          // during an account switch (AuthLoading is also emitted on fresh login,
+          // but _cachedUser being non-null is a reliable signal we're on home).
+          (state is AuthLoading && _cachedUser != null);
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme
-        .of(context)
-        .colorScheme;
+    return buildAuthListener(
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) {
+          final user = _userFrom(authState);
+          final showSwitch = _showSwitchFrom(authState);
+          final switching = _isSwitching(authState);
 
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        // Handle navigation here
-        if (state is AuthSessionExpired) {
-          debugPrint("[HomeScreen] Session expired - navigating to Login");
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil('/login', (route) => false);
-        }
-
-        if (state is AuthMultipleAccountsFound) {
-          debugPrint("[HomeScreen] Multiple accounts found - showing sheet");
-
-          UserModel? currentUser;
-          final currentState = context.read<AuthBloc>().state;
-          if (currentState is AuthAuthenticated) {
-            currentUser = currentState.user;
-          }
-
-          showMultiAccountSheet(context, state.accounts, currentUser, (
-            account,
-          ) {
-            debugPrint("[HomeScreen] Account selected: ${account.userName}");
-            context.read<AuthBloc>().add(
-              AccountSelected(
-                selectedAccount: account,
-                isSwitch: true,
-                isForce: false,
-              ),
-            );
-          });
-        }
-
-        if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(state.message)),
-                ],
-              ),
-              backgroundColor: Colors.red.shade600,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
+          return BlocBuilder<HomeBloc, HomeState>(
+            buildWhen: (prev, cur) =>
+            prev.notificationCount != cur.notificationCount,
+            builder: (context, homeState) {
+              return Scaffold(
+                appBar: HomeAppBar(
+                  user: user,
+                  showSwitchAccount: showSwitch,
+                  isSwitching: switching,
+                  notificationCount: homeState.notificationCount,
+                ),
+                body: IndexedStack(
+                  index: _currentIndex,
+                  children: List.generate(3, _buildPage),
+                ),
+                bottomNavigationBar: HomeBottomNav(
+                  currentIndex: _currentIndex,
+                  onTap: (index) {
+                    if (index == 0 && _currentIndex != 0) {
+                      context.read<HomeBloc>().add(RefreshHomeData());
+                    }
+                    setState(() => _currentIndex = index);
+                  },
+                ),
+                floatingActionButton: const HomeFab(),
+                floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerDocked,
+              );
+            },
           );
-        }
-      },
-
-      builder: (context, authState) {
-
-        final bool showSwitchAccount =
-            authState is AuthAuthenticated && authState.isMultipleAccounts;
-
-        UserModel? user;
-        if (authState is AuthAuthenticated) {
-          user = authState.user;
-        }
-
-        return BlocBuilder<HomeBloc, HomeState>(
-          buildWhen: (previous, current) =>
-          previous.notificationCount != current.notificationCount,
-          builder: (context, homeState) {
-            print("UI notificationCount: ${homeState.notificationCount}");
-
-            return Scaffold(
-              appBar: HomeAppBar(
-                user: user,
-                showSwitchAccount: showSwitchAccount,
-                state: authState,
-                notificationCount: homeState.notificationCount,
-              ),
-              body: IndexedStack(
-              index: _currentIndex,
-              children: List.generate(3, (index) => _buildPage(index)),
-            ),
-              bottomNavigationBar: HomeBottomNav(
-                currentIndex: _currentIndex,
-                onTap: (index) {
-                  // If user switches back to Dashboard tab
-                  if (index == 0 && _currentIndex != 0) {
-                    context.read<HomeBloc>().add(RefreshHomeData());
-                  }
-
-                  setState(() => _currentIndex = index);
-                },
-              ),
-              floatingActionButton: const HomeFab(),
-              floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
-            );
-          },
-        );
-      },
+        },
+      ),
     );
   }
 
@@ -180,17 +112,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     switch (index) {
       case 0:
         return const HomeDashboardPage();
-
       case 1:
         return BlocProvider(
-          create: (_) => AllTaskBloc(sl(), sl())
-            ..add(LoadAllTasks()),
+          create: (_) => AllTaskBloc(sl(), sl())..add(LoadAllTasks()),
           child: const AllTaskScreen(),
         );
-
       case 2:
         return const ProfileScreen();
-
       default:
         return const HomeDashboardPage();
     }
