@@ -2,32 +2,28 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:task_manager/features/AllTasks/bloc/all_task_bloc.dart';
 import 'package:task_manager/features/createtask/bloc/task_create_bloc.dart';
-import 'package:task_manager/features/employeetasks/bloc/employee_task_bloc.dart';
 import 'package:task_manager/features/home/bloc/home_bloc.dart';
-import 'package:task_manager/features/modulenotification/app_notification_repository.dart';
 import 'package:task_manager/features/home/repository/task_repository.dart';
-import 'package:task_manager/features/modulenotification/app_notification_service.dart';
 import 'package:task_manager/features/home/services/home_service.dart';
-import 'package:task_manager/features/task/service/task_list_service.dart';
+import 'package:task_manager/features/modulenotification/app_notification_repository.dart';
+import 'package:task_manager/features/modulenotification/app_notification_service.dart';
 import 'package:task_manager/features/modulenotification/bloc/module_notification_bloc.dart';
 import 'package:task_manager/features/prochattaks/bloc/prochat_task_bloc.dart';
 import 'package:task_manager/features/prochattaks/repository/prochat_task_repository.dart';
-import 'package:task_manager/features/taskChat/bloc/task_chat_bloc.dart';
+import 'package:task_manager/features/projecttasks/bloc/project_wise_task_bloc.dart';
+import 'package:task_manager/features/task/service/task_list_service.dart';
 
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/repository/auth_repository.dart';
 import '../../features/createtask/services/task_service.dart';
-import '../../features/duetodaytasks/bloc/due_today_bloc.dart';
 import '../../features/home/repository/home_repository.dart';
+import '../../features/prochattaks/repository/prochat_service.dart';
+import '../../features/profile/bloc/profile_bloc.dart';
 import '../../features/task/bloc/task_list_bloc.dart';
 import '../../features/task/repository/task_list_repository.dart';
 import '../../features/template/bloc/template_bloc.dart';
 import '../../features/template/repository/template_repository.dart';
 import '../../features/template/service/template_service.dart';
-import '../../features/overdue/bloc/over_due_bloc.dart';
-import '../../features/prochattaks/repository/prochat_service.dart';
-import '../../features/profile/bloc/profile_bloc.dart';
-import '../../features/task_details/bloc/task_details_bloc.dart';
 import '../network/dio_client.dart';
 import '../storage/secure_storage_service.dart';
 import '../storage/storage_service.dart';
@@ -77,7 +73,7 @@ Future<void> initializeDependencies() async {
   );
 
   // Bloc
-  sl.registerFactory<AuthBloc>(
+  sl.registerLazySingleton<AuthBloc>(
         () =>
         AuthBloc(
           sl<AuthRepository>(),
@@ -126,7 +122,7 @@ Future<void> initializeDependencies() async {
   );
 
   // Bloc
-  sl.registerFactory<CreateTaskBloc>(
+  sl.registerLazySingleton<CreateTaskBloc>(
         () =>
         CreateTaskBloc(
           sl<TaskRepository>(),
@@ -134,17 +130,18 @@ Future<void> initializeDependencies() async {
         ),
   );
 
-  sl.registerFactory<AllTaskBloc>(
+  sl.registerLazySingleton<AllTaskBloc>(
         () =>
         AllTaskBloc(
           sl<TaskRepository>(),
           sl<StorageService>(),
         ),
   );
-  sl.registerFactory<HomeBloc>(
+  sl.registerLazySingleton<HomeBloc>(
         () =>
         HomeBloc(
-          sl<HomeRepository>(),
+          sl<HomeRepository>()
+          ,sl<AuthBloc>(),
         ),
   );
 
@@ -168,7 +165,7 @@ Future<void> initializeDependencies() async {
   );
 
 // Bloc
-  sl.registerFactory<TaskListBloc>(
+  sl.registerLazySingleton<TaskListBloc>(
         () => TaskListBloc(
       sl<TaskListRepository>(),
       sl<TaskListService>(),
@@ -192,7 +189,7 @@ Future<void> initializeDependencies() async {
     ),
   );
 
-  sl.registerFactory<TemplateBloc>(
+  sl.registerLazySingleton<TemplateBloc>(
         () => TemplateBloc(
       sl<TemplateRepository>(),
     ),
@@ -221,6 +218,12 @@ Future<void> initializeDependencies() async {
 
   sl.registerLazySingleton<ProfileBloc>(() =>
       ProfileBloc(sl<StorageService>()));
+
+  sl.registerLazySingleton<ProjectWiseTaskBloc>(() =>
+      ProjectWiseTaskBloc(
+          tasksRepository: sl<TaskRepository>(),
+          homeRepository: sl<HomeRepository>(),
+          storageService: sl<StorageService>()));
 
 
 }

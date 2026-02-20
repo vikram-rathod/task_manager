@@ -39,15 +39,20 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: Row(
               children: [
                 if (user != null)
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Colors.white,
+                  InkWell(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/profile');
+                    },
                     child: CircleAvatar(
-                      radius: 20,
-                      backgroundImage: user!.userProfileUrl.isNotEmpty
-                          ? NetworkImage(user!.userProfileUrl)
-                          : const AssetImage('assets/images/app_logo.png')
-                              as ImageProvider,
+                      radius: 22,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundImage: user!.userProfileUrl.isNotEmpty
+                            ? NetworkImage(user!.userProfileUrl)
+                            : const AssetImage('assets/images/app_logo.png')
+                                as ImageProvider,
+                      ),
                     ),
                   ),
                 const SizedBox(width: 8),
@@ -130,6 +135,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               onSelected: (value) {
                 switch (value) {
+                  case 'profile':
+                    Navigator.pushNamed(context, '/profile');
+                    break;
                   case 'theme':
                     context.read<ThemeCubit>().toggle();
                     break;
@@ -146,6 +154,23 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 final isDark = theme.brightness == Brightness.dark;
 
                 return [
+                  PopupMenuItem<String>(
+                    value: 'profile',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.person,
+                          size: 20,
+                          color: Colors.grey.shade700,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          "Profile",
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
                   PopupMenuItem<String>(
                     value: 'theme',
                     child: Row(

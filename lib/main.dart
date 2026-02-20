@@ -5,6 +5,7 @@ import 'package:task_manager/features/employeetasks/bloc/employee_task_bloc.dart
 import 'package:task_manager/features/home/bloc/home_bloc.dart';
 import 'package:task_manager/features/modulenotification/bloc/module_notification_bloc.dart';
 import 'package:task_manager/features/prochattaks/bloc/prochat_task_bloc.dart';
+import 'package:task_manager/features/projecttasks/bloc/project_wise_task_bloc.dart';
 import 'package:task_manager/features/taskChat/bloc/task_chat_bloc.dart';
 
 import 'core/di/injection_container.dart';
@@ -30,8 +31,7 @@ void main() async {
         BlocProvider.value(value: sl<AuthBloc>()),
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider.value(value: CreateTaskBloc(sl(), sl())),
-        BlocProvider.value(value: AllTaskBloc(sl(), sl())),
-        BlocProvider.value(value: HomeBloc(sl())),
+        BlocProvider.value(value: HomeBloc(sl(),sl())),
         BlocProvider.value(value: EmployeeTaskBloc(sl(), sl())),
         BlocProvider.value(value: OverDueBloc(sl(), sl())),
         BlocProvider.value(value: DueTodayBloc(sl(), sl())),

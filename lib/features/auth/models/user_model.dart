@@ -106,6 +106,19 @@ class UserModel extends Equatable {
         userEmail,
         companyId,
         loginSessionId,
+        userTypeName,
+        companyName,
+        companyType,
+        companyLogoUrl,
+        userProfileUrl,
+        profileType,
+        userMobileNumber,
+        designation,
+        userAccAutoCreate,
+        refCandidateId,
+        userFixId,
+        userPassword,
+        userType,
       ];
 
   @override

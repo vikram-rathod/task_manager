@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/features/task/screen/widget/_main_item_card.dart';
 import '../../../core/di/injection_container.dart';
-import '../../../core/storage/storage_service.dart';
+import '../../../reusables/searchable_dropdown.dart';
 import '../../createtask/bloc/task_create_bloc.dart';
 import '../../createtask/bloc/taskcreate_event.dart';
 import '../../createtask/bloc/taskcreate_state.dart';
@@ -22,65 +22,45 @@ class TaskListScreen extends StatefulWidget {
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
-  int _selectedTabIndex = 1;
-
   bool _isFabOpen = false;
-  bool _isFounderOrPartner = false;
 
   final List<String> _tabs = [
-    "Collection → Filling of Documents",
-    "Collection → Review & Commenting",
-    "Creation of Source Documents → Handoff"
+    "Collection → Filing of Documents",
+    "Collection → Review & Commenting → Updated Doc Collection → Filing of Documents",
+    "Creation of Source Documents → Handoff",
   ];
 
   @override
   void initState() {
     super.initState();
     context.read<CreateTaskBloc>().add(LoadProjectList());
-    _loadUserRole();
+    context.read<TaskListBloc>().add(LoadUserRole());
   }
 
-  void _loadUserRole() async {
-    final userType = await sl<StorageService>().read("userType");
-
-    setState(() {
-      _isFounderOrPartner =
-          userType == "700372" || userType == "2"; // adjust if needed
-    });
-  }
-
-
-  void _loadHierarchy(String projectId) {
-    context.read<TaskListBloc>().add(
-      LoadTaskHierarchy(
-        projectId: projectId,
-        tabId: (_selectedTabIndex + 1).toString(),
-      ),
-    );
+  @override
+  void dispose() {
+    context.read<TaskListBloc>().add(ResetTaskList());
+    context.read<CreateTaskBloc>().add(ProjectCleared());
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).primaryColor;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Task-List"),
+        title: const Text("Task List"),
       ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: _buildBody(),
-          ),
-
-          _buildFloatingMenu(), // 👈 Add this
-        ],
+      floatingActionButton: _buildFloatingMenu(),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: _buildBody(cs),
       ),
     );
   }
-  Widget _buildBody() {
-    final primary = Theme.of(context).primaryColor;
+
+  Widget _buildBody(ColorScheme cs) {
     return BlocBuilder<CreateTaskBloc, CreateTaskState>(
       builder: (context, projectState) {
         if (projectState.projectListLoading) {
@@ -91,294 +71,308 @@ class _TaskListScreenState extends State<TaskListScreen> {
           return Center(child: Text(projectState.errorMessage!));
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            /// ---------------- TABS ----------------
-            SizedBox(
-              height: 45,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _tabs.length,
-                separatorBuilder: (_, __) =>
-                const SizedBox(width: 10),
-                itemBuilder: (context, index) {
-                  final isSelected =
-                      _selectedTabIndex == index;
+        return BlocBuilder<TaskListBloc, TaskListState>(
+          builder: (context, taskState) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                /// TABS
+                SizedBox(
+                  height: 45,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _tabs.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final isSelected =
+                          taskState.selectedTabIndex == index;
 
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedTabIndex = index;
-                      });
-
-                      if (projectState.selectedProject !=
-                          null) {
-                        _loadHierarchy(projectState
-                            .selectedProject!.projectId
-                            .toString());
-                      }
-                    },
-                    child: AnimatedContainer(
-                      duration:
-                      const Duration(milliseconds: 250),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18),
-                      decoration: BoxDecoration(
-                        borderRadius:
-                        BorderRadius.circular(30),
-                        color: isSelected
-                            ? primary
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: primary,
+                      return GestureDetector(
+                        onTap: () {
+                          final tabId = (index + 1).toString();
+                          context.read<TaskListBloc>().add(
+                            ChangeTab(tabId: tabId, tabIndex: index),
+                          );
+                          if (projectState.selectedProject != null) {
+                            context.read<TaskListBloc>().add(
+                              LoadTaskHierarchy(
+                                projectId: projectState
+                                    .selectedProject!.projectId
+                                    .toString(),
+                                tabId: tabId,
+                              ),
+                            );
+                          }
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          padding:
+                          const EdgeInsets.symmetric(horizontal: 18),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            color: isSelected
+                                ? cs.primary
+                                : Colors.transparent,
+                            border: Border.all(color: cs.primary),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            _tabs[index],
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected
+                                  ? cs.onPrimary
+                                  : cs.primary,
+                            ),
+                          ),
                         ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        _tabs[index],
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: isSelected
-                              ? Colors.white
-                              : primary,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// ---------------- SELECT PROJECT ----------------
-            Text(
-              "Select Project",
-              style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: primary),
-            ),
-            const SizedBox(height: 8),
-
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16),
-              decoration: BoxDecoration(
-                borderRadius:
-                BorderRadius.circular(16),
-                border: Border.all(
-                    color:
-                    Colors.grey.withOpacity(0.5)),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  isExpanded: true,
-                  value: projectState.selectedProject?.projectId,
-                  hint: const Text("Choose Project"),
-                  items: projectState.projects.map((project) {
-                    return DropdownMenuItem<int>(
-                      value: project.projectId,
-                      child: Text(
-                        project.projectName,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (projectId) {
-                    if (projectId != null) {
-                      final selectedProject = projectState.projects
-                          .firstWhere((p) => p.projectId == projectId);
-
-                      context.read<CreateTaskBloc>().add(
-                        ProjectSelected(selectedProject),
                       );
+                    },
+                  ),
+                ),
 
-                      _loadHierarchy(projectId.toString());
+                const SizedBox(height: 20),
+
+                /// PROJECT SELECTION — using SearchableDropdown
+                SearchableDropdown(
+                  label: 'Project',
+                  hint: 'Select project',
+                  icon: Icons.folder_outlined,
+                  items: projectState.projects,
+                  selectedItem: projectState.selectedProject,
+                  itemAsString: (project) => project.projectName,
+                  onChanged: (project) {
+                    if (project != null) {
+                      context
+                          .read<CreateTaskBloc>()
+                          .add(ProjectSelected(project));
+                      context.read<TaskListBloc>().add(
+                        LoadTaskHierarchy(
+                          projectId: project.projectId.toString(),
+                          tabId: taskState.selectedTabId,
+                        ),
+                      );
+                    } else {
+                      context.read<TaskListBloc>().add(ClearTaskItems());
+                      context.read<CreateTaskBloc>().add(ProjectCleared());
                     }
                   },
+                  isEnabled: !projectState.projectListLoading,
+                  isLoading: projectState.projectListLoading,
                 ),
-              ),
-            ),
 
-            const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-            /// ---------------- TASK HIERARCHY ----------------
-            Expanded(
-              child:
-              BlocBuilder<TaskListBloc,
-                  TaskListState>(
-                builder: (context, state) {
-                  if (state.isLoading) {
-                    return const Center(
-                        child:
-                        CircularProgressIndicator());
-                  }
-
-                  if (state.items.isEmpty) {
-                    return Center(
-                      child:
-                      Text("No Task Lists Found",style: TextStyle(color: Theme.of(context).colorScheme.outline),),
-                    );
-                  }
-
-                  return ListView.builder(
-                    itemCount: state.items.length,
-                    itemBuilder: (context, index) {
-                      final selectedProject = projectState.selectedProject;
-
-                      if (selectedProject == null) {
-                        return const SizedBox(); // safety
+                /// TASK HIERARCHY
+                Expanded(
+                  child: Builder(
+                    builder: (_) {
+                      if (taskState.isLoading) {
+                        return const Center(
+                            child: CircularProgressIndicator());
                       }
 
-                      return MainItemCard(
-                        item: state.items[index],
-                        projectId: selectedProject.projectId.toString(),
+                      if (projectState.selectedProject == null) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.folder_open_rounded,
+                                  size: 64,
+                                  color: cs.onSurfaceVariant
+                                      .withOpacity(0.4)),
+                              const SizedBox(height: 12),
+                              Text(
+                                "Select a project to view tasks",
+                                style: TextStyle(
+                                    color: cs.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      if (taskState.items.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.inbox_rounded,
+                                  size: 64,
+                                  color: cs.onSurfaceVariant
+                                      .withOpacity(0.4)),
+                              const SizedBox(height: 12),
+                              Text(
+                                "No Task Lists Found",
+                                style: TextStyle(
+                                    color: cs.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        itemCount: taskState.items.length,
+                        itemBuilder: (context, index) {
+                          return MainItemCard(
+                            item: taskState.items[index],
+                            projectId: projectState
+                                .selectedProject!.projectId
+                                .toString(),
+                          );
+                        },
                       );
                     },
-                  );
-
-                },
-              ),
-            )
-          ],
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 
   Widget _buildFloatingMenu() {
-    final primary = Theme.of(context).primaryColor;
+    final cs = Theme.of(context).colorScheme;
+    final taskState = context.watch<TaskListBloc>().state;
 
-    return Positioned(
-      bottom: 30,
-      right: 20,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        /// CREATE TEMPLATE (Role Based)
+        if (_isFabOpen && taskState.isFounderOrPartner)
+          _buildMiniOption(
+            icon: Icons.note_add,
+            label: "Create Template",
+            onTap: () {
+              setState(() => _isFabOpen = false);
+              final tabId =
+                  context.read<TaskListBloc>().state.selectedTabId;
+              final tabName = _tabs[int.parse(tabId) - 1];
 
-          /// CREATE TEMPLATE (Role Based)
-          if (_isFabOpen )
-            _buildMiniOption(
-              icon: Icons.note_add,
-              label: "Create Template",
-              onTap: () {
-                setState(() => _isFabOpen = false);
-
-                final tabId = (_selectedTabIndex + 1).toString();
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BlocProvider(
-                      create: (_) => sl<TemplateBloc>()
-                        ..add(LoadTemplates(tabId: tabId)),
-                      child:TemplateListScreen(tabId: tabId,),
-                    ),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) => sl<TemplateBloc>()
+                      ..add(LoadTemplates(tabId: tabId)),
+                    child: TemplateListScreen(tabId: tabId,tabName : tabName),
                   ),
-                );
-              },
-            ),
-
-          /// ASSIGN TASK
-          /// ASSIGN TASK
-          if (_isFabOpen)
-            _buildMiniOption(
-              icon: Icons.assignment,
-              label: "Assign Task",
-              onTap: () {
-                setState(() => _isFabOpen = false);
-
-                final tabId = (_selectedTabIndex + 1).toString();
-
-                final selectedProject =
-                    context.read<CreateTaskBloc>().state.selectedProject;
-
-                if (selectedProject == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Please select project first")),
-                  );
-                  return;
-                }
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BlocProvider(
-                      create: (_) => sl<TemplateBloc>()
-                        ..add(LoadTemplates(tabId: tabId)),
-                      child: AssignTaskScreen(
-                        tabId: tabId,
-                        projectName: selectedProject.projectName,
-                        projectId: selectedProject.projectId.toString(),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-
-          const SizedBox(height: 12),
-
-          /// MAIN FAB
-          FloatingActionButton(
-            backgroundColor: primary,
-            onPressed: () {
-              setState(() => _isFabOpen = !_isFabOpen);
+                ),
+              );
             },
+          ),
+
+        /// ASSIGN TASK
+        if (_isFabOpen)
+          _buildMiniOption(
+            icon: Icons.assignment,
+            label: "Assign Task",
+            onTap: () {
+              setState(() => _isFabOpen = false);
+              final tabId =
+                  context.read<TaskListBloc>().state.selectedTabId;
+              final selectedProject =
+                  context.read<CreateTaskBloc>().state.selectedProject;
+
+              if (selectedProject == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text("Please select a project first"),
+                    backgroundColor: cs.error,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+                return;
+              }
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) => sl<TemplateBloc>()
+                      ..add(LoadTemplates(tabId: tabId)),
+                    child: AssignTaskScreen(
+                      tabId: tabId,
+                      projectName: selectedProject.projectName,
+                      projectId: selectedProject.projectId.toString(),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+
+        const SizedBox(height: 12),
+
+        /// MAIN FAB
+        FloatingActionButton(
+          backgroundColor: cs.primary,
+          onPressed: () => setState(() => _isFabOpen = !_isFabOpen),
+          child: AnimatedRotation(
+            turns: _isFabOpen ? 0.125 : 0,
+            duration: const Duration(milliseconds: 200),
             child: Icon(
               _isFabOpen ? Icons.close : Icons.add,
+              color: cs.onPrimary,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+
   Widget _buildMiniOption({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
   }) {
+    final cs = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-
-          /// Label
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 8,
-            ),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color:Theme.of(context).colorScheme.surface.withOpacity(0.2),
+              color: cs.surface,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cs.outlineVariant),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                  color: cs.shadow.withOpacity(0.08),
                   blurRadius: 8,
                 ),
               ],
             ),
-            child: Text(label,style: TextStyle(color: Theme.of(context).colorScheme.outline,fontWeight: FontWeight.w700)),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
           ),
-
           const SizedBox(width: 10),
-
-          /// Icon Button
           FloatingActionButton(
             heroTag: label,
             mini: true,
-            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            backgroundColor: cs.primaryContainer,
             onPressed: onTap,
-            child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+            child: Icon(icon, color: cs.primary, size: 20),
           ),
         ],
       ),
     );
   }
-
 }
-

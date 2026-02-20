@@ -26,7 +26,6 @@ class ProjectSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _ProjectHeader(count: state.projects.length),
-              const SizedBox(height: 12),
               SizedBox(
                 height: 140,
                 child: state.isProjectsLoading
@@ -167,9 +166,10 @@ class _ProjectCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       onTap: () {
         // Navigate to project details
+        Navigator.of(context).pushNamed('/project-details', arguments: project);
       },
       child: Container(
-        width: 200,
+        width: 210,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: scheme.surface,
@@ -211,7 +211,6 @@ class _ProjectCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Expanded(
-              // ✅ Expanded instead of Spacer — lets text take available space
               child: Text(
                 project.projectName,
                 maxLines: 2,
@@ -220,14 +219,12 @@ class _ProjectCard extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: scheme.onSurface,
-                  height: 1.2,
                 ),
               ),
             ),
-            const SizedBox(height: 8),
             Wrap(
-              spacing: 5,
-              runSpacing: 4,
+              spacing: 4,
+              runSpacing: 2,
               children: [
                 _ProjectStatusChip(
                   count: '${project.completedTaskCount}',

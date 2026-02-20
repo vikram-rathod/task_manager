@@ -39,12 +39,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
       },
       child: CustomScrollView(
         slivers: [
-          const SliverPadding(
-            padding: EdgeInsets.all(8),
-            sliver: SliverToBoxAdapter(
-              child: QuickActionSection(),
-            ),
-          ),
+          SliverToBoxAdapter(child: QuickActionSection()),
           const SliverToBoxAdapter(child: EmployeeSection()),
           const SliverToBoxAdapter(child: ProjectSection()),
           const SliverToBoxAdapter(child: TodaysTaskSection()),

@@ -37,3 +37,5 @@ class FetchTodaysTasks extends HomeEvent {
 }
 
 class ClearTodaysTasksError extends HomeEvent {}
+
+class RefreshHomeData extends HomeEvent {}

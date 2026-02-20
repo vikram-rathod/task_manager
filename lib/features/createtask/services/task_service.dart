@@ -336,4 +336,41 @@ class TaskApiService {
     );
   }
 
+  Future<ApiResponse<List<TMTasksModel>>> getAllTaskByProjectId({
+    String? userId,
+    String? compId,
+    String? userType,
+    required int page,
+    required int size,
+    String? makerId,
+    String? checkerId,
+    String? pcEngrId,
+    String? searchQuery,
+    required String projectId,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.taskListByProjectId,
+      data: {
+        'user_id': userId,
+        'comp_id': compId,
+        'user_type': userType,
+        'page': page,
+        'size': size,
+        'maker_id': makerId,
+        'checker_id': checkerId,
+        'pc_engr_id': pcEngrId,
+        'search_query': searchQuery,
+        'project_id': projectId,
+      },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+    return ApiResponse.fromJson(
+      response.data,
+          (data) =>
+          (data as List).map((e) => TMTasksModel.fromJson(e)).toList(),
+    );
+  }
+
 }

@@ -10,10 +10,15 @@ class LoadTaskHierarchy extends TaskListEvent {
   });
 }
 
+
 class ChangeTab extends TaskListEvent {
   final String tabId;
+  final int tabIndex;
 
-  ChangeTab(this.tabId);
+  ChangeTab({
+    required this.tabId,
+    required this.tabIndex,
+  });
 }
 
 class TransferTaskRequested extends TaskListEvent {
@@ -25,3 +30,9 @@ class TransferTaskRequested extends TaskListEvent {
     required this.projectId,
   });
 }
+
+class LoadUserRole extends TaskListEvent {}
+
+class ClearTaskItems extends TaskListEvent {}
+
+class ResetTaskList extends TaskListEvent {}

@@ -121,4 +121,26 @@ class TaskRepository {
     replyTo: replyTo,
     mentionUserIds: mentionUserId.join(','),
   );
+
+  Future<ApiResponse<List<TMTasksModel>>> getAllTaskByProjectId({
+    String? userId, String? compId, String? userType,
+    required int page,
+    required int size, String? makerId, String? checkerId,
+    String? pcEngrId, String? searchQuery, required String projectId}) async {
+
+      final response = await _api.getAllTaskByProjectId(
+        userId: userId,
+        compId: compId,
+        userType: userType,
+        page: page,
+        size: size,
+          makerId: makerId,
+        checkerId: checkerId,
+        pcEngrId: pcEngrId,
+          searchQuery: searchQuery,
+        projectId: projectId,
+      );
+      return response;
+
+  }
 }

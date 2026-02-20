@@ -188,16 +188,20 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                             width: 0.2,
                           ),
                         ),
-                        child: Text(
-                          task.taskDescription.isNotEmpty
-                              ? task.taskDescription
-                              : 'No description available',
-                          style: TextStyle(
-                            fontSize: 15,
-                            height: 1.6,
-                            color: task.taskDescription.isNotEmpty
-                                ? scheme.onSurface
-                                : scheme.onSurfaceVariant,
+                        child: Tooltip(
+                          message: task.taskDescription,
+                          child: Text(
+                            task.taskDescription.isNotEmpty
+                                ? task.taskDescription
+                                : 'No description available',
+                            maxLines: 10,
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 1.6,
+                              color: task.taskDescription.isNotEmpty
+                                  ? scheme.onSurface
+                                  : scheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ),

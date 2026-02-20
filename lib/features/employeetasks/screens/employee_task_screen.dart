@@ -87,7 +87,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
     final tabLabel = bloc.state.tabs[index].label;
 
     print('═══════════════════════════════════════════════════════');
-    print('🔄 TAB SWITCHED');
+    print(' TAB SWITCHED');
     print('═══════════════════════════════════════════════════════');
     print('   Tab Index: $index');
     print('   Tab ID: $tabId');
@@ -136,7 +136,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
           final currentPage = state.pagesByTab[tabId] ?? 1;
           final nextPage = currentPage + 1;
 
-          print('📄 Loading next page: $nextPage for tab: $tabId');
+          print(' Loading next page: $nextPage for tab: $tabId');
 
           context.read<EmployeeTaskBloc>().add(
             FetchEmployeeTasks(
@@ -172,16 +172,15 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final employee = widget.employee;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0A0E21) : const Color(0xFFF8F9FE),
+      backgroundColor: theme.colorScheme.surface,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: CustomScrollView(
           slivers: [
-            _buildModernAppBar(theme, isDark, employee),
+            _buildModernAppBar(theme, employee),
             // Main Content
             SliverToBoxAdapter(
               child: Column(
@@ -199,13 +198,13 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
   }
 
   Widget _buildModernAppBar(
-      ThemeData theme, bool isDark, EmployeeModel employee) {
+      ThemeData theme, EmployeeModel employee) {
     return SliverAppBar(
       expandedHeight: 140,
       floating: false,
       pinned: true,
       elevation: 0,
-      backgroundColor: isDark ? const Color(0xFF1A1F3A) : theme.primaryColor,
+      backgroundColor: theme.primaryColor,
       leading: IconButton(
         icon: Container(
           padding: const EdgeInsets.all(8),
@@ -224,14 +223,9 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: isDark
-                  ? [
-                const Color(0xFF1A1F3A),
-                const Color(0xFF2D3561),
-              ]
-                  : [
-                theme.primaryColor,
-                theme.primaryColor.withOpacity(0.85),
+              colors: [
+                theme.primaryColor.withOpacity(0.4),
+                theme.primaryColor.withOpacity(0.8),
               ],
             ),
           ),
@@ -377,6 +371,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+
     return BlocBuilder<EmployeeTaskBloc, EmployeeTaskState>(
       builder: (context, state) {
         if (state.tabs.isEmpty) {
@@ -490,7 +485,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
                 ),
               ))
                   .toList(),
-              views: state.tabs.map((tab) => _buildTasksList(tab.id)).toList(),
+              views: state.tabs.map((tab) => _buildTasksList(tab.id,theme.colorScheme)).toList(),
               onTabChanged: _onTabChanged,
               height:MediaQuery.of(context).size.height * 0.75,
               tabCounts: [
@@ -504,7 +499,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
     );
   }
 
-  Widget _buildTasksList(String tabId) {
+  Widget _buildTasksList(String tabId,ColorScheme scheme) {
     return BlocBuilder<EmployeeTaskBloc, EmployeeTaskState>(
       builder: (context, state) {
         final isLoading = state.loadingByTab[tabId] ?? false;
@@ -537,7 +532,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
             _loadTasksForTab(tabId, isRefresh: true);
             await Future.delayed(const Duration(milliseconds: 500));
           },
-          color: const Color(0xFF667EEA),
+          color: scheme.surface,
           child: ListView.builder(
             controller: _scrollControllers[tabId],
             padding: const EdgeInsets.only(bottom: 20),
@@ -555,14 +550,10 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
                 child: TaskCard(
                   task: taskModel,
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Task ${taskModel.taskId} clicked'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
+                    Navigator.pushNamed(
+                      context,
+                      '/taskDetails',
+                      arguments: taskModel,
                     );
                   },
                   onChatTap: () {

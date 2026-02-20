@@ -33,7 +33,7 @@ class TemplateRepository {
 
 
 
-  /// 🔥 NEW: Fetch Authorities
+  ///  NEW: Fetch Authorities
   Future<List<AuthorityModel>> getAuthorities({
     required String moduleId,
   }) async {

@@ -4,6 +4,8 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 import '../model/quick_action_model.dart';
 import '../repository/home_repository.dart';
 import 'home_state.dart';
@@ -12,8 +14,14 @@ part 'home_event.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final HomeRepository repository;
+  final AuthBloc authBloc;
 
-  HomeBloc(this.repository) : super(const HomeState()) {
+  late final StreamSubscription _authSubscription;
+
+
+  HomeBloc(this.repository, this.authBloc) : super(const HomeState()) {
+
+    on<RefreshHomeData>(_onRefreshHomeData);
     on<FetchQuickActions>(_fetchQuickActions);
     on<ClearQuickActionsError>(_clearQuickActionsError);
     on<FetchTaskHistory>(_fetchTaskHistory);
@@ -24,6 +32,26 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<ClearEmployeeWiseTaskListError>(_clearEmployeeWiseTaskListError);
     on<FetchTodaysTasks>(_fetchTodaysTasks);
     on<ClearTodaysTasksError>(_clearTodaysTasksError);
+
+    _authSubscription = authBloc.stream.listen((authState) {
+      debugPrint('HomeBloc: _authSubscription state: $authState');
+      if (authState is AuthAuthenticated) {
+        add(RefreshHomeData());
+      }
+    });
+  }
+
+  Future<void> _onRefreshHomeData(
+      RefreshHomeData event,
+      Emitter<HomeState> emit,
+      ) async {
+    debugPrint('HomeBloc: _onRefreshHomeData');
+
+    add(FetchQuickActions());
+    add(FetchTaskHistory());
+    add(LoadProjectList());
+    add(LoadEmployeeWiseTaskList());
+    add(const FetchTodaysTasks(page: 1, isMyTasks: true));
   }
 
   Future<void> _fetchQuickActions(
@@ -303,6 +331,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       myTasksError: null,
       otherTasksError: null,
     ));
+  }
+
+  @override
+  Future<void> close() {
+    _authSubscription.cancel();
+    return super.close();
   }
 }
 

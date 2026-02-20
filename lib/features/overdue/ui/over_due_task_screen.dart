@@ -80,7 +80,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
     final tabLabel = bloc.state.tabs[index].label;
 
     print('═══════════════════════════════════════════════════════');
-    print('🔄 TAB SWITCHED');
+    print('TAB SWITCHED');
     print('═══════════════════════════════════════════════════════');
     print('   Tab Index: $index');
     print('   Tab ID: $tabId');
@@ -94,7 +94,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
 
   void _loadTasksForTab(String tabId, {bool isRefresh = false}) {
     print(
-      '📡 API CALL: Loading tasks for tabId: $tabId, isRefresh: $isRefresh, page: 1',
+      'API CALL: Loading tasks for tabId: $tabId, isRefresh: $isRefresh, page: 1',
     );
 
     context.read<OverDueBloc>().add(
@@ -162,18 +162,15 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final quickAction = widget.action;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0A0E21)
-          : const Color(0xFFF8F9FE),
+      backgroundColor: theme.colorScheme.surface,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: CustomScrollView(
           slivers: [
-            _buildSimpleAppBar(theme, isDark, "Overdue Tasks", ""
+            _buildSimpleAppBar(theme.colorScheme, "Overdue Tasks", ""
                 "Your Over Due Tasks..."),
             // Main Content
             SliverToBoxAdapter(
@@ -191,9 +188,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
     );
   }
 
-  Widget _buildSimpleAppBar(
-    ThemeData theme,
-    bool isDark,
+  Widget _buildSimpleAppBar(ColorScheme theme,
     String title,
     String subtitle,
   ) {
@@ -202,11 +197,11 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
       floating: false,
       pinned: true,
       elevation: 0,
-      backgroundColor: isDark ? const Color(0xFF1A1F3A) : theme.primaryColor,
+      backgroundColor: theme.primaryContainer,
       leading: IconButton(
-        icon: const Icon(
+        icon: Icon(
           Icons.arrow_back_ios_new_rounded,
-          color: Colors.white,
+          color: theme.primary,
           size: 20,
         ),
         onPressed: () => Navigator.pop(context),
@@ -222,8 +217,8 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.primary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -234,7 +229,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: theme.primary.withOpacity(0.8),
                     fontSize: 13,
                   ),
                   maxLines: 1,
@@ -248,39 +243,8 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
     );
   }
 
-  Widget _buildMicroStat({
-    required IconData icon,
-    required String value,
-    required String label,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.white70, size: 14),
-        const SizedBox(width: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(width: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildTasksSection() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return BlocBuilder<OverDueBloc, OverDueState>(
       builder: (context, state) {
@@ -314,44 +278,35 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Container(
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF0A0E21)
-                      : const Color(0xFFF5F6FA),
+                  color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.black.withOpacity(0.05),
+                    color: theme.colorScheme.surfaceVariant.withOpacity(0.05),
                   ),
                 ),
                 child: TextField(
                   controller: _searchController,
                   style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: theme.colorScheme.onSurface,
                     fontSize: 14,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Search tasks...',
                     hintStyle: TextStyle(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.4)
-                          : Colors.grey[500],
+                      color: theme.colorScheme.onSurface.withOpacity(0.4),
                       fontSize: 14,
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: isDark
-                          ? Colors.white.withOpacity(0.4)
-                          : Colors.grey[500],
+                      color: theme.colorScheme.onSurface.withOpacity(0.4),
                       size: 22,
                     ),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
                             icon: Icon(
                               Icons.clear_rounded,
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.4)
-                                  : Colors.grey[500],
+                              color: theme.colorScheme.onSurface
+                                  .withOpacity(0.4),
                               size: 20,
                             ),
                             onPressed: () {
@@ -399,7 +354,8 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
                     ),
                   )
                   .toList(),
-              views: state.tabs.map((tab) => _buildTasksList(tab.id)).toList(),
+              views: state.tabs.map((tab) =>
+                  _buildTasksList(tab.id, theme.colorScheme)).toList(),
               onTabChanged: _onTabChanged,
               tabCounts: [
                 widget.action.pendingAtMe,
@@ -413,7 +369,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
     );
   }
 
-  Widget _buildTasksList(String tabId) {
+  Widget _buildTasksList(String tabId, ColorScheme scheme) {
     return BlocBuilder<OverDueBloc, OverDueState>(
       builder: (context, state) {
         final isLoading = state.loadingByTab[tabId] ?? false;
@@ -446,7 +402,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
             _loadTasksForTab(tabId, isRefresh: true);
             await Future.delayed(const Duration(milliseconds: 500));
           },
-          color: const Color(0xFF667EEA),
+          color: scheme.primary,
           child: ListView.builder(
             controller: _scrollControllers[tabId],
             padding: const EdgeInsets.only(bottom: 20),
@@ -496,7 +452,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                const Color(0xFF667EEA),
+                const Color(0xFF0D9667),
               ),
             ),
           ),
@@ -554,7 +510,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('Try Again'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF667EEA),
+                backgroundColor: const Color(0xFF0D9667),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -584,13 +540,13 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF667EEA).withOpacity(0.1),
+              color: const Color(0xFF0D9667).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 56,
-              color: const Color(0xFF667EEA).withOpacity(0.6),
+              color: const Color(0xFF0D9667).withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 20),
@@ -622,7 +578,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
         height: 24,
         child: CircularProgressIndicator(
           strokeWidth: 2.5,
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667EEA)),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D9667)),
         ),
       ),
     );

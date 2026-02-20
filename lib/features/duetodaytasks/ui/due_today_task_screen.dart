@@ -78,7 +78,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
     final tabLabel = bloc.state.tabs[index].label;
 
     print('═══════════════════════════════════════════════════════');
-    print('🔄 TAB SWITCHED');
+    print(' TAB SWITCHED');
     print('═══════════════════════════════════════════════════════');
     print('   Tab Index: $index');
     print('   Tab ID: $tabId');
@@ -160,18 +160,15 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final quickAction = widget.action;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0A0E21)
-          : const Color(0xFFF8F9FE),
+      backgroundColor: theme.colorScheme.surface,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: CustomScrollView(
           slivers: [
-            _buildSimpleAppBar(theme, isDark, "Due Today Tasks", ""
+            _buildSimpleAppBar(theme.colorScheme, "Due Today Tasks", ""
                 "Your Due Today Tasks..."),
             // Main Content
             SliverToBoxAdapter(
@@ -189,9 +186,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
     );
   }
 
-  Widget _buildSimpleAppBar(
-      ThemeData theme,
-      bool isDark,
+  Widget _buildSimpleAppBar(ColorScheme theme,
       String title,
       String subtitle,
       ) {
@@ -200,11 +195,11 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
       floating: false,
       pinned: true,
       elevation: 0,
-      backgroundColor: isDark ? const Color(0xFF1A1F3A) : theme.primaryColor,
+      backgroundColor: theme.primaryContainer,
       leading: IconButton(
-        icon: const Icon(
+        icon:  Icon(
           Icons.arrow_back_ios_new_rounded,
-          color: Colors.white,
+          color: theme.primary,
           size: 20,
         ),
         onPressed: () => Navigator.pop(context),
@@ -220,8 +215,8 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.onPrimaryContainer,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -232,7 +227,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: theme.onPrimaryContainer.withOpacity(0.8),
                     fontSize: 13,
                   ),
                   maxLines: 1,
@@ -246,39 +241,9 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
     );
   }
 
-  Widget _buildMicroStat({
-    required IconData icon,
-    required String value,
-    required String label,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.white70, size: 14),
-        const SizedBox(width: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(width: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildTasksSection() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return BlocBuilder<DueTodayBloc, DueTodayState>(
       builder: (context, state) {
@@ -312,44 +277,34 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Container(
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF0A0E21)
-                      : const Color(0xFFF5F6FA),
+                  color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.black.withOpacity(0.05),
+                    color: theme.colorScheme.surfaceVariant.withOpacity(0.05),
                   ),
                 ),
                 child: TextField(
                   controller: _searchController,
                   style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: theme.colorScheme.onSurface,
                     fontSize: 14,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Search tasks...',
                     hintStyle: TextStyle(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.4)
-                          : Colors.grey[500],
+                      color: theme.colorScheme.onSurface.withOpacity(0.4),
                       fontSize: 14,
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: isDark
-                          ? Colors.white.withOpacity(0.4)
-                          : Colors.grey[500],
+                      color: theme.colorScheme.onSurface.withOpacity(0.4),
                       size: 22,
                     ),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
                       icon: Icon(
                         Icons.clear_rounded,
-                        color: isDark
-                            ? Colors.white.withOpacity(0.4)
-                            : Colors.grey[500],
+                        color: theme.colorScheme.onSurface.withOpacity(0.4),
                         size: 20,
                       ),
                       onPressed: () {
@@ -397,7 +352,8 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
                 ),
               )
                   .toList(),
-              views: state.tabs.map((tab) => _buildTasksList(tab.id)).toList(),
+              views: state.tabs.map((tab) =>
+                  _buildTasksList(tab.id, scheme: theme.colorScheme)).toList(),
               onTabChanged: _onTabChanged,
               tabCounts: [
                 widget.action.pendingAtMe,
@@ -410,7 +366,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
     );
   }
 
-  Widget _buildTasksList(String tabId) {
+  Widget _buildTasksList(String tabId, {required ColorScheme scheme}) {
     return BlocBuilder<DueTodayBloc, DueTodayState>(
       builder: (context, state) {
         final isLoading = state.loadingByTab[tabId] ?? false;
@@ -427,6 +383,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
           return _buildErrorState(
             message: error,
             onRetry: () => _loadTasksForTab(tabId, isRefresh: true),
+            scheme: scheme,
           );
         }
 
@@ -435,6 +392,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
             icon: Icons.task_alt_rounded,
             title: 'No Tasks Found',
             subtitle: 'There are no tasks to display for this category',
+            scheme: scheme,
           );
         }
 
@@ -443,7 +401,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
             _loadTasksForTab(tabId, isRefresh: true);
             await Future.delayed(const Duration(milliseconds: 500));
           },
-          color: const Color(0xFF667EEA),
+          color: scheme.primary,
           child: ListView.builder(
             controller: _scrollControllers[tabId],
             padding: const EdgeInsets.only(bottom: 20),
@@ -489,7 +447,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                const Color(0xFF667EEA),
+                const Color(0xFF0A835D),
               ),
             ),
           ),
@@ -510,6 +468,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
   Widget _buildErrorState({
     required String message,
     required VoidCallback onRetry,
+    required ColorScheme scheme,
   }) {
     return Center(
       child: Padding(
@@ -547,8 +506,8 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('Try Again'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF667EEA),
-                foregroundColor: Colors.white,
+                backgroundColor: scheme.primary,
+                foregroundColor: scheme.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
@@ -569,6 +528,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
     required IconData icon,
     required String title,
     required String subtitle,
+    required ColorScheme scheme,
   }) {
     return Center(
       child: Column(
@@ -577,28 +537,29 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF667EEA).withOpacity(0.1),
+              color: scheme.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 56,
-              color: const Color(0xFF667EEA).withOpacity(0.6),
+              color: scheme.primary.withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 20),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: scheme.primary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             subtitle,
-            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+            style: TextStyle(
+                fontSize: 13, color: scheme.primary.withOpacity(0.6)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -615,7 +576,7 @@ class _DueTodayTaskScreenState extends State<DueTodayTaskScreen> with SingleTick
         height: 24,
         child: CircularProgressIndicator(
           strokeWidth: 2.5,
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667EEA)),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D9667)),
         ),
       ),
     );

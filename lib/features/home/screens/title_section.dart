@@ -7,29 +7,38 @@ class TitleSection extends StatelessWidget {
 
   const TitleSection({super.key, required this.user});
 
+  String get _subtitleText {
+    if (user.companyName.isEmpty) return user.userName;
+    return "${user.companyName} • ${user.companyType}";
+  }
+
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Task Manager title with overflow handling
         Text.rich(
           TextSpan(
             children: [
-              const TextSpan(
+              TextSpan(
                 text: "TASK ",
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                  color: scheme.onSurface,
                 ),
               ),
               TextSpan(
                 text: "MANAGER",
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                  color: scheme.primary,
                 ),
               ),
             ],
@@ -37,14 +46,11 @@ class TitleSection extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
-        const SizedBox(height: 4),
-        // Header text animation with flexible width
+        const SizedBox(height: 2),
         Flexible(
           child: HeaderTextAnimation(
             designation: user.designation,
-            companyText: user.companyName.isEmpty
-                ? user.userName
-                : "${user.companyName} • ${user.companyType}",
+            companyText: _subtitleText,
           ),
         ),
       ],

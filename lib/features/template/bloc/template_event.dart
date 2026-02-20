@@ -1,8 +1,16 @@
-import '../model/account_model.dart';
+import 'dart:io';
+
+import 'package:equatable/equatable.dart';
+
 import '../model/assign_task_request.dart';
 import '../model/create_template_insert_request.dart';
 
-abstract class TemplateEvent {}
+class TemplateEvent extends Equatable {
+  const TemplateEvent();
+
+  @override
+  List<Object?> get props => [];
+}
 
 class LoadTemplates extends TemplateEvent {
   final String tabId;
@@ -15,7 +23,6 @@ class FetchAuthorities extends TemplateEvent {
   FetchAuthorities({required this.moduleId});
 }
 
-/// 🔥 NEW
 class TemplateApprovalEvent extends TemplateEvent {
   final String itemId;
   final String status; // 0,1,2
@@ -40,3 +47,5 @@ class AssignTasks extends TemplateEvent {
 
   AssignTasks({required this.request});
 }
+
+

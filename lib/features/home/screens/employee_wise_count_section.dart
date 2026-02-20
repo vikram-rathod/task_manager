@@ -17,7 +17,6 @@ class EmployeeSection extends StatelessWidget {
           curr.isEmployeeWiseTaskListLoading ||
           prev.employeeWiseTaskList != curr.employeeWiseTaskList,
       builder: (context, state) {
-        // ❌ REMOVED: CircularProgressIndicator check
         if (!state.isEmployeeWiseTaskListLoading &&
             state.employeeWiseTaskList.isEmpty) {
           return const SizedBox.shrink();
@@ -29,7 +28,6 @@ class EmployeeSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _EmployeeHeader(count: state.employeeWiseTaskList.length),
-              const SizedBox(height: 12),
               SizedBox(
                 height: 120,
                 child: state.isEmployeeWiseTaskListLoading

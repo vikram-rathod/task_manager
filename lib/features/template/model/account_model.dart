@@ -1,3 +1,6 @@
+
+import 'dart:io';
+
 class AccountModel {
   final int id;
   final String name;
@@ -54,4 +57,5 @@ class CategoryModel {
 
 class TaskModel {
   String name = "";
+  List<File> files = [];
 }

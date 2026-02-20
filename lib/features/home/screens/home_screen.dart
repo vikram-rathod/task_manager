@@ -9,6 +9,8 @@ import 'package:task_manager/features/home/bloc/home_bloc.dart';
 import 'package:task_manager/features/home/screens/home_app_bar.dart';
 import 'package:task_manager/features/profile/profile_page.dart';
 
+import '../../../core/di/injection_container.dart';
+import '../../AllTasks/bloc/all_task_bloc.dart';
 import '../../auth/dialogs/multi_account_dialog.dart';
 import '../bloc/home_state.dart';
 import 'home_bottom_nav.dart';
@@ -24,12 +26,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-
-  final List<Widget> _pages = [
-    const HomeDashboardPage(),
-    const AllTaskScreen(),
-    const ProfilePage(),
-  ];
 
   void showMultiAccountSheet(
     BuildContext context,
@@ -138,23 +134,40 @@ class _HomeScreenState extends State<HomeScreen> {
                 notificationCount: homeState.notificationCount,
               ),
               body: IndexedStack(
-                index: _currentIndex,
-                children: _pages,
-              ),
-              bottomNavigationBar:
-              HomeBottomNav(
+              index: _currentIndex,
+              children: List.generate(3, (index) => _buildPage(index)),
+            ),
+              bottomNavigationBar: HomeBottomNav(
                 currentIndex: _currentIndex,
-                onTap: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
+                onTap: (index) => setState(() => _currentIndex = index),
               ),
               floatingActionButton: const HomeFab(),
+              floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
             );
           },
         );
       },
     );
+  }
+
+  Widget _buildPage(int index) {
+    switch (index) {
+      case 0:
+        return const HomeDashboardPage();
+
+      case 1:
+        return BlocProvider(
+          create: (_) => AllTaskBloc(sl(), sl())
+            ..add(LoadAllTasks()),
+          child: const AllTaskScreen(),
+        );
+
+      case 2:
+        return const ProfileScreen();
+
+      default:
+        return const HomeDashboardPage();
+    }
   }
 }

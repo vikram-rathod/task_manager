@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/features/home/model/quick_action_model.dart';
-
 import '../../reusables/task_card.dart';
 import 'assign_task_bottom_sheet.dart';
 import 'bloc/prochat_task_bloc.dart';
@@ -32,11 +31,11 @@ class _ProChatTaskScreenState extends State<ProChatTaskScreen> {
   }
 
   void _onTaskTap(TMTasksModel task) {
-    Navigator.pushReplacementNamed(context, '/taskDetails', arguments: task);
+    Navigator.pushNamed(context, '/taskDetails', arguments: task);
   }
 
   void _onChatTap(TMTasksModel task) {
-    Navigator.pushReplacementNamed(context, '/taskChat', arguments: task);
+    Navigator.pushNamed(context, '/taskChat', arguments: task);
   }
 
   void _onAssignTap(TMTasksModel task) {
@@ -193,10 +192,6 @@ class _ProChatTaskScreenState extends State<ProChatTaskScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Sync widgets
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _SyncBanner extends StatelessWidget {
   final bool isSyncing;
   final VoidCallback onSync;
@@ -295,10 +290,6 @@ class _SyncingIndicator extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Sub-views
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _ErrorView extends StatelessWidget {
   final String message;

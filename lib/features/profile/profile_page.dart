@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/core/theme/theme_cubit.dart';
+import 'package:task_manager/features/auth/models/user_model.dart';
 
 import '../../core/storage/storage_keys.dart';
 import '../../core/storage/storage_service.dart';
@@ -9,20 +10,14 @@ import '../auth/bloc/auth_bloc.dart';
 import '../auth/bloc/auth_event.dart';
 import 'bloc/profile_bloc.dart';
 
-// ─────────────────────────────────────────────
-//  ProfilePage
-// ─────────────────────────────────────────────
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({
-    super.key,
-  });
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
-  bool _showLogoutDialog = false;
+class _ProfileScreenState extends State<ProfileScreen> {
   bool _showFullImagePreview = false;
 
   @override
@@ -33,12 +28,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
-    final isDarkMode = Theme
-        .of(context)
-        .brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return BlocBuilder<ProfileBloc, ProfileState>(
       builder: (context, state) {
@@ -47,24 +38,16 @@ class _ProfilePageState extends State<ProfilePage> {
         return Stack(
           children: [
             Scaffold(
-              backgroundColor: Theme
-                  .of(context)
-                  .colorScheme
-                  .background,
+              backgroundColor: colorScheme.background,
               appBar: AppBar(
-                backgroundColor: Theme
-                    .of(context)
-                    .colorScheme
-                    .background,
+                backgroundColor: colorScheme.background,
                 elevation: 0,
                 actions: [
                   IconButton(
-                      icon: Icon(
-                        isDarkMode
-                            ? Icons.light_mode_outlined
-                            : Icons.dark_mode_outlined,
-                      ),
-                      onPressed: () => context.read<ThemeCubit>().toggle()
+                    icon: Icon(isDarkMode
+                        ? Icons.light_mode_outlined
+                        : Icons.dark_mode_outlined),
+                    onPressed: () => context.read<ThemeCubit>().toggle(),
                   ),
                 ],
               ),
@@ -78,8 +61,19 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ── Profile Header Card ──────────────────────
+                    _ProfileHeaderCard(
+                      user: user,
+                      onImageTap: user.userProfileUrl.isNotEmpty
+                          ? () => setState(
+                              () => _showFullImagePreview = true)
+                          : null,
+                    ),
+
+                    const SizedBox(height: 20),
+
                     // ── Contact Information ──────────────────────
-                    _SectionTitle(title: 'Contact Information'),
+                    const _SectionTitle(title: 'Contact Information'),
                     const SizedBox(height: 8),
 
                     if (user.userEmail.isNotEmpty)
@@ -107,35 +101,54 @@ class _ProfilePageState extends State<ProfilePage> {
                         value: user.profileType,
                       ),
 
-                    const SizedBox(height: 24),
+                    // ── Company Information ──────────────────────
+                    if (user.companyName.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      const _SectionTitle(
+                          title: 'Company Information'),
+                      const SizedBox(height: 8),
+                      _ProfileDetailItem(
+                        icon: Icons.business_outlined,
+                        label: 'Company',
+                        value: user.companyName,
+                      ),
+                      if (user.companyType.isNotEmpty)
+                        _ProfileDetailItem(
+                          icon: Icons.category_outlined,
+                          label: 'Company Type',
+                          value: user.companyType,
+                        ),
+                    ],
+
+                    const SizedBox(height: 20),
 
                     // ── Settings ─────────────────────────────────
-                    _SectionTitle(title: 'Settings'),
+                    const _SectionTitle(title: 'Settings'),
                     const SizedBox(height: 8),
 
                     _SettingsItem(
                       icon: Icons.edit_outlined,
                       label: 'Edit Profile',
                       onTap: () =>
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(
-                              content: Text('Coming Soon'))),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Coming Soon'))),
                     ),
                     _SettingsItem(
                       icon: Icons.security_outlined,
                       label: 'Change Password',
                       onTap: () =>
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(
-                              content: Text('Coming Soon'))),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Coming Soon'))),
                     ),
                     _SettingsItem(
                       icon: Icons.notifications_outlined,
                       label: 'Notifications',
                       onTap: () =>
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(
-                              content: Text('Coming Soon'))),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Coming Soon'))),
                     ),
 
                     if (user.userId.toString() == '700417')
@@ -143,47 +156,37 @@ class _ProfilePageState extends State<ProfilePage> {
                         icon: Icons.phone_android_outlined,
                         label: 'Sessions',
                         onTap: () =>
-                        {
-                          Navigator.pushNamed(context, '/sessions')
-                        },
+                            Navigator.pushNamed(context, '/sessions'),
                       ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     // ── App Version ──────────────────────────────
                     _SettingsItem(
-                      icon: Icons.phone_android_outlined,
+                      icon: Icons.info_outline,
                       label: 'App Version: [ 1.0.0 ]',
                       onTap: () {},
                       showNavigation: false,
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
                     // ── Logout Button ────────────────────────────
-                    Padding(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                            Theme
-                                .of(context)
-                                .colorScheme
-                                .error,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.error,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          icon: const Icon(Icons.logout, size: 20),
-                          label: const Text('Logout'),
-                          onPressed: () =>
-                              _showLogoutConfirmation(context)
                         ),
+                        icon: const Icon(Icons.logout, size: 20),
+                        label: const Text('Logout'),
+                        onPressed: () =>
+                            _showLogoutConfirmation(context),
                       ),
                     ),
 
@@ -194,9 +197,9 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
 
             // ── Full Image Preview ───────────────────────────────────────────
-            if (_showFullImagePreview && state.user?.userProfileUrl != null)
+            if (_showFullImagePreview && user?.userProfileUrl.isNotEmpty == true)
               _FullImagePreview(
-                imageUrl: state.user!.userProfileUrl!,
+                imageUrl: user!.userProfileUrl,
                 onDismiss: () => setState(() => _showFullImagePreview = false),
               ),
           ],
@@ -205,22 +208,18 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+
 Future<void> _showLogoutConfirmation(BuildContext context) async {
   final profileBloc = context.read<ProfileBloc>();
-
-  final sessionId = await profileBloc.storageService
-      .read(StorageKeys.loginSessionId);
-
+  final sessionId =
+  await profileBloc.storageService.read(StorageKeys.loginSessionId);
   if (!context.mounted) return;
-
   showDialog(
     context: context,
     builder: (_) => LogoutConfirmationDialog(
       onConfirm: () {
         context.read<AuthBloc>().add(
-          LogoutRequested(
-            sessionId: sessionId ?? '',
-          ),
+          LogoutRequested(sessionId: sessionId ?? ''),
         );
       },
     ),
@@ -228,18 +227,13 @@ Future<void> _showLogoutConfirmation(BuildContext context) async {
 }
 
 // ─────────────────────────────────────────────
-//  Profile Image With Initials
+//  Profile Header Card
 // ─────────────────────────────────────────────
-class _ProfileImageWithInitials extends StatelessWidget {
-  final String? imageUrl;
-  final String userName;
-  final double size;
+class _ProfileHeaderCard extends StatelessWidget {
+  final UserModel user;
+  final VoidCallback? onImageTap;
 
-  const _ProfileImageWithInitials({
-    required this.imageUrl,
-    required this.userName,
-    this.size = 100,
-  });
+  const _ProfileHeaderCard({required this.user, this.onImageTap});
 
   String _getInitials(String name) {
     final parts = name.trim().split(' ');
@@ -250,34 +244,143 @@ class _ProfileImageWithInitials extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final scheme = Theme.of(context).colorScheme;
+    final hasImage = user.userProfileUrl.isNotEmpty;
+    final hasCompany = user.companyName.isNotEmpty;
+    final hasDesignation = user.designation.isNotEmpty;
 
-    return ClipOval(
-      child: Container(
-        width: size,
-        height: size,
-        color: colorScheme.primary,
-        child: (imageUrl != null && imageUrl!.isNotEmpty)
-            ? Image.network(
-          imageUrl!,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _initialsWidget(colorScheme),
-        )
-            : _initialsWidget(colorScheme),
+    return Card(
+      color: scheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Avatar
+            GestureDetector(
+              onTap: onImageTap,
+              child: Stack(
+                children: [
+                  ClipOval(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      color: scheme.primary,
+                      child: hasImage
+                          ? Image.network(
+                        user.userProfileUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            _initialsWidget(scheme, user.userName),
+                      )
+                          : _initialsWidget(scheme, user.userName),
+                    ),
+                  ),
+                  if (hasImage)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: scheme.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: scheme.surface, width: 1.5),
+                        ),
+                        child: Icon(Icons.zoom_in,
+                            size: 12, color: scheme.onPrimary),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 14),
+
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.userName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (hasDesignation) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      user.designation,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (hasCompany) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.business_outlined,
+                            size: 12, color: scheme.onSurfaceVariant),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            user.companyType.isNotEmpty
+                                ? '${user.companyName} • ${user.companyType}'
+                                : user.companyName,
+                            style:
+                            Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                  // User ID chip
+                  Container(
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'ID: ${user.userId}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _initialsWidget(ColorScheme colorScheme) {
+  Widget _initialsWidget(ColorScheme scheme, String name) {
     return Center(
       child: Text(
-        _getInitials(userName),
+        _getInitials(name),
         style: TextStyle(
-          fontSize: 36,
+          fontSize: 28,
           fontWeight: FontWeight.bold,
-          color: colorScheme.onPrimary,
+          color: scheme.onPrimary,
         ),
       ),
     );
@@ -300,41 +403,31 @@ class _ProfileDetailItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       color: colorScheme.surface,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, size: 24, color: colorScheme.primary),
-            const SizedBox(width: 16),
+            Icon(icon, size: 22, color: colorScheme.primary),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     label,
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     value,
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -366,39 +459,30 @@ class _SettingsItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       color: colorScheme.surface,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              Icon(icon, size: 24, color: colorScheme.primary),
-              const SizedBox(width: 16),
+              Icon(icon, size: 22, color: colorScheme.primary),
+              const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   label,
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
               if (showNavigation)
-                Icon(
-                  Icons.chevron_right,
-                  color: colorScheme.onSurfaceVariant,
-                ),
+                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -421,12 +505,9 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4),
       child: Text(
         title,
-        style: Theme
-            .of(context)
-            .textTheme
-            .titleMedium
-            ?.copyWith(
-          fontWeight: FontWeight.bold,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.1,
         ),
       ),
     );
@@ -458,8 +539,7 @@ class _FullImagePreview extends StatelessWidget {
                 child: Image.network(
                   imageUrl,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) =>
-                  const Icon(
+                  errorBuilder: (_, __, ___) => const Icon(
                     Icons.broken_image,
                     color: Colors.white,
                     size: 64,
@@ -470,7 +550,8 @@ class _FullImagePreview extends StatelessWidget {
                 top: 40,
                 right: 16,
                 child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                  icon:
+                  const Icon(Icons.close, color: Colors.white, size: 28),
                   onPressed: onDismiss,
                 ),
               ),
@@ -481,10 +562,3 @@ class _FullImagePreview extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────
-//  Helper alias so the old Card shape string
-//  compiles (Flutter uses BorderRadius directly)
-// ─────────────────────────────────────────────
-ShapeBorder RoundedCornerShape(double radius) =>
-    RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius));

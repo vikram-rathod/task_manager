@@ -27,7 +27,6 @@ class _TaskChatScreenState extends State<TaskChatScreen> {
 
   bool _showMentionList = false;
   String _mentionQuery = '';
-  int _mentionStartIndex = -1;
   String? _highlightedChatId;
   final Map<String, GlobalKey> _messageKeys = {};
 
@@ -71,7 +70,6 @@ class _TaskChatScreenState extends State<TaskChatScreen> {
       setState(() {
         _showMentionList = true;
         _mentionQuery = textAfterAt.toLowerCase();
-        _mentionStartIndex = lastAtIndex;
       });
     } else {
       setState(() {
@@ -283,15 +281,18 @@ class _TaskChatScreenState extends State<TaskChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Task Conversation', style: TextStyle(fontSize: 18)),
-            Text(
-              widget.task.taskDescription,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
+            Tooltip(
+              message: widget.task.taskDescription,
+              child: Text(
+                widget.task.taskDescription,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            )
           ],
         ),
         actions: [

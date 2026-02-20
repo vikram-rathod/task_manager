@@ -1,27 +1,23 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../createtask/screen/create_task_screen.dart';
 
+// ─────────────────────────────────────────────
+//  HomeFab
+// ─────────────────────────────────────────────
 class HomeFab extends StatelessWidget {
   const HomeFab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 64,
-      width: 64,
-      child: FloatingActionButton(
-        elevation: 10,
-        shape: const CircleBorder(),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const CreateTaskScreen(),
-            ),
-          );
-        },
-        child: const Icon(Icons.add, size: 32),
-      ),
+    final cs = Theme.of(context).colorScheme;
+
+    return FloatingActionButton(
+      onPressed: () => Navigator.pushNamed(context, '/createTask'),
+      backgroundColor: cs.primary,
+      foregroundColor: cs.onPrimary,
+      elevation: 4,
+      shape: const CircleBorder(),
+      child: const Icon(Icons.add_rounded, size: 28),
     );
   }
 }

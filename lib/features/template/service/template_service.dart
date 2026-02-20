@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import '../../../core/network/dio_client.dart';
 import '../model/account_model.dart';
 import '../model/assign_task_request.dart';
@@ -103,6 +104,7 @@ class TemplateService {
   Future<bool> insertTemplate({
     required Map<String, dynamic> body,
   }) async {
+    debugPrint("Insert Template Format : body: $body");
     final response = await _dio.post(
       "task_list/task_template_insert.php",
       data: body,
