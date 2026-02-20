@@ -6,14 +6,6 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pin_code_fields/pin_code_fields.dart';
-
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
-
 class OtpVerificationSheet extends StatefulWidget {
   final String email;
   final String username;
@@ -25,8 +17,6 @@ class OtpVerificationSheet extends StatefulWidget {
   final bool isForce;
   final bool isSwitch;
   final int? selectedUserId;
-
-
 
   const OtpVerificationSheet({
     super.key,
@@ -54,7 +44,6 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
   @override
   void initState() {
     super.initState();
-    // Automatically request OTP when sheet opens
     _requestOtp();
   }
 
@@ -91,6 +80,9 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is OtpSentSuccess) {
@@ -114,61 +106,78 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
             ),
           );
         }
-
         if (state is OtpVerifiedSuccess) {
           debugPrint("[OtpVerificationSheet] OTP verified successfully");
-          // Navigator.of(context).pop();
-
         }
-
         if (state is AuthAuthenticated) {
           debugPrint("[OtpVerificationSheet] AuthAuthenticated - navigating to home");
-          Navigator.of(context).pushNamedAndRemoveUntil(
-              '/home', (route) => false);
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
         }
-
       },
-      child: Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(24, 16, 24, bottomInset + 16),
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+              // Handle + Close button row
+              Row(
+                children: [
+                  const Spacer(),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceVariant.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            size: 18,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Icon
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: scheme.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.shield_outlined,
-                  size: 48,
-                  color: Theme.of(context).primaryColor,
+                  size: 40,
+                  color: scheme.primary,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Title
-              const Text(
+              Text(
                 "Verify Your Identity",
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
+                  color: scheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
@@ -178,36 +187,36 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                 "We've sent a 4-digit code to\n${widget.email}",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
+                  fontSize: 13,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // OTP Input - Changed to 4 digits
+              // OTP Input
               PinCodeTextField(
                 appContext: context,
-                length: 4, // Changed from 6 to 4
+                length: 4,
                 controller: _otpController,
                 keyboardType: TextInputType.number,
                 animationType: AnimationType.fade,
                 pinTheme: PinTheme(
                   shape: PinCodeFieldShape.box,
                   borderRadius: BorderRadius.circular(12),
-                  fieldHeight: 56,
-                  fieldWidth: 56, // Increased width since only 4 fields
-                  activeFillColor: Colors.white,
-                  inactiveFillColor: Colors.grey.shade50,
-                  selectedFillColor: Colors.white,
-                  activeColor: Theme.of(context).primaryColor,
-                  inactiveColor: Colors.grey.shade300,
-                  selectedColor: Theme.of(context).primaryColor,
+                  fieldHeight: 54,
+                  fieldWidth: 54,
+                  activeFillColor: scheme.surface,
+                  inactiveFillColor: scheme.surfaceVariant.withOpacity(0.4),
+                  selectedFillColor: scheme.surface,
+                  activeColor: scheme.primary,
+                  inactiveColor: scheme.outline.withOpacity(0.5),
+                  selectedColor: scheme.primary,
                 ),
                 enableActiveFill: true,
                 onCompleted: (code) => _verifyOtp(),
                 onChanged: (value) {},
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
 
               // Resend OTP
               Row(
@@ -215,36 +224,53 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                 children: [
                   Text(
                     "Didn't receive the code? ",
-                    style: TextStyle(color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   TextButton(
                     onPressed: _isResending ? null : _requestOtp,
+                    style: TextButton.styleFrom(
+                      minimumSize: Size.zero,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     child: _isResending
-                        ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                        ? SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: scheme.primary,
+                      ),
                     )
-                        : const Text("Resend"),
+                        : Text(
+                      "Resend",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Verify Button
               SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 52,
                 child: BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     final isVerifying = state is AuthLoading;
                     return ElevatedButton(
                       onPressed: isVerifying ? null : _verifyOtp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor: scheme.primary,
+                        foregroundColor: scheme.onPrimary,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       child: isVerifying
@@ -260,7 +286,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                           : const Text(
                         "Verify OTP",
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -268,7 +294,6 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                   },
                 ),
               ),
-              const SizedBox(height: 16),
             ],
           ),
         ),

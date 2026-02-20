@@ -10,6 +10,7 @@ import 'package:task_manager/features/home/screens/home_app_bar.dart';
 import 'package:task_manager/features/profile/profile_page.dart';
 
 import '../../../core/di/injection_container.dart';
+import '../../../core/navigation/route_observer.dart';
 import '../../AllTasks/bloc/all_task_bloc.dart';
 import '../../auth/dialogs/multi_account_dialog.dart';
 import '../bloc/home_state.dart';
@@ -24,9 +25,26 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   int _currentIndex = 0;
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    debugPrint("Returned to HomeScreen → refreshing data");
+    context.read<HomeBloc>().add(RefreshHomeData());
+  }
   void showMultiAccountSheet(
     BuildContext context,
     List<UserModel> accounts,
@@ -139,7 +157,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
               bottomNavigationBar: HomeBottomNav(
                 currentIndex: _currentIndex,
-                onTap: (index) => setState(() => _currentIndex = index),
+                onTap: (index) {
+                  // If user switches back to Dashboard tab
+                  if (index == 0 && _currentIndex != 0) {
+                    context.read<HomeBloc>().add(RefreshHomeData());
+                  }
+
+                  setState(() => _currentIndex = index);
+                },
               ),
               floatingActionButton: const HomeFab(),
               floatingActionButtonLocation:

@@ -84,33 +84,29 @@ class _LoginScreenState extends State<LoginScreen>
       bool isForce,
       bool isSwitch,
       int? selectedUserId,) async {
-    final authBloc = context.read<AuthBloc>();
 
     if (!context.mounted) return;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      isDismissible: false,
-      enableDrag: false,
+      isDismissible: true,
+      enableDrag: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
-        return BlocProvider.value(
-          value: authBloc,
-          child: OtpVerificationSheet(
-            email: _usernameController.text.trim(),
-            username: _usernameController.text.trim(),
-            password: _passwordController.text.trim(),
-            deviceName: deviceName,
-            deviceType: deviceType,
-            deviceUniqueId: deviceUniqueId,
-            deviceToken: deviceToken,
-            isForce: isForce,
-            isSwitch: isSwitch,
-            selectedUserId: selectedUserId,
-          ),
+        return OtpVerificationSheet(
+          email: _usernameController.text.trim(),
+          username: _usernameController.text.trim(),
+          password: _passwordController.text.trim(),
+          deviceName: deviceName,
+          deviceType: deviceType,
+          deviceUniqueId: deviceUniqueId,
+          deviceToken: deviceToken,
+          isForce: isForce,
+          isSwitch: isSwitch,
+          selectedUserId: selectedUserId,
         );
       },
     );
@@ -180,7 +176,11 @@ class _LoginScreenState extends State<LoginScreen>
               state.isForce,
               state.isSwitch,
               state.selectedUserId,
-            );
+            ).then((value) {
+              if (context.mounted) {
+                context.read<AuthBloc>().add(ResetAuthState());
+              }
+            });
           }
 
           if (state is AuthMultipleAccountsFound) {

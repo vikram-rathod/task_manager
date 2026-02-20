@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
@@ -18,8 +19,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RequestOtpEvent>(_requestOtp);
     on<VerifyOtpEvent>(_verifyOtp);
     on<LogoutRequested>(_logout);
+    on<ResetAuthState>(_resetAuthState);
 
   }
+
 
   Future<void> _login(LoginRequested event, Emitter<AuthState> emit) async {
     debugPrint("[_login] Start login process"
@@ -250,5 +253,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     emit(AuthSessionExpired("Session Expired...Log out Successfully."));
 
+  }
+
+  FutureOr<void> _resetAuthState(ResetAuthState event,
+      Emitter<AuthState> emit) {
+    emit(AuthInitial());
   }
 }

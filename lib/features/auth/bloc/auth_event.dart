@@ -80,3 +80,6 @@ class LogoutRequested extends AuthEvent {
 
   LogoutRequested({required this.sessionId});
 }
+
+
+class ResetAuthState extends AuthEvent {}

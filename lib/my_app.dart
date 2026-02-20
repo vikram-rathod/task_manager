@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/router/app_router.dart';
 
+import 'core/navigation/route_observer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'features/auth/bloc/auth_bloc.dart';
@@ -10,6 +11,7 @@ import 'features/auth/bloc/auth_state.dart';
 import 'features/auth/screens/splash_screen.dart';
 
 class MyApp extends StatelessWidget {
+
   const MyApp({super.key});
 
   @override
@@ -25,6 +27,7 @@ class MyApp extends StatelessWidget {
           home: const AuthWrapper(),
           initialRoute: '/',
           onGenerateRoute: AppRouter.generateRoute,
+          navigatorObservers: [routeObserver],
         );
       },
     );
