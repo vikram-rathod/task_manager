@@ -192,6 +192,7 @@ class AuthRepository {
 
     await _storage.write(StorageKeys.loginSessionId, user.loginSessionId);
 
+    await _storage.write(StorageKeys.userDisplayName, user.userName);
     await _storage.write(StorageKeys.userName, user.userName);
     await _storage.write(StorageKeys.userId, user.userId.toString());
     await _storage.write(StorageKeys.userType, user.userType.toString());

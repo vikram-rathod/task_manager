@@ -180,6 +180,7 @@ class QuickActionSection extends StatelessWidget {
                                     action.count,
                                     action.isHighlighted,
                                     action.id,
+                                    action.pendingAtOthers
                                   ),
                                 ] else if (action.count > 0) ...[
                                   const SizedBox(height: 3),
@@ -227,6 +228,7 @@ class QuickActionSection extends StatelessWidget {
       int total,
       bool isHighlighted,
       String actionId,
+      int pendingAtOthers
       ) {
     return RichText(
       text: TextSpan(
@@ -240,7 +242,7 @@ class QuickActionSection extends StatelessWidget {
             ),
           ),
           TextSpan(
-            text: '/$total ',
+            text: '/$pendingAtOthers ',
             style: TextStyle(
               fontWeight: FontWeight.w500,
               fontSize: 10,

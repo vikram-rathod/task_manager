@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:task_manager/features/utils/app_exception.dart';
 
 import '../../../core/models/taskchat/chat_data.dart';
 import '../../../core/models/taskchat/task_chat_message.dart';
@@ -105,11 +106,12 @@ class TaskChatBloc extends Bloc<TaskChatEvent, TaskChatState> {
       }
     } catch (e) {
       print("$_tag: Exception in LoadChatTimeline = $e");
+      final exception = AppExceptionMapper.from(e);
 
       emit(state.copyWith(
         isLoading: false,
         hasError: true,
-        errorMessage: 'Failed to load chat: ${e.toString()}',
+        errorMessage: exception.message,
       ));
     }
   }
@@ -170,11 +172,11 @@ class TaskChatBloc extends Bloc<TaskChatEvent, TaskChatState> {
       }
     } catch (e) {
       print("$_tag: Exception in SendChatMessage = $e");
-
+      final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(
         isSending: false,
         hasError: true,
-        errorMessage: 'Failed to send message: ${e.toString()}',
+        errorMessage:  exception.message,
       ));
     }
   }

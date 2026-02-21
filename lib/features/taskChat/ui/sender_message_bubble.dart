@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:task_manager/features/taskChat/ui/screens/mention_text.dart';
 import '../../../../core/models/taskchat/chat_data.dart';
+import '../../../core/utils/file_preview_screen.dart';
 
 class SenderMessageBubble extends StatelessWidget {
   final bool isHighlighted;
@@ -259,7 +260,7 @@ class SenderMessageBubble extends StatelessWidget {
           const SizedBox(height: 8),
 
         if (files.isNotEmpty)
-          ...files.map((url) => _buildFileAttachment(url.split('/').last)),
+          ...files.map((url) => _buildFileAttachment(url, context)),
       ],
     );
   }
@@ -267,16 +268,20 @@ class SenderMessageBubble extends StatelessWidget {
   Widget _buildImageGrid(List<String> images,BuildContext context) {
     if (images.length == 1) {
       // Single image - display larger
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          images[0],
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: 200,
-          errorBuilder: (context, error, stackTrace) {
-            return _buildFileAttachment(images[0].split('/').last);
-          },
+      return InkWell(
+        onTap: () {
+          _openPreview(context, images[0]);
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(
+            images[0],
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 200,
+            errorBuilder: (_, __, ___) =>
+                _buildFileAttachment(images[0], context),
+          ),
         ),
       );
     }
@@ -286,41 +291,46 @@ class SenderMessageBubble extends StatelessWidget {
       spacing: 4,
       runSpacing: 4,
       children: images.map((url) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: Image.network(
-            url,
-            fit: BoxFit.cover,
-            width: (MediaQuery.of(context).size.width * 0.75 - 32) / 2, // Divide by 2 for 2 columns
-            height: 100,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                width: (MediaQuery.of(context).size.width * 0.75 - 32) / 2,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.broken_image,
-                      size: 24,
-                      color: Colors.white70,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Failed to load',
-                      style: TextStyle(
-                        fontSize: 10,
+        return InkWell(
+          onTap: () {
+            _openPreview(context, url);
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Image.network(
+              url,
+              fit: BoxFit.cover,
+              width: (MediaQuery.of(context).size.width * 0.75 - 32) / 2, // Divide by 2 for 2 columns
+              height: 100,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: (MediaQuery.of(context).size.width * 0.75 - 32) / 2,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.broken_image,
+                        size: 24,
                         color: Colors.white70,
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                      const SizedBox(height: 4),
+                      Text(
+                        'Failed to load',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         );
       }).toList(),
@@ -336,34 +346,54 @@ class SenderMessageBubble extends StatelessWidget {
         fileName.endsWith('.webp');
   }
 
-  Widget _buildFileAttachment(String fileName) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _getFileIcon(fileName),
-            size: 16,
-            color: Colors.white70,
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              fileName,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.white,
-              ),
-              overflow: TextOverflow.ellipsis,
+  Widget _buildFileAttachment(String url, BuildContext context) {
+    final fileName = url.split('/').last;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _openPreview(context, url),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Icon(_getFileIcon(fileName), size: 16, color: Colors.white70),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    fileName,
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.open_in_new, size: 12, color: Colors.white54),
+              ],
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  void _openPreview(BuildContext context, String url) {
+    final fileName = url.split('/').last;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FilePreviewScreen(
+          fileUrl: url,
+          fileName: fileName,
+        ),
       ),
     );
   }

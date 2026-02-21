@@ -10,6 +10,8 @@ import 'package:task_manager/features/auth/models/login_response.dart';
 import 'package:task_manager/features/auth/models/user_model.dart';
 import 'package:task_manager/features/auth/repository/auth_repository.dart';
 
+import '../../utils/app_exception.dart';
+
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository repo;
 
@@ -125,7 +127,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     } catch (error) {
       debugPrint("[_login] Exception: ${error.toString()}");
-      emit(AuthError(error.toString()));
+      final exception = AppExceptionMapper.from(error);
+      emit(AuthError(
+        exception.message,
+      ));
     }
   }
 
@@ -149,6 +154,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       SessionCheckRequested event,
       Emitter<AuthState> emit,
       ) async {
+    debugPrint("[_sessionCheck] Checking session...");
     emit(AuthLoading("Checking session..."));
     try {
       final isValid = await repo.isSessionValid();
@@ -164,7 +170,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthSessionExpired("Session expired. Please login again."));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      final exception = AppExceptionMapper.from(e);
+      emit(AuthError(
+        exception.message,
+      ));
     }
   }
 
@@ -183,7 +192,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             : "Failed to send OTP"));
       }
     } catch (error) {
-      emit(OtpError(error.toString()));
+      debugPrint("[_requestOtp] Exception: ${error.toString()}");
+      final exception = AppExceptionMapper.from(error);
+
+      emit(OtpError(
+        exception.message,
+      ));
     }
   }
 
@@ -215,15 +229,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             : "Invalid OTP. Please try again."));
       }
     } catch (error) {
-      emit(OtpError(error.toString()));
+      debugPrint("[_verifyOtp] Exception: ${error.toString()}");
+      final exception = AppExceptionMapper.from(error);
+
+      emit(OtpError(exception.message));
     }
   }
 
   Future<void> _logout(LogoutRequested event, Emitter<AuthState> emit) async {
+    try {
     emit(AuthLoading("Logging out..."));
     await repo.logout(sessionId: event.sessionId);
     await repo.saveIsMultipleAccounts(false);
     emit(AuthSessionExpired("Session Expired...Log out Successfully."));
+    } catch (e) {
+      final exception = AppExceptionMapper.from(e);
+      emit(AuthError(exception.message));
+    }
   }
 
   FutureOr<void> _resetAuthState(

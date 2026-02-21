@@ -6,6 +6,7 @@ import 'package:task_manager/core/storage/storage_service.dart';
 
 import '../../../reusables/custom_tabs.dart';
 import '../../home/repository/task_repository.dart';
+import '../../utils/app_exception.dart';
 
 part 'employee_task_event.dart';
 part 'employee_task_state.dart';
@@ -165,11 +166,12 @@ class EmployeeTaskBloc extends Bloc<EmployeeTaskEvent, EmployeeTaskState> {
     } catch (e, stackTrace) {
       print(' [EmployeeTaskBloc] Exception: $e');
       print('   Stack trace: $stackTrace');
+      final exception = AppExceptionMapper.from(e);
 
       emit(state.copyWith(
         loadingByTab: {...state.loadingByTab, tabId: false},
         paginationLoadingByTab: {...state.paginationLoadingByTab, tabId: false},
-        errorsByTab: {...state.errorsByTab, tabId: 'An unexpected error occurred'},
+        errorsByTab: {...state.errorsByTab, tabId: exception.message},
         hasMoreByTab: {...state.hasMoreByTab, tabId: false},
       ));
     }

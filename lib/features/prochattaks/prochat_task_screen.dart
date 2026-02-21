@@ -53,9 +53,18 @@ class _ProChatTaskScreenState extends State<ProChatTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('ProChat Tasks'),
+        actions: [
+          // refresh icon
+          IconButton(
+            onPressed: _onRefresh,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+
+        ],
         centerTitle: false,
       ),
       body: BlocConsumer<ProchatTaskBloc, ProchatTaskState>(
@@ -65,7 +74,7 @@ class _ProChatTaskScreenState extends State<ProChatTaskScreen> {
             // New tasks detected — show snackbar nudge
             (!prev.hasNewTasksToSync && curr.hasNewTasksToSync),
         listener: (context, state) {
-          if (state.isError && !state.hasData) return; // handled by full-page view
+          if (state.isError && !state.hasData) return;
 
           if (state.isError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -77,40 +86,40 @@ class _ProChatTaskScreenState extends State<ProChatTaskScreen> {
             );
           }
 
-          if (state.hasNewTasksToSync) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Row(
-                  children: [
-                    Icon(Icons.sync_rounded, color: Colors.white, size: 18),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'New ProChat tasks available to sync',
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: const Color(0xFF6366F1),
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 6),
-                margin: const EdgeInsets.all(12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                action: SnackBarAction(
-                  label: 'SYNC NOW',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    context
-                        .read<ProchatTaskBloc>()
-                        .add(const ProchatSyncAndReload());
-                  },
-                ),
-              ),
-            );
-          }
+          // if (state.hasNewTasksToSync) {
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     SnackBar(
+          //       content: const Row(
+          //         children: [
+          //           Icon(Icons.sync_rounded, color: Colors.white, size: 18),
+          //           SizedBox(width: 10),
+          //           Expanded(
+          //             child: Text(
+          //               'New ProChat tasks available to sync',
+          //               style: TextStyle(fontWeight: FontWeight.w500),
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //       backgroundColor: scheme.primaryContainer,
+          //       behavior: SnackBarBehavior.floating,
+          //       duration: const Duration(seconds: 6),
+          //       margin: const EdgeInsets.all(12),
+          //       shape: RoundedRectangleBorder(
+          //           borderRadius: BorderRadius.circular(12)),
+          //       action: SnackBarAction(
+          //         label: 'SYNC NOW',
+          //         textColor: Colors.white,
+          //         onPressed: () {
+          //           ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          //           context
+          //               .read<ProchatTaskBloc>()
+          //               .add(const ProchatSyncAndReload());
+          //         },
+          //       ),
+          //     ),
+          //   );
+          // }
         },
         builder: (context, state) {
           // ── Full-page loading
@@ -200,16 +209,17 @@ class _SyncBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       key: const ValueKey('sync-banner'),
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        color: Color(0xFF6366F1),
+      decoration: BoxDecoration(
+        color: scheme.primary,
       ),
       child: Row(
         children: [
-          const Icon(Icons.sync_rounded, color: Colors.white, size: 18),
+           Icon(Icons.sync_rounded, color: scheme.onPrimary, size: 18),
           const SizedBox(width: 10),
           const Expanded(
             child: Text(
@@ -260,12 +270,13 @@ class _SyncingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       key: const ValueKey('syncing-indicator'),
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: const Color(0xFF6366F1).withOpacity(0.85),
-      child: const Row(
+      color: scheme.primary.withOpacity(0.85),
+      child:  Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(
@@ -273,14 +284,14 @@ class _SyncingIndicator extends StatelessWidget {
             height: 14,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: Colors.white,
+              color: scheme.onPrimary,
             ),
           ),
           SizedBox(width: 10),
           Text(
             'Syncing ProChat tasks...',
             style: TextStyle(
-              color: Colors.white,
+              color: scheme.onPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),

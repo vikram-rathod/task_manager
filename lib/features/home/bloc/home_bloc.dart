@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager/features/utils/app_exception.dart';
 
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
@@ -130,10 +131,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       ));
     } catch (e, stackTrace) {
       debugPrint('[HomeBloc] Error in FetchQuickActions: $e');
+      final exception = AppExceptionMapper.from(e);
       debugPrint(stackTrace.toString());
       emit(state.copyWith(
         isQuickActionsLoading: false,
-        quickActionsError: e.toString(),
+        quickActionsError: exception.message,
+
           notificationCount: 0
       ));
     }
@@ -150,10 +153,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final history = await repository.getTaskHistory();
       emit(state.copyWith(isTaskHistoryLoading: false, taskHistory: history));
     } catch (e) {
+      debugPrint('[HomeBloc] Error in FetchTaskHistory: $e');
+      final exception = AppExceptionMapper.from(e);
+      debugPrint(exception.message);
       emit(
         state.copyWith(
           isTaskHistoryLoading: false,
-          taskHistoryError: e.toString(),
+          taskHistoryError: exception.message,
         ),
       );
     }
@@ -178,8 +184,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         state.copyWith(projects: projectsCountList, isProjectsLoading: false),
       );
     } catch (e) {
+      debugPrint('[HomeBloc] Error in LoadProjectList: $e');
+      final exception = AppExceptionMapper.from(e);
       emit(
-        state.copyWith(isProjectsLoading: false, projectsError: e.toString()),
+        state.copyWith(isProjectsLoading: false, projectsError: exception.message),
       );
     }
   }
@@ -209,9 +217,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       );
     } catch (e, stackTrace) {
       debugPrint('[HomeBloc] Error in LoadEmployeeWiseTaskList: $e');
+      final exception = AppExceptionMapper.from(e);
       debugPrint(stackTrace.toString());
       emit(
-        state.copyWith(isEmployeeWiseTaskListLoading: false, employeeWiseTaskListError: e.toString()),
+        state.copyWith(isEmployeeWiseTaskListLoading: false, employeeWiseTaskListError: exception.message),
       );
     }
   }
@@ -269,10 +278,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       } catch (e, stackTrace) {
         debugPrint("[$_tag] API ERROR (MyTasks) → $e");
         debugPrint("[$_tag] StackTrace → $stackTrace");
+        final exception = AppExceptionMapper.from(e);
+
 
         emit(state.copyWith(
           isMyTasksLoading: false,
-          myTasksError: e.toString(),
+          myTasksError: exception.message,
         ));
       }
     } else {
@@ -311,10 +322,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       } catch (e, stackTrace) {
         debugPrint("[$_tag] API ERROR (OtherTasks) → $e");
         debugPrint("[$_tag] StackTrace → $stackTrace");
+        final exception = AppExceptionMapper.from(e);
+
 
         emit(state.copyWith(
           isOtherTasksLoading: false,
-          otherTasksError: e.toString(),
+          otherTasksError: exception.message,
         ));
       }
     }

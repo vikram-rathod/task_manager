@@ -9,6 +9,7 @@ import 'package:task_manager/features/projecttasks/bloc/project_wise_task_bloc.d
 import 'package:task_manager/features/taskChat/bloc/task_chat_bloc.dart';
 
 import 'core/di/injection_container.dart';
+import 'core/lifecycle/app_lifecycle_observer.dart';
 import 'core/theme/theme_cubit.dart';
 import 'features/AllTasks/bloc/all_task_bloc.dart';
 import 'features/auth/bloc/auth_bloc.dart';
@@ -32,16 +33,15 @@ void main() async {
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider.value(value: CreateTaskBloc(sl(), sl())),
         BlocProvider.value(value: HomeBloc(sl(),sl())),
-        BlocProvider.value(value: EmployeeTaskBloc(sl(), sl())),
-        BlocProvider.value(value: OverDueBloc(sl(), sl())),
-        BlocProvider.value(value: DueTodayBloc(sl(), sl())),
-        BlocProvider.value(value: TaskDetailsBloc(sl(), sl())),
-        BlocProvider.value(value: TaskChatBloc(sl(),sl())),
-        BlocProvider.value(value: ProchatTaskBloc(sl(),sl(),sl())),
-        BlocProvider.value(value: ModuleNotificationBloc(sl(),sl())),
-        BlocProvider.value(value: ProfileBloc(sl())),
+        // BlocProvider.value(value: EmployeeTaskBloc(sl(), sl())),
+        // BlocProvider.value(value: OverDueBloc(sl(), sl())),
+        // BlocProvider.value(value: DueTodayBloc(sl(), sl())),
+        // BlocProvider.value(value: TaskDetailsBloc(sl(), sl())),
+        // BlocProvider.value(value: TaskChatBloc(sl(),sl())),
+        // BlocProvider.value(value: ProchatTaskBloc(sl(),sl(),sl())),
+        // BlocProvider.value(value: ModuleNotificationBloc(sl(),sl())),
       ],
-      child: const MyApp(),
+      child: AppLifecycleObserver(child: const MyApp()),
     ),
   );
 }

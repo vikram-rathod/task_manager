@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/core/storage/storage_keys.dart';
 import 'package:task_manager/core/storage/storage_service.dart';
@@ -7,6 +8,7 @@ import 'package:task_manager/core/storage/storage_service.dart';
 import '../../../core/models/project_model.dart';
 import '../../auth/models/user_model.dart';
 import '../../home/repository/home_repository.dart';
+import '../../utils/app_exception.dart';
 import '../repository/prochat_task_repository.dart';
 
 part 'prochat_task_event.dart';
@@ -63,6 +65,7 @@ class ProchatTaskBloc extends Bloc<ProchatTaskEvent, ProchatTaskState> {
         companyId: creds.companyId,
         userType: creds.userType,
       );
+      debugPrint("[ProchatTaskBloc] - SyncCheck: $response");
 
       if (response.status == true && response.data != null) {
         emit(state.copyWith(
@@ -155,11 +158,13 @@ class ProchatTaskBloc extends Bloc<ProchatTaskEvent, ProchatTaskState> {
         ));
       }
     } catch (e) {
+      final exception = AppExceptionMapper.from(e);
+
       emit(state.copyWith(
         isLoading: false,
         isRefreshing: false,
         isError: true,
-        errorMessage: e.toString(),
+        errorMessage:exception.message,
       ));
     }
   }

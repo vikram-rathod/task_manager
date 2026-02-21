@@ -8,6 +8,7 @@ class StorageKeys {
 
   // User
   static const String userName = 'user_name';
+  static const String userDisplayName = 'user_display_name';
   static const String userId = 'user_id';
   static const String userType = 'user_type';
   static const String userTypeName = 'user_type_name';

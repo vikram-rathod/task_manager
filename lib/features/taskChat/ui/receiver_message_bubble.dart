@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:task_manager/features/taskChat/ui/screens/mention_text.dart';
 import '../../../../core/models/taskchat/chat_data.dart';
+import '../../../core/utils/file_preview_screen.dart';
 
 class ReceiverMessageBubble extends StatelessWidget {
   final ChatData chat;
@@ -140,7 +141,7 @@ class ReceiverMessageBubble extends StatelessWidget {
                             // Document attachments
                             if (chat.documentUrls.isNotEmpty) ...[
                               const SizedBox(height: 8),
-                              _buildAttachments(chat.documentUrls),
+                              _buildAttachments(chat.documentUrls,context),
                             ],
 
                             // Mentioned users chips
@@ -260,7 +261,7 @@ class ReceiverMessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachments(List<String> urls) {
+  Widget _buildAttachments(List<String> urls,BuildContext context) {
     // Separate images and files
     final images = <String>[];
     final files = <String>[];
@@ -277,31 +278,33 @@ class ReceiverMessageBubble extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Display images
-        if (images.isNotEmpty) _buildImageGrid(images),
+        if (images.isNotEmpty) _buildImageGrid(images,context),
 
         // Display files
         if (files.isNotEmpty && images.isNotEmpty)
           const SizedBox(height: 8),
 
         if (files.isNotEmpty)
-          ...files.map((url) => _buildFileAttachment(url.split('/').last)),
+          ...files.map((url) => _buildFileAttachment(url, context)),
       ],
     );
   }
 
-  Widget _buildImageGrid(List<String> images) {
+  Widget _buildImageGrid(List<String> images,BuildContext context) {
     if (images.length == 1) {
       // Single image - display larger
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          images[0],
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: 200,
-          errorBuilder: (context, error, stackTrace) {
-            return _buildFileAttachment(images[0].split('/').last);
-          },
+      return InkWell(
+        onTap: () => _openPreview(context, images[0]),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(
+            images[0],
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 200,
+            errorBuilder: (_, __, ___) =>
+                _buildFileAttachment(images[0], context),
+          ),
         ),
       );
     }
@@ -313,41 +316,44 @@ class ReceiverMessageBubble extends StatelessWidget {
             spacing: 4,
             runSpacing: 4,
             children: images.map((url) {
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: Image.network(
-                  url,
-                  fit: BoxFit.cover,
-                  width: (MediaQuery.of(context).size.width * 0.75 - 32) / 2, // Divide by 2 for 2 columns
-                  height: 100,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: (MediaQuery.of(context).size.width * 0.75 - 32) / 2,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF005C4B).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(
-                            Icons.broken_image,
-                            size: 24,
-                            color: Color(0xFF005C4B),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Failed to load',
-                            style: TextStyle(
-                              fontSize: 10,
+              return InkWell(
+                onTap: () => _openPreview(context, url),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                    width: (MediaQuery.of(context).size.width * 0.75 - 32) / 2, // Divide by 2 for 2 columns
+                    height: 100,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: (MediaQuery.of(context).size.width * 0.75 - 32) / 2,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF005C4B).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(
+                              Icons.broken_image,
+                              size: 24,
                               color: Color(0xFF005C4B),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                            SizedBox(height: 4),
+                            Text(
+                              'Failed to load',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Color(0xFF005C4B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
               );
             }).toList(),
@@ -365,34 +371,38 @@ class ReceiverMessageBubble extends StatelessWidget {
         fileName.endsWith('.webp');
   }
 
-  Widget _buildFileAttachment(String fileName) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF005C4B).withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _getFileIcon(fileName),
-            size: 16,
-            color: const Color(0xFF005C4B),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              fileName,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.black87,
-              ),
-              overflow: TextOverflow.ellipsis,
+  Widget _buildFileAttachment(String url, BuildContext context) {
+    final fileName = url.split('/').last;
+    return InkWell(
+      onTap: () => _openPreview(context, url),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF005C4B).withOpacity(0.15),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _getFileIcon(fileName),
+              size: 16,
+              color: const Color(0xFF005C4B),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                fileName,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black87,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -460,5 +470,18 @@ class ReceiverMessageBubble extends StatelessWidget {
     ];
     final hash = name.codeUnits.fold(0, (sum, code) => sum + code);
     return colors[hash % colors.length];
+  }
+
+  void _openPreview(BuildContext context, String url) {
+    final fileName = url.split('/').last;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FilePreviewScreen(
+          fileUrl: url,
+          fileName: fileName,
+        ),
+      ),
+    );
   }
 }

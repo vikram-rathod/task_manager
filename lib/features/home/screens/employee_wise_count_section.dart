@@ -29,7 +29,7 @@ class EmployeeSection extends StatelessWidget {
             children: [
               _EmployeeHeader(count: state.employeeWiseTaskList.length),
               SizedBox(
-                height: 120,
+                height: 130,
                 child: state.isEmployeeWiseTaskListLoading
                     ? const _EmployeeShimmerList()
                     : _EmployeeList(employees: state.employeeWiseTaskList),
@@ -42,7 +42,7 @@ class EmployeeSection extends StatelessWidget {
   }
 }
 
-// ── Shimmer List ─────────────────────────────────────────────────────────────
+// ── Shimmer List ──────────────────────────────────────────────────────────────
 
 class _EmployeeShimmerList extends StatelessWidget {
   const _EmployeeShimmerList();
@@ -59,75 +59,83 @@ class _EmployeeShimmerList extends StatelessWidget {
   }
 }
 
+/// Mirrors _EmployeeCard exactly:
+///   CircleAvatar (r18) → SizedBox(8) → Expanded name → SizedBox(6) → chip Row
 class _EmployeeShimmerCard extends StatelessWidget {
   const _EmployeeShimmerCard();
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Shimmer.fromColors(
-      baseColor: scheme.surfaceContainerHighest,
-      highlightColor: scheme.surfaceContainerLow,
+      baseColor: const Color(0xFFE0E0E0),
+      highlightColor: const Color(0xFFF5F5F5),
       child: Container(
-        width: 200,
+        width: 220,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: scheme.surface,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: scheme.outlineVariant.withOpacity(0.2), width: 0.5),
+          border: Border.all(color: cs.outlineVariant.withOpacity(0.2), width: 0.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
           children: [
-            // Avatar placeholder
-            Row(
+            // Avatar
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE0E0E0),
+                shape: BoxShape.circle,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Name bars
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
+                  width: 120,
+                  height: 11,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0E0E0),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 5),
                 Container(
-                  width: 16,
-                  height: 16,
+                  width: 80,
+                  height: 11,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: const Color(0xFFE0E0E0),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            // Name placeholder
-            Container(
-              width: 110,
-              height: 12,
-              decoration: BoxDecoration(
-                color: scheme.surface,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            const Spacer(),
-            // Chips placeholder
+
+            const Spacer(),  // pushes chips to bottom
+
+            // Chip row
             Row(
-              children: List.generate(
-                3,
-                    (_) => Padding(
-                  padding: const EdgeInsets.only(right: 6),
+              children: List.generate(3, (i) {
+                return Expanded(
                   child: Container(
-                    width: 44,
-                    height: 22,
+                    margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
+                    height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(6),
+                      color: const Color(0xFFE0E0E0),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                ),
-              ),
+                );
+              }),
             ),
           ],
         ),
@@ -158,7 +166,7 @@ class _EmployeeList extends StatelessWidget {
   }
 }
 
-// ── Reusable Employee Card ────────────────────────────────────────────────────
+// ── Employee Card ─────────────────────────────────────────────────────────────
 
 class _EmployeeCard extends StatelessWidget {
   final EmployeeModel employee;
@@ -166,26 +174,36 @@ class _EmployeeCard extends StatelessWidget {
 
   const _EmployeeCard({required this.employee, required this.index});
 
+  Color _avatarBg(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return [
+      cs.primaryContainer,
+      cs.secondaryContainer,
+      cs.tertiaryContainer,
+      cs.errorContainer,
+    ][index % 4];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () {
-        Navigator.pushNamed(context, '/employeeTask', arguments: employee);
-      },
+      onTap: () =>
+          Navigator.pushNamed(context, '/employeeTask', arguments: employee),
       child: Container(
-        width: 200,
+        width: 220,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: scheme.surface,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: scheme.outlineVariant.withOpacity(0.2), width: 0.5),
-
+          border: Border.all(
+              color: cs.outlineVariant.withOpacity(0.2), width: 0.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: cs.shadow.withOpacity(0.04),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -193,64 +211,67 @@ class _EmployeeCard extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: _getBgColor(context, index),
-                  backgroundImage: employee.userProfileUrl.isNotEmpty
-                      ? NetworkImage(employee.userProfileUrl)
-                      : null,
-                  child: employee.userProfileUrl.isEmpty
-                      ? Text(
-                    employee.userName.isNotEmpty
-                        ? employee.userName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: scheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                      : null,
+            // Avatar
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: _avatarBg(context),
+              backgroundImage: employee.userProfileUrl.isNotEmpty
+                  ? NetworkImage(employee.userProfileUrl)
+                  : null,
+              child: employee.userProfileUrl.isEmpty
+                  ? Text(
+                employee.userName.isNotEmpty
+                    ? employee.userName[0].toUpperCase()
+                    : '?',
+                style: textTheme.labelMedium?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.bold,
                 ),
-                const Spacer(),
-                Icon(Icons.chevron_right, size: 18, color: Colors.grey.shade400),
-              ],
+              )
+                  : null,
             ),
-            const SizedBox(height: 10),
-            Text(
-              employee.userName,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: scheme.onSurface,
+
+            const SizedBox(height: 8),
+
+            // Name
+            Expanded(
+              child: Text(
+                employee.userName,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
+                ),
               ),
             ),
-            const Spacer(),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
+
+            const SizedBox(height: 6),
+
+            // Chips
+            Row(
               children: [
-                _EmployeeStatusChip(
-                  count: '${employee.completedTaskCount}',
-                  label: 'Done',
-                  textColor: scheme.primary,
-                  bgColor: scheme.primaryContainer,
-                ),
-                _EmployeeStatusChip(
-                  count: '${employee.pendingAtMe}',
-                  label: 'At me',
-                  textColor: scheme.secondary,
-                  bgColor: scheme.secondaryContainer,
-                ),
-                _EmployeeStatusChip(
-                  count: '${employee.totalPendingTask}',
+                _StatusChip(
+                  count: employee.totalPendingTask,
                   label: 'Pending',
-                  textColor: scheme.error,
-                  bgColor: scheme.errorContainer,
+                  textColor: cs.error,
+                  bgColor: cs.errorContainer,
+                ),
+                const SizedBox(width: 4),
+                _StatusChip(
+                  count: employee.pendingAtOther,
+                  label: 'At Others',
+                  textColor: cs.primary,
+                  bgColor: cs.primaryContainer,
+                ),
+                const SizedBox(width: 4),
+                _StatusChip(
+                  count: employee.pendingAtMe,
+                  label: 'At Me',
+                  textColor: cs.secondary,
+                  bgColor: cs.secondaryContainer,
                 ),
               ],
             ),
@@ -259,28 +280,17 @@ class _EmployeeCard extends StatelessWidget {
       ),
     );
   }
-
-  Color _getBgColor(BuildContext context, int index) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = [
-      scheme.primaryContainer,
-      scheme.secondaryContainer,
-      scheme.tertiaryContainer,
-      scheme.errorContainer,
-    ];
-    return colors[index % colors.length];
-  }
 }
 
-// ── Reusable Status Chip ──────────────────────────────────────────────────────
+// ── Status Chip ───────────────────────────────────────────────────────────────
 
-class _EmployeeStatusChip extends StatelessWidget {
-  final String count;
+class _StatusChip extends StatelessWidget {
+  final int count;
   final String label;
   final Color textColor;
   final Color bgColor;
 
-  const _EmployeeStatusChip({
+  const _StatusChip({
     required this.count,
     required this.label,
     required this.textColor,
@@ -289,33 +299,38 @@ class _EmployeeStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            count,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: textColor,
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$count',
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
-          ),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              color: textColor,
+            Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -330,34 +345,22 @@ class _EmployeeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Row(
         children: [
-          Icon(Icons.people_alt_rounded, size: 20, color: scheme.primary),
+          Icon(Icons.people_alt_rounded, size: 20, color: cs.primary),
           const SizedBox(width: 6),
-           Text(
-            "Employees",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: scheme.onSurface,),
+          Text(
+            'Employees',
+            style: textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: cs.onSurface,
+            ),
           ),
-          // const SizedBox(width: 8),
-          // Container(
-          //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          //   decoration: BoxDecoration(
-          //     color: Colors.grey.shade100,
-          //     borderRadius: BorderRadius.circular(12),
-          //   ),
-          //   child: Text(
-          //     "$count",
-          //     style: TextStyle(
-          //       fontSize: 12,
-          //       fontWeight: FontWeight.w600,
-          //       color: Colors.grey.shade700,
-          //     ),
-          //   ),
-          // ),
           const Spacer(),
           TextButton(
             onPressed: () {},
@@ -367,11 +370,10 @@ class _EmployeeHeader extends StatelessWidget {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(
-              "View all",
-              style: TextStyle(
-                fontSize: 12,
+              'View all',
+              style: textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: scheme.onSurface,
+                color: cs.primary,
               ),
             ),
           ),
@@ -380,3 +382,4 @@ class _EmployeeHeader extends StatelessWidget {
     );
   }
 }
+

@@ -882,13 +882,13 @@ class _CreateTaskViewState extends State<CreateTaskView> {
         ),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'DISMISS',
-          textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
-        ),
+        // action: SnackBarAction(
+        //   label: 'DISMISS',
+        //   textColor: Colors.white,
+        //   onPressed: () {
+        //     ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        //   },
+        // ),
       ),
     );
   }

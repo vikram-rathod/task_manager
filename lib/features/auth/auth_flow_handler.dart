@@ -64,7 +64,7 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
         color: Colors.green.shade600,
         icon: Icons.check_circle_outline_rounded,
       );
-      Future.delayed(const Duration(milliseconds: 600), () {
+      Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
         }
@@ -149,7 +149,7 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
       // If closed due to successful navigation, state is AuthAuthenticated — leave it.
       if (currentState is AuthMultipleAccountsFound ||
           currentState is AuthLoading ||
-          currentState is AuthSwitching) {
+          currentState is AuthSwitching ) {
         if (isHomeContext) {
           final restoredUser = currentState is AuthMultipleAccountsFound
               ? currentState.currentUser

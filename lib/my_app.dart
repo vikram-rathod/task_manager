@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/router/app_router.dart';
 
+import 'core/lifecycle/app_lifecycle_observer.dart';
 import 'core/navigation/route_observer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeMode,
-          home: const AuthWrapper(),
+          home: AuthWrapper(),
           initialRoute: '/',
           onGenerateRoute: AppRouter.generateRoute,
           navigatorObservers: [routeObserver],

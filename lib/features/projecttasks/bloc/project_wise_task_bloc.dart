@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/core/storage/storage_keys.dart';
 import 'package:task_manager/core/storage/storage_service.dart';
 import 'package:task_manager/features/projecttasks/bloc/project_wise_task_event.dart';
 import 'package:task_manager/features/projecttasks/bloc/project_wise_task_state.dart';
+import 'package:task_manager/features/utils/app_exception.dart';
 
 import '../../auth/models/user_model.dart';
 import '../../home/repository/home_repository.dart';
@@ -281,9 +281,10 @@ class ProjectWiseTaskBloc
         isRefreshing: false,
       ));
     } catch (e) {
+      final exception = AppExceptionMapper.from(e);
       if (!isLoadMore) {
         emit(state.copyWith(
-          taskStatus: TaskListError(e.toString()),
+          taskStatus: TaskListError(exception.message),
           isLoadingMore: false,
           isRefreshing: false,
         ));
@@ -309,8 +310,9 @@ class ProjectWiseTaskBloc
       emit(state.copyWith(
           checkerMakerUserStatus: UserListSuccess(users)));
     } catch (e) {
+      final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(
-          checkerMakerUserStatus: UserListError(e.toString())));
+          checkerMakerUserStatus: UserListError(exception.message)));
     }
   }
 
@@ -326,8 +328,9 @@ class ProjectWiseTaskBloc
       emit(state.copyWith(
           pcEngineerUserStatus: UserListSuccess(users)));
     } catch (e) {
+      final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(
-          pcEngineerUserStatus: UserListError(e.toString())));
+          pcEngineerUserStatus: UserListError(exception.message)));
     }
   }
 

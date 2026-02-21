@@ -57,68 +57,99 @@ class _ProjectShimmerList extends StatelessWidget {
   }
 }
 
+/// Mirrors _ProjectCard exactly:
+///   icon-row (36×36 box + chevron) → SizedBox(8) → Expanded name → SizedBox(6) → chip Row
 class _ProjectShimmerCard extends StatelessWidget {
   const _ProjectShimmerCard();
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Shimmer.fromColors(
-      baseColor: scheme.surfaceContainerHighest,
-      highlightColor: scheme.surfaceContainerLowest,
+      baseColor: const Color(0xFFE0E0E0),      // Grey 300 — clearly visible
+      highlightColor: const Color(0xFFF5F5F5), // Grey 100 — bright sweep
       child: Container(
-        width: 200,
+        width: 210, // matches real card
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: scheme.surface,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: scheme.outlineVariant, width: 1.2),
+          border: Border.all(
+              color: cs.outlineVariant.withOpacity(0.2), width: 0.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: scheme.onSurface,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              width: 120,
-              height: 12,
-              decoration: BoxDecoration(
-                color: scheme.onSurface,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              width: 80,
-              height: 10,
-              decoration: BoxDecoration(
-                color: scheme.onSurface,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            const Spacer(),
+            // ── Icon row placeholder ──────────────────────────────────────
             Row(
-              children: List.generate(
-                3,
-                    (_) => Padding(
-                  padding: const EdgeInsets.only(right: 5),
-                  child: Container(
-                    width: 44,
-                    height: 22,
+              children: [
+                Container(
+                  width: 34,  // matches padding(7)*2 + icon(20) = 34
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0E0E0),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0E0E0),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            // ── Name placeholder — Expanded like real card ────────────────
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 130,
+                    height: 11,
                     decoration: BoxDecoration(
-                      color: scheme.onSurface,
+                      color: const Color(0xFFE0E0E0),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Container(
+                    width: 90,
+                    height: 11,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0E0E0),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // ── Chip row placeholder — three Expanded siblings ────────────
+            Row(
+              children: List.generate(3, (i) {
+                return Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0E0E0),
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                ),
-              ),
+                );
+              }),
             ),
           ],
         ),
@@ -157,27 +188,38 @@ class _ProjectCard extends StatelessWidget {
 
   const _ProjectCard({required this.project, required this.index});
 
+  Color _projectColor(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return [
+      cs.primary,
+      cs.secondary,
+      cs.tertiary,
+      cs.error,
+      cs.primaryContainer,
+    ][index % 5];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final projectColor = _getProjectColor(context, index);
+    final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final projectColor = _projectColor(context);
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () {
-        // Navigate to project details
-        Navigator.of(context).pushNamed('/project-details', arguments: project);
-      },
+      onTap: () =>
+          Navigator.of(context).pushNamed('/project-details', arguments: project),
       child: Container(
         width: 210,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: scheme.surface,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: scheme.outlineVariant.withOpacity(0.2), width: 0.5),
+          border: Border.all(
+              color: cs.outlineVariant.withOpacity(0.2), width: 0.5),
           boxShadow: [
             BoxShadow(
-              color: scheme.shadow.withOpacity(0.04),
+              color: cs.shadow.withOpacity(0.04),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -187,6 +229,7 @@ class _ProjectCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Icon row ────────────────────────────────────────────────────
             Row(
               children: [
                 Container(
@@ -195,54 +238,54 @@ class _ProjectCard extends StatelessWidget {
                     color: projectColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    Icons.folder_outlined,
-                    size: 20,
-                    color: projectColor,
-                  ),
+                  child: Icon(Icons.folder_outlined,
+                      size: 20, color: projectColor),
                 ),
                 const Spacer(),
-                Icon(
-                  Icons.chevron_right,
-                  size: 18,
-                  color: scheme.onSurfaceVariant,
-                ),
+                Icon(Icons.chevron_right,
+                    size: 18, color: cs.onSurfaceVariant),
               ],
             ),
+
             const SizedBox(height: 8),
+
+            // ── Project name ─────────────────────────────────────────────────
             Expanded(
               child: Text(
                 project.projectName,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
+                style: textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: scheme.onSurface,
+                  color: cs.onSurface,
                 ),
               ),
             ),
-            Wrap(
-              spacing: 4,
-              runSpacing: 2,
+
+            const SizedBox(height: 6),
+
+            // ── Chips — Row + Expanded so they never overflow ─────────────
+            Row(
               children: [
                 _ProjectStatusChip(
-                  count: '${project.completedTaskCount}',
+                  count: project.completedTaskCount,
                   label: 'Done',
-                  textColor: Colors.green.shade700,
-                  bgColor: Colors.green.shade50,
+                  textColor: cs.onPrimaryContainer,
+                  bgColor: cs.primaryContainer,
                 ),
+                const SizedBox(width: 4),
                 _ProjectStatusChip(
-                  count: '${project.inProgressTaskCount}',
+                  count: project.inProgressTaskCount,
                   label: 'Progress',
-                  textColor: Colors.orange.shade700,
-                  bgColor: Colors.orange.shade50,
+                  textColor: cs.onErrorContainer,
+                  bgColor: cs.errorContainer,
                 ),
+                const SizedBox(width: 4),
                 _ProjectStatusChip(
-                  count: '${project.totalTaskCount}',
+                  count: project.totalTaskCount,
                   label: 'To Client',
-                  textColor: Colors.blue.shade700,
-                  bgColor: Colors.blue.shade50,
+                  textColor: cs.onSecondaryContainer,
+                  bgColor: cs.secondaryContainer,
                 ),
               ],
             ),
@@ -251,24 +294,12 @@ class _ProjectCard extends StatelessWidget {
       ),
     );
   }
-
-  Color _getProjectColor(BuildContext context, int index) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = [
-      scheme.primary,
-      scheme.secondary,
-      scheme.tertiary,
-      Colors.orange.shade600,
-      Colors.red.shade600,
-    ];
-    return colors[index % colors.length];
-  }
 }
 
-// ── Reusable Status Chip ─────────────────────────────────────────────────────
+// ── Status Chip ───────────────────────────────────────────────────────────────
 
 class _ProjectStatusChip extends StatelessWidget {
-  final String count;
+  final int count;
   final String label;
   final Color textColor;
   final Color bgColor;
@@ -282,33 +313,38 @@ class _ProjectStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            count,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: textColor,
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$count',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
-          ),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              color: textColor,
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

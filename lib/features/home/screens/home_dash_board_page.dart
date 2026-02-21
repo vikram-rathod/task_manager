@@ -6,6 +6,8 @@ import 'package:task_manager/features/home/screens/quick_action_section.dart';
 import 'package:task_manager/features/home/screens/task_history_section.dart';
 import 'package:task_manager/features/home/screens/todays_task_section.dart';
 
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_event.dart';
 import '../bloc/home_bloc.dart';
 import 'employee_wise_count_section.dart';
 
@@ -25,6 +27,8 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     bloc.add(FetchTaskHistory());
     bloc.add(LoadProjectList());
     bloc.add(LoadEmployeeWiseTaskList());
+    bloc.add(const FetchTodaysTasks(page: 1, isMyTasks: true));
+
   }
 
   @override
@@ -36,6 +40,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         context.read<HomeBloc>().add(LoadProjectList());
         context.read<HomeBloc>().add(LoadEmployeeWiseTaskList());
         context.read<HomeBloc>().add(const FetchTodaysTasks(page: 1, isMyTasks: true));
+        context.read<AuthBloc>().add(SessionCheckRequested());
       },
       child: CustomScrollView(
         slivers: [
@@ -47,7 +52,6 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         ],
       ),
     );
-
   }
 }
 

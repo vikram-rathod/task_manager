@@ -5,6 +5,7 @@ import 'package:task_manager/features/home/model/task_history_model.dart';
 import 'package:task_manager/features/home/repository/task_repository.dart';
 
 import '../../../core/models/task_model.dart';
+import '../../utils/app_exception.dart';
 
 part 'task_details_event.dart';
 part 'task_details_state.dart';
@@ -57,9 +58,10 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
       }
     } catch (e) {
       print(' [TaskDetailsBloc] Error fetching task details: $e');
+      final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(
         isLoading: false,
-        errorMessage: 'An error occurred while fetching task details',
+        errorMessage: exception.message,
       ));
     }
   }

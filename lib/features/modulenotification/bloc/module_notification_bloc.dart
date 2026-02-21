@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:task_manager/core/storage/storage_keys.dart';
 import 'package:task_manager/core/storage/storage_service.dart';
+import 'package:task_manager/features/utils/app_exception.dart';
 
 import '../../../core/models/app_notification_acknow_model.dart';
 import '../app_notification_repository.dart';
@@ -76,11 +77,12 @@ class ModuleNotificationBloc
         );
       }
     } catch (e) {
+      final exception = AppExceptionMapper.from(e);
       emit(
         state.copyWith(
           clearSubmittingId: true,
           isError: true,
-          errorMessage: e.toString(),
+          errorMessage: exception.message,
         ),
       );
     }
@@ -107,6 +109,7 @@ class ModuleNotificationBloc
           ),
         );
       } else {
+
         emit(
           state.copyWith(
             isLoading: false,
@@ -117,12 +120,13 @@ class ModuleNotificationBloc
         );
       }
     } catch (e) {
+      final exception = AppExceptionMapper.from(e);
       emit(
         state.copyWith(
           isLoading: false,
           isRefreshing: false,
           isError: true,
-          errorMessage: e.toString(),
+          errorMessage: exception.message,
         ),
       );
     }
@@ -160,11 +164,12 @@ class ModuleNotificationBloc
         );
       }
     } catch (e) {
+      final exception = AppExceptionMapper.from(e);
       emit(
         state.copyWith(
           clearMarkingReadId: true,
           isError: true,
-          errorMessage: 'Network error. Please check your connection.',
+          errorMessage: exception.message,
         ),
       );
     }

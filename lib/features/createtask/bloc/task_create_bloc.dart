@@ -10,6 +10,7 @@ import 'package:task_manager/features/createtask/bloc/taskcreate_state.dart';
 
 import '../../home/repository/home_repository.dart';
 import '../../home/repository/task_repository.dart';
+import '../../utils/app_exception.dart';
 
 class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
   final HomeRepository homeRepository;
@@ -57,9 +58,10 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
     } catch (e, stackTrace) {
       debugPrint('[CreateTask][ERROR] Failed to load projects: $e');
       debugPrint('StackTrace: $stackTrace');
+      final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(
         projectListLoading: false,
-        errorMessage: _getErrorMessage(e, 'Failed to load projects'),
+        errorMessage : exception.message,
       ));
     }
   }
@@ -91,9 +93,10 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
     } catch (e, stackTrace) {
       debugPrint('[CreateTask][ERROR] Failed to load checkers: $e');
       debugPrint('StackTrace: $stackTrace');
+      final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(
         checkerListLoading: false,
-        errorMessage: _getErrorMessage(e, 'Failed to load checkers'),
+        errorMessage:  exception.message,
       ));
     }
   }
@@ -136,9 +139,10 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
     } catch (e, stackTrace) {
       debugPrint('[CreateTask][ERROR] Failed to load makers: $e');
       debugPrint('StackTrace: $stackTrace');
+      final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(
         makerListLoading: false,
-        errorMessage: _getErrorMessage(e, 'Failed to load makers'),
+        errorMessage : exception.message,
       ));
     }
   }
@@ -177,9 +181,10 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
     } catch (e, stackTrace) {
       debugPrint('[CreateTask][ERROR] Failed to load PC engineers: $e');
       debugPrint('StackTrace: $stackTrace');
+      final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(
         pcEngineerListLoading: false,
-        errorMessage: _getErrorMessage(e, 'Failed to load PC engineers'),
+        errorMessage: exception.message,
       ));
     }
   }
@@ -250,6 +255,7 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
         emit(state.copyWith(errorMessage: 'No image selected from camera'));
       }
     } catch (e) {
+
       emit(state.copyWith(errorMessage: 'Failed to pick image from camera'));
     }
   }
@@ -326,8 +332,9 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
     } catch (e, stackTrace) {
       debugPrint('[CreateTask][ERROR] Failed to pick files: $e');
       debugPrint('StackTrace: $stackTrace');
+      final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(
-        errorMessage: _getErrorMessage(e, 'Failed to pick files'),
+        errorMessage: exception.message,
       ));
     }
   }
@@ -408,10 +415,11 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
       debugPrint('[CreateTask][ERROR] Task creation failed');
       debugPrint('Error: $e');
       debugPrint('StackTrace: $stackTrace');
+      final exception = AppExceptionMapper.from(e);
 
       emit(state.copyWith(
         taskCreateStatus: TaskCreateStatus.error,
-        errorMessage: _getErrorMessage(e, 'Failed to create task'),
+        errorMessage:  exception.message,
       ));
     }
   }
@@ -431,26 +439,6 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
     emit(state.copyWith(errorMessage: null, taskCreateStatus: TaskCreateStatus.idle));
   }
 
-  String _getErrorMessage(dynamic error, String defaultMessage) {
-    if (error.toString().contains('SocketException')) {
-      return 'No internet connection. Please check your network';
-    } else if (error.toString().contains('TimeoutException')) {
-      return 'Request timed out. Please try again';
-    } else if (error.toString().contains('401')) {
-      return 'Unauthorized. Please login again';
-    } else if (error.toString().contains('404')) {
-      return 'Resource not found';
-    } else if (error.toString().contains('500')) {
-      return 'Server error. Please try again later';
-    }
-
-    final errorMessage = error.toString();
-    if (errorMessage.length > 100) {
-      return defaultMessage;
-    }
-
-    return errorMessage;
-  }
 }
 
 extension DateTimeX on DateTime? {

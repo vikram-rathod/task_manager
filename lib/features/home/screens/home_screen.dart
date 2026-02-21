@@ -9,12 +9,15 @@ import 'package:task_manager/features/home/screens/home_app_bar.dart';
 import 'package:task_manager/features/profile/profile_page.dart';
 
 import '../../../core/di/injection_container.dart';
+import '../../../core/navigation/route_observer.dart';
 import '../../AllTasks/bloc/all_task_bloc.dart';
 import '../../auth/auth_flow_handler.dart';
+import '../../auth/bloc/auth_event.dart';
 import '../../home/bloc/home_state.dart';
 import '../../home/screens/home_bottom_nav.dart';
 import '../../home/screens/home_dash_board_page.dart';
 import '../../home/screens/home_fab.dart';
+import '../../profile/bloc/profile_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,12 +29,36 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with RouteAware, AuthFlowHandler {
 
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   routeObserver.subscribe(this, ModalRoute.of(context)!);
+  // }
+  //
+  // @override
+  // void dispose() {
+  //   routeObserver.unsubscribe(this);
+  //   super.dispose();
+  // }
+  //
+  // @override
+  // void didPopNext() {
+  //   final previousRoute = routeObserver.navigator?.widget.initialRoute;
+  //
+  //   final authState = context.read<AuthBloc>().state;
+  //
+  //   // Only refresh if auth is stable AND not switching
+  //   if (authState is AuthAuthenticated) {
+  //     debugPrint("[HomeScreen] didPopNext safe refresh");
+  //     context.read<HomeBloc>().add(RefreshHomeData());
+  //   }
+  // }
+
   @override
   bool get isHomeContext => true;
 
   int _currentIndex = 0;
 
-  /// Cached user so the AppBar never goes blank during loading/switching states.
   UserModel? _cachedUser;
 
   UserModel? _userFrom(AuthState state) {
@@ -67,44 +94,54 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     return buildAuthListener(
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, authState) {
-          final user = _userFrom(authState);
-          final showSwitch = _showSwitchFrom(authState);
-          final switching = _isSwitching(authState);
-
-          return BlocBuilder<HomeBloc, HomeState>(
-            buildWhen: (prev, cur) =>
-            prev.notificationCount != cur.notificationCount,
-            builder: (context, homeState) {
-              return Scaffold(
-                appBar: HomeAppBar(
-                  user: user,
-                  showSwitchAccount: showSwitch,
-                  isSwitching: switching,
-                  notificationCount: homeState.notificationCount,
-                ),
-                body: IndexedStack(
-                  index: _currentIndex,
-                  children: List.generate(3, _buildPage),
-                ),
-                bottomNavigationBar: HomeBottomNav(
-                  currentIndex: _currentIndex,
-                  onTap: (index) {
-                    if (index == 0 && _currentIndex != 0) {
-                      context.read<HomeBloc>().add(RefreshHomeData());
-                    }
-                    setState(() => _currentIndex = index);
-                  },
-                ),
-                floatingActionButton: const HomeFab(),
-                floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerDocked,
-              );
-            },
-          );
+      child: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthSessionExpired) {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/login',
+                  (route) => false,
+            );
+          }
         },
-      ),
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            final user = _userFrom(authState);
+            final showSwitch = _showSwitchFrom(authState);
+            final switching = _isSwitching(authState);
+
+            return BlocBuilder<HomeBloc, HomeState>(
+              buildWhen: (prev, cur) =>
+              prev.notificationCount != cur.notificationCount,
+              builder: (context, homeState) {
+                return Scaffold(
+                  appBar: HomeAppBar(
+                    user: user,
+                    showSwitchAccount: showSwitch,
+                    isSwitching: switching,
+                    notificationCount: homeState.notificationCount,
+                  ),
+                  body: IndexedStack(
+                    index: _currentIndex,
+                    children: List.generate(3, _buildPage),
+                  ),
+                  bottomNavigationBar: HomeBottomNav(
+                    currentIndex: _currentIndex,
+                    onTap: (index) {
+                      if (index == 0 && _currentIndex != 0) {
+                        context.read<HomeBloc>().add(RefreshHomeData());
+                      }
+                      setState(() => _currentIndex = index);
+                    },
+                  ),
+                  floatingActionButton: const HomeFab(),
+                  floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerDocked,
+                );
+              },
+            );
+          },
+        ),
+      ),   //  BlocListener
     );
   }
 
@@ -118,7 +155,10 @@ class _HomeScreenState extends State<HomeScreen>
           child: const AllTaskScreen(),
         );
       case 2:
-        return const ProfileScreen();
+        return BlocProvider(
+          create: (_) => ProfileBloc(sl()),
+          child: const ProfileScreen(),
+        );
       default:
         return const HomeDashboardPage();
     }

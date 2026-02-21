@@ -141,7 +141,7 @@ class _TodaysTaskSectionState extends State<TodaysTaskSection>
                 children: [
                   Icon(Icons.groups_outlined, size: 18),
                   SizedBox(width: 6),
-                  Text('Other Tasks'),
+                  Text('Pending@Me'),
                 ],
               ),
             ),

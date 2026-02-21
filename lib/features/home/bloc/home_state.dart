@@ -46,6 +46,8 @@ class HomeState extends Equatable {
 
   final int notificationCount;
 
+  final String? globalError;
+
 
   const HomeState({
 
@@ -83,6 +85,8 @@ class HomeState extends Equatable {
     this.otherTasksPage = 1,
     this.hasMoreOtherTasks = true,
     this.notificationCount = 0,
+
+    this.globalError,
 
   });
 
@@ -124,6 +128,8 @@ class HomeState extends Equatable {
 
     int? notificationCount,
 
+    String? globalError,
+
   }) {
     return HomeState(
 
@@ -155,6 +161,8 @@ class HomeState extends Equatable {
       otherTasksPage: otherTasksPage ?? this.otherTasksPage,
       hasMoreOtherTasks: hasMoreOtherTasks ?? this.hasMoreOtherTasks,
       notificationCount: notificationCount ?? this.notificationCount,
+      globalError: globalError ?? this.globalError,
+
     );
   }
 
@@ -183,5 +191,6 @@ class HomeState extends Equatable {
     otherTasksPage,
     hasMoreOtherTasks,
     notificationCount,
+    globalError,
   ];
 }

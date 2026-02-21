@@ -35,7 +35,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       final user = UserModel(
         userName:
-        await storageService.read(StorageKeys.userName) ?? '',
+        await storageService.read(StorageKeys.userDisplayName) ?? '',
         userId: int.tryParse(userId ?? '') ?? 0,
         userType: int.tryParse(userType ?? '') ?? 0,
         userTypeName:
