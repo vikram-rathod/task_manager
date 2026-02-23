@@ -361,6 +361,16 @@ class _EmployeeHeader extends StatelessWidget {
               color: cs.onSurface,
             ),
           ),
+          const SizedBox(width: 8),
+          if (count > 0)
+            Text(
+              "($count)",
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
           const Spacer(),
           TextButton(
             onPressed: () {},

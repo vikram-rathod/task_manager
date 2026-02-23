@@ -240,8 +240,8 @@ class _IdleState extends StatelessWidget {
         'Please select a Checker to see the tasks assigned for checking.',
       ),
       UserRoleType.pcEngineer => (
-        'No PC Engineer Selected',
-        'Please select a PC Engineer to load their project tasks.',
+        'No Planner/Coordinator Selected',
+        'Please select a Planner/Coordinator to load their project tasks.',
       ),
       UserRoleType.all => (
         'No Tasks Available',

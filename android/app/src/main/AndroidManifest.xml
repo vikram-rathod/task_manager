@@ -12,7 +12,7 @@
 
 
     <application
-        android:label="Task Manager"
+        android:label="TaskManager"
         android:name="${applicationName}"
         android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher">

@@ -6,6 +6,7 @@ import '../../../core/di/injection_container.dart';
 import '../../createtask/bloc/task_create_bloc.dart';
 import '../../task/bloc/task_list_bloc.dart';
 import '../../task/screen/task_list_screen.dart';
+import '../../template/bloc/template_bloc.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_state.dart';
 
@@ -37,12 +38,13 @@ class QuickActionSection extends StatelessWidget {
                 children: [
                   Row(
                     children: [
+                      const SizedBox(width: 2),
                       Icon(
                         Icons.flash_on_rounded,
                         color: scheme.primary,
                         size: 20,
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       Text(
                         "Quick Actions",
                         style: TextStyle(
@@ -84,6 +86,7 @@ class QuickActionSection extends StatelessWidget {
                                   providers: [
                                     BlocProvider(create: (_) => sl<TaskListBloc>()),
                                     BlocProvider(create: (_) => sl<CreateTaskBloc>()),
+                                    BlocProvider(create: (_) => sl<TemplateBloc>()),
                                   ],
                                   child: const TaskListScreen(),
                                 ),

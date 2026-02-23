@@ -173,13 +173,13 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
       final pcEngineers = await homeRepository.getProjectCoordinatorUserList(
         projectId: state.selectedProject!.projectId.toString(),
       );
-      debugPrint('[CreateTask] Loaded ${pcEngineers.length} PC engineers for maker ${event.maker.userName}');
+      debugPrint('[CreateTask] Loaded ${pcEngineers.length} Planner/Coordinators for maker ${event.maker.userName}');
       emit(state.copyWith(
         pcEngineers: pcEngineers,
         pcEngineerListLoading: false,
       ));
     } catch (e, stackTrace) {
-      debugPrint('[CreateTask][ERROR] Failed to load PC engineers: $e');
+      debugPrint('[CreateTask][ERROR] Failed to load Planner/Coordinators: $e');
       debugPrint('StackTrace: $stackTrace');
       final exception = AppExceptionMapper.from(e);
       emit(state.copyWith(

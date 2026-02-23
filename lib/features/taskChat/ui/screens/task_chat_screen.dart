@@ -98,9 +98,9 @@ class _TaskChatScreenState extends State<TaskChatScreen> {
     );
     members[widget.task.pcEngrId.toString()] = TeamMember(
       userId: widget.task.pcEngrId.toString(),
-      userName: widget.task.pcEngrName ?? 'PC Engineer',
+      userName: widget.task.pcEngrName ?? 'Planner/Coordinator',
       profileUrl: '',
-      role: 'PC Engineer',
+      role: 'Planner/Coordinator',
     );
 
     return members.values.toList();

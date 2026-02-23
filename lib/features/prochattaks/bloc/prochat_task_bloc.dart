@@ -289,7 +289,7 @@ class ProchatTaskBloc extends Bloc<ProchatTaskEvent, ProchatTaskState> {
     } catch (e) {
       emit(state.copyWith(
         pcEngineerListLoading: false,
-        assignErrorMessage: 'Failed to load PC engineers',
+        assignErrorMessage: 'Failed to load Planner/Coordinators',
       ));
     }
   }
@@ -462,7 +462,7 @@ class ProchatTaskBloc extends Bloc<ProchatTaskEvent, ProchatTaskState> {
 
     if (matchedMaker == null) return;
 
-    // Select maker and load PC engineers
+    // Select maker and load Planner/Coordinators
     emit(state.copyWith(
       selectedMaker: matchedMaker,
       pcEngineerListLoading: true,
@@ -482,7 +482,7 @@ class ProchatTaskBloc extends Bloc<ProchatTaskEvent, ProchatTaskState> {
       return;
     }
 
-    // ── 4. Match PC engineer ──────────────────────────────────────────────
+    // ── 4. Match Planner/Coordinator ──────────────────────────────────────────────
     final matchedPcEngineer = pcEngineers.cast<UserModel?>().firstWhere(
           (u) =>
       (task.pcEngrId != null &&

@@ -189,7 +189,7 @@ class TaskRowState extends State<TaskRow> {
                 _infoChip(
                   cs,
                   icon: Icons.engineering_rounded,
-                  label: "PC Engineer",
+                  label: "Planner/Coordinator",
                   value: widget.task.taskDetails?.pcEngrName?.isNotEmpty ==
                       true
                       ? widget.task.taskDetails!.pcEngrName!

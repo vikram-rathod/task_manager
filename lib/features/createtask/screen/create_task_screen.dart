@@ -182,7 +182,7 @@ class _CreateTaskViewState extends State<CreateTaskView> {
 
                     const SizedBox(height: 16),
 
-                    // PC Engineer Selection 
+                    // Planner/Coordinator Selection 
                     SearchableDropdown(
                       label: 'Planner/Coordinator',
                       hint: 'Select coordinator',

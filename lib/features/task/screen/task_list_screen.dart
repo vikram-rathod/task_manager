@@ -250,20 +250,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             label: "Create Template",
             onTap: () {
               setState(() => _isFabOpen = false);
-              final tabId =
-                  context.read<TaskListBloc>().state.selectedTabId;
-              final tabName = _tabs[int.parse(tabId) - 1];
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) => sl<TemplateBloc>()
-                      ..add(LoadTemplates(tabId: tabId)),
-                    child: TemplateListScreen(tabId: tabId,tabName : tabName),
-                  ),
-                ),
-              );
+              _navigateToTemplateList();  // ✅ correct method
             },
           ),
 
@@ -274,38 +261,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             label: "Assign Task",
             onTap: () {
               setState(() => _isFabOpen = false);
-              final tabId =
-                  context.read<TaskListBloc>().state.selectedTabId;
-              final selectedProject =
-                  context.read<CreateTaskBloc>().state.selectedProject;
-
-              if (selectedProject == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text("Please select a project first"),
-                    backgroundColor: cs.error,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
-                return;
-              }
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) => sl<TemplateBloc>()
-                      ..add(LoadTemplates(tabId: tabId)),
-                    child: AssignTaskScreen(
-                      tabId: tabId,
-                      projectName: selectedProject.projectName,
-                      projectId: selectedProject.projectId.toString(),
-                    ),
-                  ),
-                ),
-              );
+              _navigateToAssignTask();    // ✅ correct method
             },
           ),
 
@@ -328,6 +284,56 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
+  void _navigateToAssignTask() {
+    final tabId = context.read<TaskListBloc>().state.selectedTabId;
+    final selectedProject = context.read<CreateTaskBloc>().state.selectedProject;
+    final cs = Theme.of(context).colorScheme;
+
+    if (selectedProject == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Please select a project first"),
+          backgroundColor: cs.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
+    final templateBloc = sl<TemplateBloc>()..add(LoadTemplates(tabId: tabId));
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: templateBloc,
+          child: AssignTaskScreen(
+            tabId: tabId,
+            projectName: selectedProject.projectName,
+            projectId: selectedProject.projectId.toString(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToTemplateList() {
+    final tabId = context.read<TaskListBloc>().state.selectedTabId;
+    final tabName = _tabs[int.parse(tabId) - 1];
+
+    final templateBloc = sl<TemplateBloc>()..add(LoadTemplates(tabId: tabId));
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: templateBloc,
+          child: TemplateListScreen(tabId: tabId, tabName: tabName),
+        ),
+      ),
+    );
+  }
   Widget _buildMiniOption({
     required IconData icon,
     required String label,

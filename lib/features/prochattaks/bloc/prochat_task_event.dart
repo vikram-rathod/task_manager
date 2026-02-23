@@ -75,7 +75,7 @@ class ProchatMakerCleared extends ProchatTaskEvent {
   const ProchatMakerCleared();
 }
 
-// ── Assign flow — PC engineer ──────────────────────────────────────────────
+// ── Assign flow — Planner/Coordinator ──────────────────────────────────────────────
 
 class ProchatPcEngineerSelected extends ProchatTaskEvent {
   final UserModel engineer;

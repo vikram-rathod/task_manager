@@ -301,7 +301,7 @@ class AssignTaskBottomSheet extends StatelessWidget {
 
                         const SizedBox(height: 16),
 
-                        // PC Engineer
+                        // Planner/Coordinator
                         SearchableDropdown(
                           label: 'Planner/Coordinator',
                           hint: 'Select coordinator',
@@ -372,33 +372,33 @@ class AssignTaskBottomSheet extends StatelessWidget {
 
                         const SizedBox(height: 8),
 
-                        // Cancel
-                        SizedBox(
-                          width: double.infinity,
-                          child: TextButton(
-                            onPressed: isSubmitting
-                                ? null
-                                : () {
-                              context
-                                  .read<ProchatTaskBloc>()
-                                  .add(const ProchatAssignReset());
-                              Navigator.pop(context);
-                            },
-                            style: TextButton.styleFrom(
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                        ),
+                        // // Cancel
+                        // SizedBox(
+                        //   width: double.infinity,
+                        //   child: TextButton(
+                        //     onPressed: isSubmitting
+                        //         ? null
+                        //         : () {
+                        //       context
+                        //           .read<ProchatTaskBloc>()
+                        //           .add(const ProchatAssignReset());
+                        //       Navigator.pop(context);
+                        //     },
+                        //     style: TextButton.styleFrom(
+                        //       padding:
+                        //       const EdgeInsets.symmetric(vertical: 14),
+                        //     ),
+                        //     child: Text(
+                        //       'Cancel',
+                        //       style: TextStyle(
+                        //         fontSize: 15,
+                        //         color: isDark
+                        //             ? Colors.grey[400]
+                        //             : Colors.grey[600],
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),

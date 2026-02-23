@@ -47,10 +47,10 @@ class UserDropdownSection extends StatelessWidget {
               },
             ),
 
-          // PC Engineer dropdown
+          // Planner/Coordinator dropdown
           if (state.selectedRole == UserRoleType.pcEngineer)
             UserDropdown(
-              label: 'Select PC Engineer',
+              label: 'Select Planner/Coordinator',
               placeholder: 'Search engineers...',
               userStatus: state.pcEngineerUserStatus,
               selectedUser: state.selectedPcEngineer,

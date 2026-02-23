@@ -270,7 +270,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                       if (task.pcEngrName.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         _buildRoleRow(
-                          role: 'PC Engineer',
+                          role: 'Planner/Coordinator',
                           name: task.pcEngrName,
                           scheme: scheme,
                         ),

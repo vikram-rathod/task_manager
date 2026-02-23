@@ -16,7 +16,7 @@ extension UserRoleTypeX on UserRoleType {
       case UserRoleType.checker:
         return 'Checker';
       case UserRoleType.pcEngineer:
-        return 'PC Engineer';
+        return 'Planner/Coordinator';
     }
   }
 }

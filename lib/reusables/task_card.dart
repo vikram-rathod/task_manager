@@ -70,6 +70,8 @@ class _TaskCardState extends State<TaskCard>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final scheme = theme.colorScheme;
+
 
     return ScaleTransition(
       scale: _scaleAnimation,
@@ -121,49 +123,20 @@ class _TaskCardState extends State<TaskCard>
                   children: [
                     // Header: Priority + Task Type + Chat
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Expanded(
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              // Priority Badge
-                              if ((widget.task.taskPriority?.isNotEmpty ??
-                                  false) ||
-                                  (widget.task.priority?.isNotEmpty ?? false))
-                                _ModernPriorityBadge(
-                                  priority: widget.task.taskPriority ??
-                                      widget.task.priority ??
-                                      '',
-                                ),
-
-                              // Task Type Badge
-                              if (widget.task.taskType?.isNotEmpty ?? false)
-                                _TaskTypeBadge(
-                                    taskType: widget.task.taskType!),
-                            ],
-                          ),
-                        ),
-
                         // Chat Button
                         if (widget.onChatTap != null)
                           _ModernChatButton(onTap: widget.onChatTap!),
+
+                        const SizedBox(width: 12),
+
+                        if (widget.task.taskType?.isNotEmpty ?? false)
+                          _TaskTypeBadge(
+                              taskType: widget.task.taskType!),
                       ],
                     ),
 
-                    const SizedBox(height: 12),
-
-                    // Task Description
-                    _HighlightedText(
-                      text: widget.task.taskDescription ?? 'No description',
-                      query: widget.searchQuery,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
-                        height: 1.4,
-                      ),
-                    ),
 
                     // Project Name
                     if (widget.task.projectName.isNotEmpty ?? false) ...[
@@ -201,6 +174,49 @@ class _TaskCardState extends State<TaskCard>
                         ),
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    // Task Description
+                    _HighlightedText(
+                      text: widget.task.taskDescription ?? 'No description',
+                      query: widget.searchQuery,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Priority Badge
+                    if ((widget.task.taskPriority?.isNotEmpty ??
+                        false) ||
+                        (widget.task.priority?.isNotEmpty ?? false))
+                      _ModernPriorityBadge(
+                        priority: widget.task.taskPriority ??
+                            widget.task.priority ??
+                            '',
+                      ),
+                    const SizedBox(height: 12),
+                    // Task Regn Date
+                    if (widget.task.taskRegisteredDate != null)
+                      _buildTimelineRow(
+                        icon: Icons.event_available_rounded,
+                        label: 'Registered',
+                        value: widget.task.taskRegisteredDate!,
+                        scheme: scheme,
+                      ),
+                    // Task Target Date
+
+                    if (widget.task.targetedDate != null ) ...[
+                      const SizedBox(height: 12),
+                      _buildTimelineRow(
+                        icon: Icons.flag_circle_outlined,
+                        label: 'Target Date',
+                        value: widget.task.targetedDate!,
+                        scheme: scheme,
+                      ),
+                    ],
+
 
                     // ProChat Remark (if available)
                     if (_isProChatTask &&
@@ -248,7 +264,7 @@ class _TaskCardState extends State<TaskCard>
                           if (widget.task.pcEngrName.isNotEmpty ?? false) ...[
                             const SizedBox(height: 8),
                             _ModernTeamMember(
-                              role: 'PC Engineer',
+                              role: 'Planner/Coordinator',
                               name: widget.task.pcEngrName,
                               searchQuery: widget.searchQuery,
                               color: const Color(0xFF06B6D4), // Cyan
@@ -331,6 +347,64 @@ class _TaskCardState extends State<TaskCard>
 }
 
 // ========== Sub-Components ==========
+
+Widget _buildTimelineRow({
+  required IconData icon,
+  required String label,
+  required String value,
+  bool isHighlight = false,
+  required ColorScheme scheme,
+}) {
+  final highlightColor = isHighlight ? scheme.tertiary : scheme.primary;
+
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: isHighlight
+          ? scheme.tertiaryContainer.withOpacity(0.5)
+          : scheme.surfaceContainerHighest.withOpacity(0.4),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(
+          color: isHighlight ? scheme.tertiary : scheme.outline,
+          width: 0.2
+      ),
+    ),
+    child: Row(
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: isHighlight ? scheme.tertiary : scheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isHighlight ? scheme.onTertiaryContainer : scheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
 class _ModernPriorityBadge extends StatelessWidget {
   final String priority;

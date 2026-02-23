@@ -376,23 +376,17 @@ class _ProjectHeader extends StatelessWidget {
               color: scheme.onSurface,
             ),
           ),
+          const SizedBox(width: 6),
+          Text(
+            " ($count)",
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
           const Spacer(),
-          // Container(
-          //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          //   decoration: BoxDecoration(
-          //     color: scheme.surfaceContainerHighest,
-          //     borderRadius: BorderRadius.circular(12),
-          //   ),
-          //   child: Text(
-          //     "$count",
-          //     style: TextStyle(
-          //       fontSize: 12,
-          //       fontWeight: FontWeight.w600,
-          //       color: scheme.onSurfaceVariant,
-          //     ),
-          //   ),
-          // ),
-          // const SizedBox(width: 6),
+
           TextButton(
             onPressed: () {},
             style: TextButton.styleFrom(

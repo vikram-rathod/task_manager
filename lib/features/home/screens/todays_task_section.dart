@@ -105,7 +105,7 @@ class _TodaysTaskSectionState extends State<TodaysTaskSection>
               Icon(Icons.today_rounded, color: theme.primaryColor, size: 20),
               const SizedBox(width: 12),
                Text(
-                'Today\'s Tasks',
+                'In Progress Tasks',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -141,7 +141,7 @@ class _TodaysTaskSectionState extends State<TodaysTaskSection>
                 children: [
                   Icon(Icons.groups_outlined, size: 18),
                   SizedBox(width: 6),
-                  Text('Pending@Me'),
+                  Text("Others's Task"),
                 ],
               ),
             ),
