@@ -4,9 +4,8 @@ class ReusableTabsSection extends StatefulWidget {
   final List<Tab> tabs;
   final List<Widget> views;
   final ValueChanged<int>? onTabChanged;
-  final List<int>? tabCounts; // Optional counts for each tab
-  final double height;
-
+  final List<int>? tabCounts;
+  final double? height;
 
   const ReusableTabsSection({
     super.key,
@@ -14,7 +13,7 @@ class ReusableTabsSection extends StatefulWidget {
     required this.views,
     this.onTabChanged,
     this.tabCounts,
-    this.height = 400,
+    this.height, // null = Expanded mode, value = fixed height mode
   });
 
   @override
@@ -28,15 +27,11 @@ class _ReusableTabsSectionState extends State<ReusableTabsSection>
   @override
   void initState() {
     super.initState();
-
-    _controller = TabController(
-      length: widget.tabs.length,
-      vsync: this,
-    );
-
+    _controller = TabController(length: widget.tabs.length, vsync: this);
     _controller.addListener(() {
       if (!_controller.indexIsChanging) {
         widget.onTabChanged?.call(_controller.index);
+        setState(() {});
       }
     });
   }
@@ -51,17 +46,12 @@ class _ReusableTabsSectionState extends State<ReusableTabsSection>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // If no counts provided or count is null, return original tab
-    if (count == null) {
-      return tab;
-    }
+    if (count == null) return tab;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(width: 2),
-        // Original tab content
         if (tab.icon != null) ...[
           tab.icon!,
           const SizedBox(width: 4),
@@ -77,32 +67,70 @@ class _ReusableTabsSectionState extends State<ReusableTabsSection>
         else if (tab.child != null)
           Flexible(child: tab.child!),
 
-        // Show count badge only if count > 0
         if (count > 0) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            decoration: BoxDecoration(
+          const SizedBox(width: 5),
+          Text(
+            '($count)',
+            style: TextStyle(
               color: isSelected
-                  ? theme.primaryColor.withOpacity(0.2)
-                  : (isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.grey[300]),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              count.toString(),
-              style: TextStyle(
-                color: isSelected
-                    ? theme.primaryColor
-                    : (isDark ? Colors.white70 : Colors.grey[700]),
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
+                  ? theme.primaryColor
+                  : (isDark ? Colors.grey[500] : Colors.grey[500]),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
-        SizedBox(width: 2)
       ],
+    );
+  }
+
+  Widget _buildTabBar(ThemeData theme, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[800] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TabBar(
+        controller: _controller,
+        dividerColor: Colors.transparent,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          color: isDark ? Colors.grey[700] : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        labelColor: theme.primaryColor,
+        unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
+        labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: EdgeInsets.zero,
+        tabs: List.generate(
+          widget.tabs.length,
+              (index) {
+            final tab = widget.tabs[index];
+            final count = widget.tabCounts != null &&
+                index < widget.tabCounts!.length
+                ? widget.tabCounts![index]
+                : null;
+
+            return Tab(
+              height: 36,
+              child: _buildTabWithCount(
+                tab,
+                count,
+                _controller.index == index,
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -111,65 +139,34 @@ class _ReusableTabsSectionState extends State<ReusableTabsSection>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final tabBarView = TabBarView(
+      controller: _controller,
+      children: widget.views,
+    );
+
+    // ── Mode 1: Fixed height ─────────────────────────────────────────────────
+    if (widget.height != null) {
+      return Column(
+        children: [
+          _buildTabBar(theme, isDark),
+          const SizedBox(height: 16),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: 100,
+              maxHeight: widget.height!,
+            ),
+            child: tabBarView,
+          ),
+        ],
+      );
+    }
+
+    // ── Mode 2: Expanded (no height param) ───────────────────────────────────
     return Column(
       children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey[800] : Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: TabBar(
-            controller: _controller,
-            dividerColor: Colors.transparent,
-            indicator: BoxDecoration(
-              color: isDark ? Colors.grey[700] : Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            labelColor: theme.primaryColor,
-            unselectedLabelColor:
-            isDark ? Colors.grey[400] : Colors.grey[600],
-            tabs: List.generate(
-              widget.tabs.length,
-                  (index) {
-                final tab = widget.tabs[index];
-                final count = widget.tabCounts != null &&
-                    index < widget.tabCounts!.length
-                    ? widget.tabCounts![index]
-                    : null;
-
-                return Tab(
-                  child: _buildTabWithCount(
-                    tab,
-                    count,
-                    _controller.index == index,
-                  ),
-
-                );
-              },
-            ),
-          ),
-        ),
+        _buildTabBar(theme, isDark),
         const SizedBox(height: 16),
-        // TO
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: 100,
-            maxHeight: widget.height,
-          ),
-          child: TabBarView(
-            controller: _controller,
-            children: widget.views,
-          ),
-        ),
+        Expanded(child: tabBarView),
       ],
     );
   }

@@ -28,6 +28,8 @@ class _AllTasksViewState extends State<AllTasksView> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    context.read<AllTaskBloc>().add(LoadUserRole());
+
   }
 
   @override
@@ -170,7 +172,13 @@ class _AllTasksViewState extends State<AllTasksView> {
                 '/taskChat',
                 arguments: filteredTasks[index],
               );
-            }
+            },
+            onRefresh: () {
+              context.read<AllTaskBloc>().add(RefreshTasks());
+            },
+            canEditPriority: filteredTasks[index].taskPriority != '--' &&
+                (state.isHighAuthority ||
+                    filteredTasks[index].checkerId == state.loginUserId),
           );
         },
       ),

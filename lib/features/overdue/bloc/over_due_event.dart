@@ -8,6 +8,13 @@ sealed class OverDueEvent {
   List<Object?> get props => [];
 }
 
+class LoadUserRole extends OverDueEvent {
+  const LoadUserRole();
+
+  @override
+  List<Object?> get props => [];
+}
+
 class InitializeTabs extends OverDueEvent {
 
   const InitializeTabs();

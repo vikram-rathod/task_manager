@@ -63,12 +63,14 @@ class NotificationQuoteBlock extends StatelessWidget {
   final String message;
   final String? timestamp;
   final Color accentColor;
+  final String username;
 
   const NotificationQuoteBlock({
     super.key,
     required this.message,
     required this.timestamp,
     required this.accentColor,
+    required this.username,
   });
 
   @override
@@ -88,6 +90,25 @@ class NotificationQuoteBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Username header
+          if (username.isNotEmpty)
+            Row(
+              children: [
+                Icon(Icons.person_rounded, size: 12, color: accentColor),
+                const SizedBox(width: 4),
+                Text(
+                  username,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: accentColor,
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: NotificationDt.sp4),
+
+          // Message
           Text(
             message,
             style: TextStyle(
@@ -96,6 +117,8 @@ class NotificationQuoteBlock extends StatelessWidget {
               color: ntfInk2(context),
             ),
           ),
+
+          // Timestamp
           if (timestamp?.isNotEmpty ?? false) ...[
             const SizedBox(height: NotificationDt.sp4),
             Text(

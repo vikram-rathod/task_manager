@@ -7,15 +7,43 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
 
+/// Accepts either a local [File] or a remote URL [String].
+///
+/// Usage — local file (from create task attachments):
+/// ```dart
+/// FilePreviewScreen.fromFile(file: myFile, fileName: 'photo.jpg')
+/// ```
+///
+/// Usage — remote URL (from task details / chat):
+/// ```dart
+/// FilePreviewScreen.fromUrl(url: 'https://...', fileName: 'report.pdf')
+/// ```
 class FilePreviewScreen extends StatefulWidget {
-  final String fileUrl;
+  /// Local file — set when opened from device picker.
+  final File? localFile;
+
+  /// Remote URL — set when opened from a network attachment.
+  final String? remoteUrl;
+
   final String fileName;
 
-  const FilePreviewScreen({
+  /// Open a locally picked [File]
+  const FilePreviewScreen.fromFile({
     super.key,
-    required this.fileUrl,
+    required File file,
     required this.fileName,
-  });
+  })  : localFile = file,
+        remoteUrl = null;
+
+  /// Open a remote URL
+  const FilePreviewScreen.fromUrl({
+    super.key,
+    required String url,
+    required this.fileName,
+  })  : remoteUrl = url,
+        localFile = null;
+
+  bool get _isLocal => localFile != null;
 
   @override
   State<FilePreviewScreen> createState() => _FilePreviewScreenState();
@@ -53,36 +81,52 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
         _loadProgress = 0;
       });
 
-      final dir = await getTemporaryDirectory();
-      // Sanitize filename — spaces and special chars can break PDFView path
-      final safeFileName = widget.fileName
-          .replaceAll(' ', '_')
-          .replaceAll(RegExp(r'[^\w\.\-]'), '_');
-      final filePath = '${dir.path}/$safeFileName';
-      final file = File(filePath);
-
-      if (!await file.exists()) {
-        await Dio().download(
-          widget.fileUrl,
-          filePath,
-          onReceiveProgress: (received, total) {
-            if (total > 0 && mounted) {
-              setState(() => _loadProgress = received / total);
-            }
-          },
-        );
-      }
-
-      if (mounted) {
+      if (widget._isLocal) {
+        // ✅ Local file — use directly, no download needed
+        final file = widget.localFile!;
+        if (!await file.exists()) {
+          setState(() {
+            _errorMessage = 'File not found on device.';
+            _isLoading = false;
+          });
+          return;
+        }
         setState(() {
-          _localFilePath = filePath;
+          _localFilePath = file.path;
           _isLoading = false;
         });
+      } else {
+        // ✅ Remote URL — download to temp dir
+        final dir = await getTemporaryDirectory();
+        final safeFileName = widget.fileName
+            .replaceAll(' ', '_')
+            .replaceAll(RegExp(r'[^\w\.\-]'), '_');
+        final filePath = '${dir.path}/$safeFileName';
+        final file = File(filePath);
+
+        if (!await file.exists()) {
+          await Dio().download(
+            widget.remoteUrl!,
+            filePath,
+            onReceiveProgress: (received, total) {
+              if (total > 0 && mounted) {
+                setState(() => _loadProgress = received / total);
+              }
+            },
+          );
+        }
+
+        if (mounted) {
+          setState(() {
+            _localFilePath = filePath;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = "Failed to load file.\n${e.toString()}";
+          _errorMessage = 'Failed to load file.\n${e.toString()}';
           _isLoading = false;
         });
       }
@@ -90,11 +134,14 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
   }
 
   Future<void> _downloadToDevice() async {
+    // Local files — save a copy to Downloads
+    final sourceUrl = widget._isLocal ? null : widget.remoteUrl;
+    final sourceFile = widget.localFile;
+
     final cs = Theme.of(context).colorScheme;
     bool hasPermission = false;
 
     if (Platform.isAndroid) {
-      // Android 13+ (SDK 33+) — no permission needed for Downloads folder
       final sdkInt = await _getAndroidSdkInt();
       if (sdkInt >= 33) {
         hasPermission = true;
@@ -107,21 +154,17 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
           _showOpenSettingsDialog();
           return;
         } else {
-          // Denied but not permanently
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text("Storage permission is required to download files."),
-              backgroundColor: cs.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text('Storage permission is required to download files.'),
+            backgroundColor: cs.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
           return;
         }
       }
     } else {
-      // iOS
       final status = await Permission.photos.request();
       if (status.isGranted) {
         hasPermission = true;
@@ -148,56 +191,55 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
         savePath = '${dir.path}/${widget.fileName}';
       }
 
-      // Already downloaded check
       if (await File(savePath).exists()) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("File already exists in Downloads."),
-            backgroundColor: cs.secondary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('File already exists in Downloads.'),
+          backgroundColor: cs.secondary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
         setState(() => _isDownloading = false);
         return;
       }
 
-      await Dio().download(
-        widget.fileUrl,
-        savePath,
-        onReceiveProgress: (received, total) {
-          if (total > 0 && mounted) {
-            setState(() => _downloadProgress = received / total);
-          }
-        },
-      );
+      if (widget._isLocal && sourceFile != null) {
+        // ✅ Local file — just copy it to Downloads
+        await sourceFile.copy(savePath);
+      } else if (sourceUrl != null) {
+        // ✅ Remote — download fresh
+        await Dio().download(
+          sourceUrl,
+          savePath,
+          onReceiveProgress: (received, total) {
+            if (total > 0 && mounted) {
+              setState(() => _downloadProgress = received / total);
+            }
+          },
+        );
+      }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-              const SizedBox(width: 8),
-              Expanded(child: Text("Saved to Downloads: ${widget.fileName}")),
-            ],
-          ),
-          backgroundColor: cs.primary,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Saved to Downloads: ${widget.fileName}')),
+          ],
         ),
-      );
+        backgroundColor: cs.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Download failed: ${e.toString()}"),
-          backgroundColor: cs.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Download failed: ${e.toString()}'),
+        backgroundColor: cs.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ));
     } finally {
       if (mounted) setState(() => _isDownloading = false);
     }
@@ -208,22 +250,22 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Permission Required"),
+        title: const Text('Permission Required'),
         content: const Text(
-          "Storage permission was permanently denied. "
-              "Please enable it from app settings to download files.",
+          'Storage permission was permanently denied. '
+              'Please enable it from app settings to download files.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               openAppSettings();
             },
-            child: const Text("Open Settings"),
+            child: const Text('Open Settings'),
           ),
         ],
       ),
@@ -250,8 +292,7 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: cs.onSurface, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: cs.onSurface, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -269,9 +310,11 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
             Text(
               _isPdf
                   ? (_totalPages > 0
-                  ? "Page ${_currentPage + 1} of $_totalPages"
-                  : "PDF Document")
-                  : "Image",
+                  ? 'Page ${_currentPage + 1} of $_totalPages'
+                  : 'PDF Document')
+                  : _isImage
+                  ? 'Image'
+                  : 'File',
               style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
             ),
           ],
@@ -279,8 +322,7 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
         actions: [
           if (_isDownloading)
             Padding(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: SizedBox(
                 width: 22,
                 height: 22,
@@ -295,15 +337,14 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: IconButton(
-                tooltip: "Download to device",
+                tooltip: 'Save to device',
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.cloud_download_rounded,
-                      color: cs.primary, size: 20),
+                  child: Icon(Icons.cloud_download_rounded, color: cs.primary, size: 20),
                 ),
                 onPressed: _downloadToDevice,
               ),
@@ -336,8 +377,10 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
             const SizedBox(height: 20),
             Text(
               _loadProgress > 0
-                  ? "Loading... ${(_loadProgress * 100).toStringAsFixed(0)}%"
-                  : "Preparing file...",
+                  ? 'Loading... ${(_loadProgress * 100).toStringAsFixed(0)}%'
+                  : widget._isLocal
+                  ? 'Opening file...'
+                  : 'Downloading file...',
               style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
             ),
           ],
@@ -354,38 +397,26 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: cs.errorContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.error_outline_rounded,
-                    size: 40, color: cs.error),
+                decoration: BoxDecoration(color: cs.errorContainer, shape: BoxShape.circle),
+                child: Icon(Icons.error_outline_rounded, size: 40, color: cs.error),
               ),
               const SizedBox(height: 20),
-              Text(
-                "Failed to load file",
-                style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                    color: cs.onSurface),
-              ),
+              Text('Failed to load file',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 16, color: cs.onSurface)),
               const SizedBox(height: 8),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style:
-                TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
-              ),
+              Text(_errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12)),
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: _loadFile,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text("Retry"),
+                label: const Text('Retry'),
                 style: FilledButton.styleFrom(
                   backgroundColor: cs.primary,
                   foregroundColor: cs.onPrimary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ],
@@ -399,31 +430,28 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
     if (_isPdf) return _buildPdfViewer(cs);
     if (_isImage) return _buildImageViewer(cs);
 
+    // Unsupported type
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.insert_drive_file_rounded,
-              size: 72, color: cs.onSurfaceVariant),
+          Icon(Icons.insert_drive_file_rounded, size: 72, color: cs.onSurfaceVariant),
           const SizedBox(height: 16),
-          Text("Preview not available",
+          Text('Preview not available',
               style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: cs.onSurface)),
+                  fontWeight: FontWeight.w600, fontSize: 15, color: cs.onSurface)),
           const SizedBox(height: 8),
-          Text("This file type cannot be previewed.",
+          Text('This file type cannot be previewed.',
               style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13)),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: _downloadToDevice,
             icon: const Icon(Icons.download_rounded),
-            label: const Text("Download File"),
+            label: const Text('Download File'),
             style: FilledButton.styleFrom(
               backgroundColor: cs.primary,
               foregroundColor: cs.onPrimary,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ],
@@ -435,7 +463,7 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
     return Stack(
       children: [
         PDFView(
-          key: ValueKey(_localFilePath), // force rebuild on new path
+          key: ValueKey(_localFilePath),
           filePath: _localFilePath!,
           enableSwipe: true,
           swipeHorizontal: false,
@@ -463,8 +491,6 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
             debugPrint('PDF page $page error: $error');
           },
         ),
-
-        // Page indicator pill
         if (_totalPages > 0)
           Positioned(
             bottom: 20,
@@ -472,14 +498,13 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
             right: 0,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 18, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                 decoration: BoxDecoration(
                   color: cs.inverseSurface.withOpacity(0.85),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  "${_currentPage + 1} / $_totalPages",
+                  '${_currentPage + 1} / $_totalPages',
                   style: TextStyle(
                     color: cs.onInverseSurface,
                     fontWeight: FontWeight.w600,
@@ -498,9 +523,10 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
       imageProvider: FileImage(File(_localFilePath!)),
       minScale: PhotoViewComputedScale.contained,
       maxScale: PhotoViewComputedScale.covered * 4,
-      backgroundDecoration:
-      BoxDecoration(color: cs.surfaceContainerLow),
-      heroAttributes: PhotoViewHeroAttributes(tag: widget.fileUrl),
+      backgroundDecoration: BoxDecoration(color: cs.surfaceContainerLow),
+      heroAttributes: PhotoViewHeroAttributes(
+        tag: widget._isLocal ? widget.localFile!.path : widget.remoteUrl!,
+      ),
       loadingBuilder: (context, event) => Center(
         child: CircularProgressIndicator(
           value: event?.expectedTotalBytes != null
@@ -515,7 +541,7 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
           children: [
             Icon(Icons.broken_image_rounded, size: 64, color: cs.error),
             const SizedBox(height: 12),
-            Text("Failed to display image",
+            Text('Failed to display image',
                 style: TextStyle(color: cs.onSurfaceVariant)),
           ],
         ),

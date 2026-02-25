@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_constant.dart';
 import '../../../core/storage/storage_keys.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../reusables/custom_tabs.dart';
@@ -19,12 +20,27 @@ class OverDueBloc extends Bloc<OverDueEvent, OverDueState> {
 
   OverDueBloc(this._repository, this._storageService)
     : super(OverDueState()) {
+    on<LoadUserRole>(_onLoadUserRole);
     on<InitializeTabs>(_onInitializeTabs);
     on<FetchDueTasks>(_onFetchOverDueTasks);
     on<ChangeTaskTab>(_onChangeTab);
     on<ResetTaskState>(_onResetState);
 
   }
+  Future<void> _onLoadUserRole(LoadUserRole event,
+      Emitter<OverDueState> emit,) async {
+    final userType = await _storageService.read(StorageKeys.userType) ?? "";
+    final loginUserId = await _storageService.read(StorageKeys.userId) ?? "0";
+
+
+    final isHighAuthority =
+        AppConstant.owners.contains(userType) ||
+            AppConstant.partners.contains(userType);
+
+    emit(state.copyWith(isHighAuthority: isHighAuthority,
+        loginUserId: int.tryParse(loginUserId)));
+  }
+
 
   Future<void> _onInitializeTabs(
       InitializeTabs event,

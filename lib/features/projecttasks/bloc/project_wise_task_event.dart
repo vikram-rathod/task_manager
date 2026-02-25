@@ -11,6 +11,10 @@ abstract class ProjectWiseTaskEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class LoadUserRole extends ProjectWiseTaskEvent {
+  const LoadUserRole();
+}
+
 class InitializeProjectWiseTask extends ProjectWiseTaskEvent {
   final ProjectCountModel project;
   const InitializeProjectWiseTask(this.project);

@@ -7,6 +7,14 @@ class DueTodayEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class LoadUserRole extends DueTodayEvent {
+  const LoadUserRole();
+
+  @override
+  List<Object?> get props => [];
+}
+
+
 class InitializeTabs extends DueTodayEvent {
   const InitializeTabs();
 }

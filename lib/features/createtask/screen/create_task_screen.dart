@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/utils/file_preview_screen.dart';
 import '../../../reusables/searchable_dropdown.dart';
 import '../bloc/task_create_bloc.dart';
 import '../bloc/taskcreate_event.dart';
@@ -24,6 +25,7 @@ class CreateTaskView extends StatefulWidget {
 }
 
 class _CreateTaskViewState extends State<CreateTaskView> {
+  CreateTaskBloc? _bloc;
   final _taskDescriptionController = TextEditingController();
   final _remarkController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -35,9 +37,16 @@ class _CreateTaskViewState extends State<CreateTaskView> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _bloc = context.read<CreateTaskBloc>();
+  }
+
+  @override
   void dispose() {
     _taskDescriptionController.dispose();
     _remarkController.dispose();
+    _bloc?.add(ResetCreateTaskState());
     super.dispose();
   }
 
@@ -54,7 +63,7 @@ class _CreateTaskViewState extends State<CreateTaskView> {
             if (mounted) {
               _taskDescriptionController.clear();
               _remarkController.clear();
-              context.read<CreateTaskBloc>().add(ResetCreateTaskState());
+              _bloc?.add(ResetCreateTaskState());
               Navigator.of(context).pop(true);
             }
           });
@@ -586,14 +595,17 @@ class _CreateTaskViewState extends State<CreateTaskView> {
                   context.read<CreateTaskBloc>().add(AttachmentRemoved(file));
                 },
               ),
-
-              // Optional: tap to preview full image
-              onTap: isImage
-                  ? () {
-                // You can navigate to full-screen image viewer here
-                // Example: Navigator.push(context, MaterialPageRoute(...))
-              }
-                  : null,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FilePreviewScreen.fromFile(
+                      file: file,
+                      fileName: fileName,
+                    ),
+                  ),
+                );
+              },
             ),
           );
         }).toList(),

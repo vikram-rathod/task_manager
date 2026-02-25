@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager/core/storage/storage_keys.dart';
 import 'package:task_manager/core/storage/storage_service.dart';
 
+import '../../../core/constants/app_constant.dart';
 import '../../../reusables/custom_tabs.dart';
 import '../../home/repository/task_repository.dart';
 import '../../utils/app_exception.dart';
@@ -19,11 +20,27 @@ class EmployeeTaskBloc extends Bloc<EmployeeTaskEvent, EmployeeTaskState> {
       this._repository,
       this._storageService,
       ) : super(const EmployeeTaskState()) {
+    on<LoadUserRole>(_onLoadUserRole);
     on<InitializeEmployeeTabs>(_onInitializeTabs);
     on<FetchEmployeeTasks>(_onFetchEmployeeTasks);
     on<ChangeEmployeeTaskTab>(_onChangeTab);
     on<ResetEmployeeTaskState>(_onResetState);
   }
+
+  Future<void> _onLoadUserRole(LoadUserRole event,
+      Emitter<EmployeeTaskState> emit,) async {
+    final userType = await _storageService.read(StorageKeys.userType) ?? "";
+    final loginUserId = await _storageService.read(StorageKeys.userId) ?? "0";
+
+
+    final isHighAuthority =
+        AppConstant.owners.contains(userType) ||
+            AppConstant.partners.contains(userType);
+
+    emit(state.copyWith(isHighAuthority: isHighAuthority,
+        loginUserId: int.tryParse(loginUserId)));
+  }
+
 
   Future<void> _onInitializeTabs(
       InitializeEmployeeTabs event,
@@ -121,7 +138,11 @@ class EmployeeTaskBloc extends Bloc<EmployeeTaskEvent, EmployeeTaskState> {
         search: event.search,
       );
 
-      print(' [EmployeeTaskBloc] Response received: status=${response.status}, hasData=${response.data != null}');
+      print(' [EmployeeTaskBloc] '
+          'Response received: status=${response.status}, '
+          'hasData=${response.data != null}'
+          'message=${response.data}'
+      );
 
       // Handle successful response
       if (response.status && response.data != null) {

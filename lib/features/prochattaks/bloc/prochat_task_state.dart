@@ -33,6 +33,10 @@ class ProchatTaskState extends Equatable {
   final bool isSyncing;
   final bool hasNewTasksToSync;
 
+  final bool isHighAuthority;
+  final int loginUserId;
+
+
   const ProchatTaskState({
     this.isLoading = false,
     this.isRefreshing = false,
@@ -55,6 +59,9 @@ class ProchatTaskState extends Equatable {
     this.assignErrorMessage = '',
     this.isSyncing = false,
     this.hasNewTasksToSync = false,
+
+    this.isHighAuthority = false,
+    this.loginUserId = 0,
 
   });
 
@@ -90,6 +97,8 @@ class ProchatTaskState extends Equatable {
     bool clearSelectedPcEngineer = false,
     bool? isSyncing,
     bool? hasNewTasksToSync,
+    bool? isHighAuthority,
+    int? loginUserId,
   }) {
     return ProchatTaskState(
       isLoading: isLoading ?? this.isLoading,
@@ -117,6 +126,8 @@ class ProchatTaskState extends Equatable {
       assignErrorMessage: assignErrorMessage ?? this.assignErrorMessage,
       isSyncing: isSyncing ?? this.isSyncing,
       hasNewTasksToSync: hasNewTasksToSync ?? this.hasNewTasksToSync,
+      isHighAuthority: isHighAuthority ?? this.isHighAuthority,
+      loginUserId: loginUserId ?? this.loginUserId,
     );
   }
 
@@ -143,5 +154,7 @@ class ProchatTaskState extends Equatable {
     assignErrorMessage,
     isSyncing,
     hasNewTasksToSync,
+    isHighAuthority,
+    loginUserId,
   ];
 }

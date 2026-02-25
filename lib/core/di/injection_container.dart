@@ -24,6 +24,7 @@ import '../../features/task/repository/task_list_repository.dart';
 import '../../features/template/bloc/template_bloc.dart';
 import '../../features/template/repository/template_repository.dart';
 import '../../features/template/service/template_service.dart';
+import '../../reusables/taskpriority/bloc/task_priority_bloc.dart';
 import '../network/dio_client.dart';
 import '../storage/secure_storage_service.dart';
 import '../storage/storage_service.dart';
@@ -224,6 +225,12 @@ Future<void> initializeDependencies() async {
           tasksRepository: sl<TaskRepository>(),
           homeRepository: sl<HomeRepository>(),
           storageService: sl<StorageService>()));
+
+  sl.registerLazySingleton<ChangePriorityBloc>(() =>
+      ChangePriorityBloc(
+          repository: sl<TaskRepository>(),
+          storageService: sl<StorageService>()));
+
 
 
 }

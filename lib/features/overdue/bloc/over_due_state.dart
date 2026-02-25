@@ -29,6 +29,12 @@ class OverDueState extends Equatable {
   // Has more data flag by tab ID
   final Map<String, bool> hasMoreByTab;
 
+  final isHighAuthority;
+
+  final int loginUserId;
+
+
+
   const OverDueState({
     this.currentTabIndex = 0,
     this.searchQuery,
@@ -39,6 +45,8 @@ class OverDueState extends Equatable {
     this.errorsByTab = const {},
     this.pagesByTab = const {},
     this.hasMoreByTab = const {},
+    this.isHighAuthority = false,
+    this.loginUserId = 0,
   });
 
   // Convenience getters for current tab
@@ -67,6 +75,8 @@ class OverDueState extends Equatable {
     String? searchQuery,
     bool clearSearch = false,
     List<TaskTab>? tabs,
+    bool? isHighAuthority,
+    int? loginUserId,
   }) {
     return OverDueState(
       currentTabIndex: currentTabIndex ?? this.currentTabIndex,
@@ -79,6 +89,8 @@ class OverDueState extends Equatable {
       errorsByTab: errorsByTab ?? this.errorsByTab,
       pagesByTab: pagesByTab ?? this.pagesByTab,
       hasMoreByTab: hasMoreByTab ?? this.hasMoreByTab,
+      isHighAuthority: isHighAuthority ?? this.isHighAuthority,
+      loginUserId: loginUserId ?? this.loginUserId,
     );
   }
 
@@ -94,5 +106,7 @@ class OverDueState extends Equatable {
         errorsByTab,
         pagesByTab,
         hasMoreByTab,
+        isHighAuthority,
+        loginUserId,
       ];
 }

@@ -26,6 +26,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
   final TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  bool _isCollapsed = false;
 
   // Store BLoC reference to use in dispose
   EmployeeTaskBloc? _bloc;
@@ -56,6 +57,9 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
             employeeUserId: widget.employee.userId.toString(),
           ),
         );
+        context.read<EmployeeTaskBloc>().add(
+          LoadUserRole(),
+        );
       }
     });
   }
@@ -63,7 +67,6 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Safely store BLoC reference for use in dispose
     _bloc = context.read<EmployeeTaskBloc>();
   }
 
@@ -95,7 +98,6 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
     print('   Making API call for fresh data...');
     print('═══════════════════════════════════════════════════════');
 
-    // Load fresh data for the selected tab only
     _loadTasksForTab(tabId, isRefresh: true);
   }
 
@@ -108,9 +110,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
         tabId: tabId,
         employeeId: widget.employee.userId.toString(),
         page: 1,
-        search: _searchController.text.isEmpty
-            ? null
-            : _searchController.text,
+        search: _searchController.text.isEmpty ? null : _searchController.text,
         isRefresh: isRefresh,
       ),
     );
@@ -155,10 +155,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
 
   @override
   void dispose() {
-    // Reset the BLoC state when leaving the screen using stored reference
     _bloc?.add(const ResetEmployeeTaskState());
-
-    // Reset flag for next screen visit
     _hasLoadedInitialData = false;
 
     _searchController.dispose();
@@ -178,33 +175,53 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
       backgroundColor: theme.colorScheme.surface,
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: CustomScrollView(
-          slivers: [
-            _buildModernAppBar(theme, employee),
-            // Main Content
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  _buildTasksSection(),
-                  const SizedBox(height: 20),
-                ],
+        child: NestedScrollView(
+          // ✅ NestedScrollView replaces CustomScrollView
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            // Track collapse state based on innerBoxIsScrolled
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && _isCollapsed != innerBoxIsScrolled) {
+                setState(() => _isCollapsed = innerBoxIsScrolled);
+              }
+            });
+
+            return [
+              _buildModernAppBar(theme, employee, innerBoxIsScrolled),
+            ];
+          },
+          body: Column(
+            children: [
+              const SizedBox(height: 12),
+              Expanded( // ✅ Expanded fills remaining space, no overflow
+                child: _buildTasksSection(),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildModernAppBar(
-      ThemeData theme, EmployeeModel employee) {
+      ThemeData theme, EmployeeModel employee, bool innerBoxIsScrolled) {
     return SliverAppBar(
       expandedHeight: 140,
       floating: false,
       pinned: true,
+      forceElevated: innerBoxIsScrolled, // ✅ shows shadow when inner list scrolls
       elevation: 0,
       backgroundColor: theme.primaryColor,
+      title: _isCollapsed
+          ? Text(
+        employee.userName,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.3,
+        ),
+      )
+          : null,
       leading: IconButton(
         icon: Container(
           padding: const EdgeInsets.all(8),
@@ -234,7 +251,6 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
               padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
               child: Row(
                 children: [
-                  // Compact Avatar with Status Indicator
                   Stack(
                     children: [
                       Hero(
@@ -275,7 +291,6 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
                           ),
                         ),
                       ),
-                      // Active status indicator
                       Positioned(
                         right: 2,
                         bottom: 2,
@@ -292,7 +307,6 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
                     ],
                   ),
                   const SizedBox(width: 14),
-                  // Compact Name and Stats
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,38 +385,35 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-
     return BlocBuilder<EmployeeTaskBloc, EmployeeTaskState>(
       builder: (context, state) {
         if (state.tabs.isEmpty) {
-          return _buildLoadingState();
+          return const Center(child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667EEA)),
+          ));
         }
 
         // Auto-load first tab data when tabs are first initialized
         if (!_hasLoadedInitialData && state.tabs.isNotEmpty) {
           _hasLoadedInitialData = true;
 
-          // Schedule data load for next frame to avoid building during build
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               final firstTabId = state.tabs[0].id;
-              print('AUTO-LOADING: Initial data for first tab (${state.tabs[0].label}, id: $firstTabId)');
+              print(
+                  'AUTO-LOADING: Initial data for first tab (${state.tabs[0].label}, id: $firstTabId)');
               _loadTasksForTab(firstTabId, isRefresh: false);
-
-              // Initialize scroll controllers
               _initializeScrollControllers(state.tabs);
             }
           });
         }
 
+        // ✅ Use Column + Expanded — no fixed height needed since parent Expanded provides constraints
         return Column(
           children: [
             // Search Bar
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Container(
                 decoration: BoxDecoration(
                   color: isDark
@@ -465,33 +476,35 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
               ),
             ),
 
-            // Reusable Tabs Section with Counts
-            ReusableTabsSection(
-              tabs: state.tabs
-                  .map((tab) => Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(tab.icon, size: 16),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        tab.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+            Expanded(
+              child: ReusableTabsSection(
+                tabs: state.tabs
+                    .map((tab) => Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(tab.icon, size: 16),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          tab.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ))
-                  .toList(),
-              views: state.tabs.map((tab) => _buildTasksList(tab.id,theme.colorScheme)).toList(),
-              onTabChanged: _onTabChanged,
-              height:MediaQuery.of(context).size.height * 0.75,
-              tabCounts: [
-                widget.employee.pendingAtMe,
-                widget.employee.pendingAtOther,
-              ],
+                    ],
+                  ),
+                ))
+                    .toList(),
+                views: state.tabs
+                    .map((tab) => _buildTasksList(tab.id, theme.colorScheme))
+                    .toList(),
+                onTabChanged: _onTabChanged,
+                tabCounts: [
+                  widget.employee.pendingAtMe,
+                  widget.employee.pendingAtOther,
+                ],
+              ),
             ),
           ],
         );
@@ -499,7 +512,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
     );
   }
 
-  Widget _buildTasksList(String tabId,ColorScheme scheme) {
+  Widget _buildTasksList(String tabId, ColorScheme scheme) {
     return BlocBuilder<EmployeeTaskBloc, EmployeeTaskState>(
       builder: (context, state) {
         final isLoading = state.loadingByTab[tabId] ?? false;
@@ -535,7 +548,10 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
           color: scheme.surface,
           child: ListView.builder(
             controller: _scrollControllers[tabId],
-            padding: const EdgeInsets.only(bottom: 20),
+            physics: const AlwaysScrollableScrollPhysics(), // ✅ allows pull-to-refresh even when not full
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 20, // ✅ bottom nav bar safe area
+            ),
             itemCount: tasks.length + (isPaginationLoading ? 1 : 0),
             itemBuilder: (context, index) {
               if (index >= tasks.length) {
@@ -548,6 +564,8 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
                 padding:
                 const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: TaskCard(
+                  canEditPriority:taskModel.taskPriority != '--' &&   state.isHighAuthority ||
+                      state.loginUserId == taskModel.checkerId,
                   task: taskModel,
                   onTap: () {
                     Navigator.pushNamed(
@@ -562,6 +580,9 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
                       '/taskChat',
                       arguments: taskModel,
                     );
+                  },
+                  onRefresh: () {
+                    _loadTasksForTab(tabId, isRefresh: true);
                   },
                 ),
               );

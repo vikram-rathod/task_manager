@@ -56,7 +56,11 @@ class SearchableDropdown<T> extends StatefulWidget {
   /// Custom search filter function (optional)
   final bool Function(T item, String query)? searchFilter;
 
-  const SearchableDropdown({
+  String supportingText;
+
+
+
+   SearchableDropdown({
     super.key,
     required this.label,
     required this.hint,
@@ -71,6 +75,7 @@ class SearchableDropdown<T> extends StatefulWidget {
     this.validator,
     this.isRequired = false,
     this.searchFilter,
+    this.supportingText = "",
   });
 
   @override
@@ -204,6 +209,7 @@ class _SearchableDropdownState<T> extends State<SearchableDropdown<T>> {
                             _filterItems(value);
                           });
                         },
+
                       ),
                     ),
 

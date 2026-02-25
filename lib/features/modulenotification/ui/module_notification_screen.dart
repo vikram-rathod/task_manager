@@ -105,7 +105,7 @@ class _ModuleNotificationScreenState extends State<ModuleNotificationScreen> {
     );
   }
 
-  // ── Body ────────────────────────────────────────────────────────────────────
+  // ── Body ───────────────────────────── ───────────────────────────────────────
 
   Widget _buildBody(
       BuildContext context,

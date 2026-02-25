@@ -41,7 +41,19 @@ class _AppLifecycleObserverState extends State<AppLifecycleObserver>
 
     if (state == AppLifecycleState.resumed) {
       debugPrint("APP RESUMED");
-      context.read<AuthBloc>().add(SessionCheckRequested());
+
+      final authState = context.read<AuthBloc>().state;
+      debugPrint("APP RESUMED → current auth state: ${authState.runtimeType}");
+
+      //  Only check session if user is actually authenticated.
+      // If they're on login screen (AuthInitial / AuthSessionExpired),
+      // there's no session to validate — skip to avoid snackbar on login screen.
+      if (authState is AuthAuthenticated || authState is AuthSwitching) {
+        debugPrint("APP RESUMED → dispatching SessionCheckRequested");
+        context.read<AuthBloc>().add(SessionCheckRequested());
+      } else {
+        debugPrint("APP RESUMED → skipping session check, not authenticated");
+      }
     }
   }
 

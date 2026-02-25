@@ -51,7 +51,7 @@ class UserDropdownSection extends StatelessWidget {
           if (state.selectedRole == UserRoleType.pcEngineer)
             UserDropdown(
               label: 'Select Planner/Coordinator',
-              placeholder: 'Search engineers...',
+              placeholder: 'Search planner/coordinator...',
               userStatus: state.pcEngineerUserStatus,
               selectedUser: state.selectedPcEngineer,
               onUserSelected: (user) {
@@ -93,7 +93,7 @@ class UserDropdown extends StatelessWidget {
         ? (userStatus as UserListError).message
         : isLoading
         ? 'Loading...'
-        : null;
+        : "";
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -109,7 +109,7 @@ class UserDropdown extends StatelessWidget {
         isEnabled: !isLoading,
         isLoading: isLoading,
         icon: Icons.search,
-        // supportingText: supportingText,
+        supportingText: supportingText ,
       ),
     );
   }

@@ -193,14 +193,6 @@ class CompactTaskCard extends StatelessWidget {
                       spacing: 4,
                       runSpacing: 4,
                       children: [
-                        if (task.makerName.isNotEmpty)
-                          _TaskPersonChip(
-                            icon: Icons.edit_rounded,
-                            label: task.makerName,
-                            color: colorScheme.primary.withOpacity(0.8),
-                            role: 'Maker',
-                            isDark: isDark,
-                          ),
                         if (task.checkerName.isNotEmpty)
                           _TaskPersonChip(
                             icon: Icons.verified_rounded,
@@ -209,6 +201,15 @@ class CompactTaskCard extends StatelessWidget {
                             role: 'Checker',
                             isDark: isDark,
                           ),
+                        if (task.makerName.isNotEmpty)
+                          _TaskPersonChip(
+                            icon: Icons.edit_rounded,
+                            label: task.makerName,
+                            color: colorScheme.primary.withOpacity(0.8),
+                            role: 'Maker',
+                            isDark: isDark,
+                          ),
+
                         if (task.pcEngrName.isNotEmpty)
                           _TaskPersonChip(
                             icon: Icons.manage_accounts_rounded,

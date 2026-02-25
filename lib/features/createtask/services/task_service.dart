@@ -1,28 +1,24 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
+
 import '../../../core/constants/api_constants.dart';
 import '../../../core/models/task_detail_response.dart';
+import '../../../core/models/task_model.dart';
 import '../../../core/models/taskchat/task_chat_message.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/storage_keys.dart';
 import '../../../core/storage/storage_service.dart';
-import '../../AllTasks/bloc/all_task_bloc.dart';
 import '../../auth/models/api_response.dart';
 import '../models/chat_insert_data.dart';
 import '../models/insert_data_model.dart';
-import '../../../core/models/task_model.dart';
-
-import '../../auth/models/user_model.dart';
 import '../models/task_request.dart';
 
 class TaskApiService {
   final DioClient _dio;
   final StorageService _storageService;
   final String _tag = "TaskApiService";
-
 
   TaskApiService(this._dio, this._storageService);
 
@@ -371,6 +367,25 @@ class TaskApiService {
           (data) =>
           (data as List).map((e) => TMTasksModel.fromJson(e)).toList(),
     );
+  }
+
+  Future<Response> changePriority({
+    required String userId,
+    required String taskId,
+    required String priority,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.changePriority,
+      data: {
+        'user_id': userId,
+        'work_id': taskId,
+        'priority': priority,
+      },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+    return response;
   }
 
 }

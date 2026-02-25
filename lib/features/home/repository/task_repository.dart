@@ -143,4 +143,22 @@ class TaskRepository {
       return response;
 
   }
+
+  Future<ApiResponse<dynamic>> changePriority({
+    required String userId,
+    required String taskId,
+    required String priority,
+  }) async {
+    final response = await _api.changePriority(
+      userId: userId,
+      taskId: taskId,
+      priority: priority,
+    );
+    final apiResponse = ApiResponse.fromJson(
+      response.data,
+          (data) => data,
+    );
+
+    return apiResponse;
+  }
 }

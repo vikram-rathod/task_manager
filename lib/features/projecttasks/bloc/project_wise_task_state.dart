@@ -107,6 +107,10 @@ class ProjectWiseTaskState extends Equatable {
   // Search
   final String searchQuery;
 
+  final bool isHighAuthority;
+  final int loginUserId;
+
+
   const ProjectWiseTaskState({
     this.project,
     this.selectedRole = UserRoleType.all,
@@ -121,6 +125,8 @@ class ProjectWiseTaskState extends Equatable {
     this.isRefreshing = false,
     this.currentPage = 1,
     this.searchQuery = '',
+    this.isHighAuthority = false,
+    this.loginUserId = 0,
   });
 
   UserModel? get selectedMaker =>
@@ -146,6 +152,8 @@ class ProjectWiseTaskState extends Equatable {
     bool? isRefreshing,
     int? currentPage,
     String? searchQuery,
+    bool? isHighAuthority,
+    int? loginUserId,
   }) {
     return ProjectWiseTaskState(
       project: project ?? this.project,
@@ -163,6 +171,8 @@ class ProjectWiseTaskState extends Equatable {
       isRefreshing: isRefreshing ?? this.isRefreshing,
       currentPage: currentPage ?? this.currentPage,
       searchQuery: searchQuery ?? this.searchQuery,
+      isHighAuthority: isHighAuthority ?? this.isHighAuthority,
+      loginUserId: loginUserId ?? this.loginUserId,
     );
   }
 
@@ -181,5 +191,7 @@ class ProjectWiseTaskState extends Equatable {
     isRefreshing,
     currentPage,
     searchQuery,
+    isHighAuthority,
+    loginUserId,
   ];
 }

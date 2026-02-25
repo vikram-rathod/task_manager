@@ -49,6 +49,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<OverDueBloc>().add(InitializeTabs());
+        context.read<OverDueBloc>().add(LoadUserRole());
       }
     });
   }
@@ -188,14 +189,11 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
     );
   }
 
-  Widget _buildSimpleAppBar(ColorScheme theme,
-    String title,
-    String subtitle,
-  ) {
+  Widget _buildSimpleAppBar(ColorScheme theme, String title, String subtitle) {
     return SliverAppBar(
-      expandedHeight: 100,
-      floating: false,
       pinned: true,
+      floating: false,
+      expandedHeight: 0,
       elevation: 0,
       backgroundColor: theme.primaryContainer,
       leading: IconButton(
@@ -206,40 +204,32 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
         ),
         onPressed: () => Navigator.pop(context),
       ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          alignment: Alignment.bottomLeft,
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: theme.primary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: theme.primary.withOpacity(0.8),
-                    fontSize: 13,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: theme.primary,
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-        ),
+          // Text(
+          //   subtitle,
+          //   style: TextStyle(
+          //     color: theme.primary.withOpacity(0.7),
+          //     fontSize: 12,
+          //   ),
+          //   maxLines: 1,
+          //   overflow: TextOverflow.ellipsis,
+          // ),
+        ],
       ),
+      titleSpacing: 0,
     );
   }
 
@@ -417,6 +407,8 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: TaskCard(
+                  canEditPriority: taskModel.taskPriority != '--' &&
+                      (state.isHighAuthority || state.loginUserId == taskModel.checkerId),
                   task: taskModel,
                   onTap: () {
                     Navigator.pushNamed(
@@ -432,6 +424,7 @@ class _OverDueTaskScreenState extends State<OverDueTaskScreen>
                       arguments: taskModel,
                     );
                   },
+                  onRefresh: () => _loadTasksForTab(tabId, isRefresh: true),
                 ),
               );
             },

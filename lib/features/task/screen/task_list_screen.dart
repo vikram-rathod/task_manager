@@ -250,7 +250,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             label: "Create Template",
             onTap: () {
               setState(() => _isFabOpen = false);
-              _navigateToTemplateList();  // ✅ correct method
+              _navigateToTemplateList();
             },
           ),
 
@@ -261,7 +261,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             label: "Assign Task",
             onTap: () {
               setState(() => _isFabOpen = false);
-              _navigateToAssignTask();    // ✅ correct method
+              _navigateToAssignTask();
             },
           ),
 

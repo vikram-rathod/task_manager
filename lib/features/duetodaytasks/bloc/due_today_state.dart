@@ -28,6 +28,10 @@ class DueTodayState extends Equatable {
   // Has more data flag by tab ID
   final Map<String, bool> hasMoreByTab;
 
+  final isHighAuthority;
+
+  final loginUserId;
+
   const DueTodayState({
     this.currentTabIndex = 0,
     this.searchQuery,
@@ -38,6 +42,9 @@ class DueTodayState extends Equatable {
     this.errorsByTab = const {},
     this.pagesByTab = const {},
     this.hasMoreByTab = const {},
+    this.isHighAuthority = false,
+    this.loginUserId = '',
+
   });
 
   // Convenience getters for current tab
@@ -66,6 +73,8 @@ class DueTodayState extends Equatable {
     String? searchQuery,
     bool clearSearch = false,
     List<TaskTab>? tabs,
+    bool? isHighAuthority,
+    String? loginUserId,
   }) {
     return DueTodayState(
       currentTabIndex: currentTabIndex ?? this.currentTabIndex,
@@ -78,6 +87,9 @@ class DueTodayState extends Equatable {
       errorsByTab: errorsByTab ?? this.errorsByTab,
       pagesByTab: pagesByTab ?? this.pagesByTab,
       hasMoreByTab: hasMoreByTab ?? this.hasMoreByTab,
+      isHighAuthority: isHighAuthority ?? this.isHighAuthority,
+      loginUserId: loginUserId ?? this.loginUserId,
+
     );
   }
 
@@ -92,5 +104,7 @@ class DueTodayState extends Equatable {
     errorsByTab,
     pagesByTab,
     hasMoreByTab,
+    isHighAuthority,
+    loginUserId,
   ];
 }

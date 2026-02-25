@@ -2,9 +2,10 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 
+import '../../../core/constants/app_constant.dart';
+import '../../../core/models/task_model.dart';
 import '../../../core/storage/storage_keys.dart';
 import '../../../core/storage/storage_service.dart';
-import '../../../core/models/task_model.dart';
 import '../../createtask/models/task_request.dart';
 import '../../home/repository/task_repository.dart';
 import '../../utils/app_exception.dart';
@@ -23,6 +24,7 @@ class AllTaskBloc extends Bloc<AllTaskEvent, AllTaskState> {
       this.taskRepository,
       this.storageService,
       ) : super(const AllTaskState()) {
+    on<LoadUserRole>(_onLoadUserRole);
     on<LoadAllTasks>(_loadTasks);
     on<LoadNextPage>(_loadNextPage);
     on<SearchQueryChanged>(_onSearch);
@@ -31,6 +33,21 @@ class AllTaskBloc extends Bloc<AllTaskEvent, AllTaskState> {
 
     add(LoadAllTasks(reset: true));
   }
+
+  Future<void> _onLoadUserRole(LoadUserRole event,
+      Emitter<AllTaskState> emit,) async {
+    final userType = await storageService.read(StorageKeys.userType) ?? "";
+    final loginUserId = await storageService.read(StorageKeys.userId) ?? "0";
+
+
+    final isHighAuthority =
+        AppConstant.owners.contains(userType) ||
+            AppConstant.partners.contains(userType);
+
+    emit(state.copyWith(isHighAuthority: isHighAuthority,
+        loginUserId: int.parse(loginUserId)));
+  }
+
 
   Future<void> _loadTasks(
       LoadAllTasks event,

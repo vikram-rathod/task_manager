@@ -12,7 +12,10 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
   bool _otpSheetOpen = false;
   bool _multiAccountSheetOpen = false;
 
+  String get _screen => isHomeContext ? 'HomeScreen' : 'LoginScreen';
+
   Widget buildAuthListener({required Widget child}) {
+    debugPrint('[$_screen][AuthFlowHandler] buildAuthListener mounted');
     return BlocListener<AuthBloc, AuthState>(
       listener: _handleState,
       child: child,
@@ -20,41 +23,52 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
   }
 
   void _handleState(BuildContext context, AuthState state) {
+    debugPrint('[$_screen][AuthFlowHandler] _handleState fired → ${state.runtimeType}');
+
     if (state is AuthAuthenticated) {
+      debugPrint('[$_screen][AuthFlowHandler] → AuthAuthenticated | isHomeContext=$isHomeContext | user=${state.user.userEmail}');
       _onAuthenticated(context, state);
       return;
     }
     if (state is AuthSessionExpired) {
+      debugPrint('[$_screen][AuthFlowHandler] → AuthSessionExpired | isHomeContext=$isHomeContext | message="${state.message}"');
       _onSessionExpired(context, state);
       return;
     }
     if (state is AuthMultipleAccountsFound) {
+      debugPrint('[$_screen][AuthFlowHandler] → AuthMultipleAccountsFound | accounts=${state.accounts.length} | sheetOpen=$_multiAccountSheetOpen');
       _showMultiAccountSheet(context, state);
       return;
     }
     if (state is LoggedInAnotherDevice) {
+      debugPrint('[$_screen][AuthFlowHandler] → LoggedInAnotherDevice | sheetOpen=$_otpSheetOpen');
       _showOtpSheet(context, state);
       return;
     }
     if (state is AuthError) {
-      // Multi-account sheet handles AuthError inline via its own BlocListener.
-      // Only show snackbar when the sheet is NOT open.
+      debugPrint('[$_screen][AuthFlowHandler] → AuthError | message="${state.message}" | multiAccountSheetOpen=$_multiAccountSheetOpen');
       if (!_multiAccountSheetOpen) {
         _showErrorSnackbar(context, state.message);
+      } else {
+        debugPrint('[$_screen][AuthFlowHandler] AuthError suppressed — multi-account sheet is open');
       }
       return;
     }
-    // ─────────────────────────────────────────────────────────────────────────
-    // IMPORTANT: Do NOT handle AuthLoading / AuthSwitching here by popping the
-    // multi-account sheet. The sheet manages switching status internally now.
-    // Popping on AuthLoading was the root cause of the sheet closing immediately
-    // the moment an account was tapped.
-    // ─────────────────────────────────────────────────────────────────────────
+    if (state is AuthLoading) {
+      debugPrint('[$_screen][AuthFlowHandler] → AuthLoading | message="${state.message}" (ignored by handler)');
+      return;
+    }
+    if (state is AuthSwitching) {
+      debugPrint('[$_screen][AuthFlowHandler] → AuthSwitching (ignored by handler)');
+      return;
+    }
+
+    debugPrint('[$_screen][AuthFlowHandler] → Unhandled state: ${state.runtimeType}');
   }
 
   void _onAuthenticated(BuildContext context, AuthAuthenticated state) {
     if (!isHomeContext) {
-      // Show a welcome snackbar on the login screen before navigating.
+      debugPrint('[$_screen][AuthFlowHandler] _onAuthenticated → not home, will show snackbar then navigate to /home');
       final name = state.user.userName.isNotEmpty
           ? state.user.userName
           : state.user.userEmail;
@@ -65,38 +79,42 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
         icon: Icons.check_circle_outline_rounded,
       );
       Future.delayed(const Duration(milliseconds: 500), () {
+        debugPrint('[$_screen][AuthFlowHandler] _onAuthenticated → navigating to /home now | mounted=$mounted');
         if (mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
         }
       });
+    } else {
+      debugPrint('[$_screen][AuthFlowHandler] _onAuthenticated → home context, BlocBuilder handles rebuild');
     }
-    // On home: BlocBuilder rebuilds automatically.
-    // The multi-account sheet handles AuthAuthenticated via its own BlocListener.
   }
 
   void _onSessionExpired(BuildContext context, AuthSessionExpired state) {
-    // Determine whether this is a voluntary logout or a real session expiry
-    // by checking the message the bloc emits:
-    //   LogoutRequested  → "Session Expired...Log out Successfully."
-    //   session check    → "Session expired. Please login again."
-    //                    → "Not a valid session. Please login again."
     final isLogout = state.message.toLowerCase().contains('log out');
+    debugPrint('[$_screen][AuthFlowHandler] _onSessionExpired | isLogout=$isLogout | isHomeContext=$isHomeContext');
+
     final snackMessage = isLogout
         ? 'You have been logged out successfully.'
         : 'Your session has expired. Please log in again.';
     final snackColor = isLogout ? Colors.green.shade600 : Colors.orange.shade700;
     final snackIcon = isLogout ? Icons.logout_rounded : Icons.timer_off_rounded;
 
-    _showInfoSnackbar(context,
-        message: snackMessage, color: snackColor, icon: snackIcon);
+    debugPrint('[$_screen][AuthFlowHandler] _onSessionExpired → showing snackbar: "$snackMessage"');
+    _showInfoSnackbar(context, message: snackMessage, color: snackColor, icon: snackIcon);
+
+    debugPrint('[$_screen][AuthFlowHandler] _onSessionExpired → dispatching ResetAuthState immediately');
+    context.read<AuthBloc>().add(ResetAuthState());
 
     if (isHomeContext) {
-      // Small delay so the snackbar is briefly visible before the screen is replaced.
+      debugPrint('[$_screen][AuthFlowHandler] _onSessionExpired → scheduling navigation to /login in 600ms');
       Future.delayed(const Duration(milliseconds: 600), () {
+        debugPrint('[$_screen][AuthFlowHandler] _onSessionExpired → navigating to /login now | mounted=$mounted');
         if (mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
         }
       });
+    } else {
+      debugPrint('[$_screen][AuthFlowHandler] _onSessionExpired → login screen, no navigation needed');
     }
   }
 
@@ -104,8 +122,12 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
       BuildContext context,
       AuthMultipleAccountsFound state,
       ) {
-    if (_multiAccountSheetOpen) return;
+    if (_multiAccountSheetOpen) {
+      debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → already open, skipping');
+      return;
+    }
     _multiAccountSheetOpen = true;
+    debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → opening sheet');
 
     showModalBottomSheet(
       context: context,
@@ -120,7 +142,6 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
           accounts: state.accounts,
           currentUser: state.currentUser,
           isSwitch: state.isSwitch,
-          // Pass credentials so the sheet can retry the fetch itself
           username: state.username,
           password: state.password,
           deviceName: state.deviceName,
@@ -128,10 +149,7 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
           deviceUniqueId: state.deviceUniqueId,
           deviceToken: state.deviceToken,
           onAccountSelected: (account) {
-            // Dispatch ONLY — do NOT pop here.
-            // Sheet shows switching/success/failed status inline.
-            // On AuthAuthenticated → _onAuthenticated navigates and
-            // dismisses all sheets automatically.
+            debugPrint('[$_screen][AuthFlowHandler] MultiAccountSheet → account selected: ${account.userEmail}');
             context.read<AuthBloc>().add(AccountSelected(
               selectedAccount: account,
               isSwitch: state.isSwitch,
@@ -140,16 +158,20 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
         ),
       ),
     ).whenComplete(() {
+      debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → sheet closed (whenComplete)');
       _multiAccountSheetOpen = false;
-      if (!mounted) return;
+      if (!mounted) {
+        debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → not mounted, skipping cleanup');
+        return;
+      }
 
       final currentState = context.read<AuthBloc>().state;
+      debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → state after close: ${currentState.runtimeType}');
 
-      // Only reset when sheet was closed mid-flight (back button / close tap).
-      // If closed due to successful navigation, state is AuthAuthenticated — leave it.
       if (currentState is AuthMultipleAccountsFound ||
           currentState is AuthLoading ||
-          currentState is AuthSwitching ) {
+          currentState is AuthSwitching) {
+        debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → mid-flight close detected, resetting');
         if (isHomeContext) {
           final restoredUser = currentState is AuthMultipleAccountsFound
               ? currentState.currentUser
@@ -158,23 +180,32 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
               : null;
 
           if (restoredUser != null) {
+            debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → restoring user: ${restoredUser.userEmail}');
             context.read<AuthBloc>().add(RestoreAuthenticatedUser(
               user: restoredUser,
               isMultipleAccounts: true,
             ));
           } else {
+            debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → no user to restore, resetting');
             context.read<AuthBloc>().add(ResetAuthState());
           }
         } else {
+          debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → login context, resetting');
           context.read<AuthBloc>().add(ResetAuthState());
         }
+      } else {
+        debugPrint('[$_screen][AuthFlowHandler] _showMultiAccountSheet → no reset needed, state is ${currentState.runtimeType}');
       }
     });
   }
 
   void _showOtpSheet(BuildContext context, LoggedInAnotherDevice state) {
-    if (_otpSheetOpen) return;
+    if (_otpSheetOpen) {
+      debugPrint('[$_screen][AuthFlowHandler] _showOtpSheet → already open, skipping');
+      return;
+    }
     _otpSheetOpen = true;
+    debugPrint('[$_screen][AuthFlowHandler] _showOtpSheet → opening sheet');
 
     showModalBottomSheet(
       context: context,
@@ -199,11 +230,16 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
         ),
       ),
     ).whenComplete(() {
+      debugPrint('[$_screen][AuthFlowHandler] _showOtpSheet → sheet closed (whenComplete)');
       _otpSheetOpen = false;
-      if (!mounted) return;
+      if (!mounted) {
+        debugPrint('[$_screen][AuthFlowHandler] _showOtpSheet → not mounted, skipping cleanup');
+        return;
+      }
       final currentState = context.read<AuthBloc>().state;
-      if (currentState is LoggedInAnotherDevice ||
-          currentState is AuthLoading) {
+      debugPrint('[$_screen][AuthFlowHandler] _showOtpSheet → state after close: ${currentState.runtimeType}');
+      if (currentState is LoggedInAnotherDevice || currentState is AuthLoading) {
+        debugPrint('[$_screen][AuthFlowHandler] _showOtpSheet → mid-flight close, resetting');
         context.read<AuthBloc>().add(ResetAuthState());
       }
     });
@@ -211,6 +247,7 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
 
   void _showErrorSnackbar(BuildContext context, String message) {
     if (!mounted) return;
+    debugPrint('[$_screen][AuthFlowHandler] _showErrorSnackbar → "$message"');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(children: [
@@ -233,6 +270,7 @@ mixin AuthFlowHandler<T extends StatefulWidget> on State<T> {
         required IconData icon,
       }) {
     if (!mounted) return;
+    debugPrint('[$_screen][AuthFlowHandler] _showInfoSnackbar → "$message"');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(children: [

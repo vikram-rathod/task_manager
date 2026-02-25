@@ -7,6 +7,15 @@ sealed class EmployeeTaskEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class LoadUserRole extends EmployeeTaskEvent {
+  const LoadUserRole();
+
+  @override
+  List<Object?> get props => [];
+}
+
+
+
 class InitializeEmployeeTabs extends EmployeeTaskEvent {
   final String employeeUserId;
 

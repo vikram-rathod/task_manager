@@ -4,19 +4,15 @@ import 'package:flutter/foundation.dart'
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
-    // if (kIsWeb) {
-    //   return web;
-    // }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
         return ios;
-
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+              'you can reconfigure this by running the FlutterFire CLI again.',
         );
       default:
         throw UnsupportedError(
@@ -26,21 +22,21 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCELA-HYDcuz4vb71QwBsAwhdvXssQ5Utg',
-    appId: '1:288444136700:android:4a40889d280b39ebf62b79',
-    messagingSenderId: '288444136700',
-    projectId: 'bcstep-tm',
-    storageBucket: 'bcstep-tm.firebasestorage.app',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAKDUR8lxptrdEA7frmDHBqaiF1nz7xqSk',
-    appId: '1:288444136700:android:4a40889d280b39ebf62b79',
-    messagingSenderId: '288444136700',
-    projectId: 'bcstep-tm',
+    apiKey: 'AIzaSyBBxhvGia0WAiU6GM2WucCOVe1i96YO-X4',
+    appId: '1:25820351915:android:bf881c8147606ea51b16ee',
+    messagingSenderId: '25820351915',
+    projectId: 'bcstep-942ed',
     storageBucket: 'bcstep-942ed.firebasestorage.app',
-    iosBundleId: 'bcstep-tm.firebasestorage.app',
+    databaseURL: 'https://bcstep-942ed-default-rtdb.firebaseio.com',
   );
 
-
+  // Fill in once you add an iOS app in Firebase console
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyBBxhvGia0WAiU6GM2WucCOVe1i96YO-X4',
+    appId: '1:25820351915:android:bf881c8147606ea51b16ee',
+    messagingSenderId: '25820351915',
+    projectId: 'bcstep-942ed',
+    storageBucket: 'bcstep-942ed.firebasestorage.app',
+    iosBundleId: 'com.bcstep.tm',
+  );
 }

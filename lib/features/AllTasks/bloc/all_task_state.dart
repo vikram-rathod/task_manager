@@ -8,6 +8,10 @@ class AllTaskState {
   final bool hasReachedMax;
   final String searchQuery;
   final String? errorMessage;
+  final bool isHighAuthority;
+  final int loginUserId;
+
+
 
   const AllTaskState({
     this.tasks = const [],
@@ -16,6 +20,8 @@ class AllTaskState {
     this.hasReachedMax = false,
     this.searchQuery = '',
     this.errorMessage,
+    this.isHighAuthority = true,
+    this.loginUserId = 0,
   });
 
   AllTaskState copyWith({
@@ -25,6 +31,8 @@ class AllTaskState {
     bool? hasReachedMax,
     String? searchQuery,
     String? errorMessage,
+    bool? isHighAuthority,
+    int? loginUserId,
   }) {
     return AllTaskState(
       tasks: tasks ?? this.tasks,
@@ -33,6 +41,9 @@ class AllTaskState {
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
       searchQuery: searchQuery ?? this.searchQuery,
       errorMessage: errorMessage,
+      isHighAuthority: isHighAuthority ?? this.isHighAuthority,
+      loginUserId: loginUserId ?? this.loginUserId,
+
     );
   }
 }

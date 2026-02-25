@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager/reusables/taskpriority/task_priority_change_bottom_sheet.dart';
+
 import '../../../core/models/task_model.dart';
 
 class TaskCard extends StatefulWidget {
@@ -6,8 +8,11 @@ class TaskCard extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onChatTap;
   final VoidCallback? onAssignTap;
+  final VoidCallback? onRefresh;
   final EdgeInsetsGeometry? margin;
   final String searchQuery;
+  final bool canEditPriority;
+
 
   const TaskCard({
     super.key,
@@ -15,8 +20,10 @@ class TaskCard extends StatefulWidget {
     this.onTap,
     this.onChatTap,
     this.onAssignTap,
+    this.onRefresh,
     this.margin = const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
     this.searchQuery = '',
+    this.canEditPriority = false,
   });
 
   @override
@@ -136,8 +143,6 @@ class _TaskCardState extends State<TaskCard>
                               taskType: widget.task.taskType!),
                       ],
                     ),
-
-
                     // Project Name
                     if (widget.task.projectName.isNotEmpty ?? false) ...[
                       const SizedBox(height: 12),
@@ -187,21 +192,29 @@ class _TaskCardState extends State<TaskCard>
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // Priority Badge
-                    if ((widget.task.taskPriority?.isNotEmpty ??
-                        false) ||
+
+                    // ── Priority Badge (with optional edit affordance) ──
+                    if ((widget.task.taskPriority?.isNotEmpty ?? false) ||
                         (widget.task.priority?.isNotEmpty ?? false))
-                      _ModernPriorityBadge(
+                      _PriorityBadgeWithEdit(
                         priority: widget.task.taskPriority ??
-                            widget.task.priority ??
-                            '',
+                            widget.task.priority ?? '',
+                        canEdit: widget.canEditPriority,
+                        onEditTap: () => showChangePriorityBottomSheet(
+                          context: context,
+                          taskId: widget.task.taskId.toString(),
+                          currentPriority: widget.task.taskPriority ??
+                              widget.task.priority ?? '1',
+                          onSuccess: () => widget.onRefresh?.call(),
+                        ),
                       ),
+
                     const SizedBox(height: 12),
                     // Task Regn Date
                     if (widget.task.taskRegisteredDate != null)
                       _buildTimelineRow(
                         icon: Icons.event_available_rounded,
-                        label: 'Registered',
+                        label: 'Registered Date',
                         value: widget.task.taskRegisteredDate!,
                         scheme: scheme,
                       ),
@@ -245,30 +258,38 @@ class _TaskCardState extends State<TaskCard>
                       const SizedBox(height: 16),
                       Column(
                         children: [
-                          if (widget.task.makerName.isNotEmpty ?? false)
-                            _ModernTeamMember(
-                              role: 'Maker',
-                              name: widget.task.makerName,
-                              searchQuery: widget.searchQuery,
-                              color: const Color(0xFF6366F1), // Indigo
-                            ),
-                          if (widget.task.checkerName.isNotEmpty ?? false) ...[
+                          if (widget.task.checkerName.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             _ModernTeamMember(
                               role: 'Checker',
                               name: widget.task.checkerName,
                               searchQuery: widget.searchQuery,
                               color: const Color(0xFF8B5CF6), // Purple
+                              url: widget.task.checkerProfilePicUrl,
                             ),
                           ],
-                          if (widget.task.pcEngrName.isNotEmpty ?? false) ...[
+
+                          if (widget.task.makerName.isNotEmpty)...[
+                            const SizedBox(height: 8),
+                          _ModernTeamMember(
+                            role: 'Maker',
+                            name: widget.task.makerName,
+                            searchQuery: widget.searchQuery,
+                            color: const Color(0xFF6366F1),
+                            // Indigo
+                            url: widget.task.makerProfilePicUrl,
+                          ),
+                          ],
+                          if (widget.task.pcEngrName.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             _ModernTeamMember(
                               role: 'Planner/Coordinator',
                               name: widget.task.pcEngrName,
                               searchQuery: widget.searchQuery,
                               color: const Color(0xFF06B6D4), // Cyan
+                              url: widget.task.pcEngrProfilePicUrl,
                             ),
+
                           ],
                         ],
                       ),
@@ -346,6 +367,106 @@ class _TaskCardState extends State<TaskCard>
   }
 }
 
+// ========== Priority Badge with Edit ==========
+
+class _PriorityBadgeWithEdit extends StatelessWidget {
+  final String priority;
+  final bool canEdit;
+  final VoidCallback onEditTap;
+
+  const _PriorityBadgeWithEdit({
+    required this.priority,
+    required this.canEdit,
+    required this.onEditTap,
+  });
+
+  Color _getPriorityColor() {
+    switch (priority) {
+      case '1': return const Color(0xFFEF4444);
+      case '2': return const Color(0xFFF59E0B);
+      case '3': return const Color(0xFF3B82F6);
+      default:  return const Color(0xFF6B7280);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _getPriorityColor();
+
+    // Read-only badge — no edit affordance
+    if (!canEdit) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.flag_outlined, size: 14, color: color),
+            const SizedBox(width: 6),
+            Text(
+              'P-$priority',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Editable badge — tappable with a distinct edit icon
+    return GestureDetector(
+      onTap: onEditTap,
+      child: Container(
+        padding: const EdgeInsets.only(left: 10, top: 5, bottom: 5, right: 6),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: color.withOpacity(0.35),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.flag_rounded, size: 14, color: color),
+            const SizedBox(width: 6),
+            Text(
+              'P-$priority',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 4),
+            // Divider
+            Container(
+              width: 1,
+              height: 14,
+              color: color.withOpacity(0.3),
+            ),
+            const SizedBox(width: 6),
+            // Edit icon button
+            Icon(
+              Icons.edit_rounded,
+              size: 13,
+              color: color,
+            ),
+            const SizedBox(width: 2),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ========== Sub-Components ==========
 
 Widget _buildTimelineRow({
@@ -404,53 +525,6 @@ Widget _buildTimelineRow({
       ],
     ),
   );
-}
-
-class _ModernPriorityBadge extends StatelessWidget {
-  final String priority;
-
-  const _ModernPriorityBadge({required this.priority});
-
-  Color _getPriorityColor() {
-    switch (priority) {
-      case '1':
-        return const Color(0xFFEF4444);
-      case '2':
-        return const Color(0xFFF59E0B);
-      case '3':
-        return const Color(0xFF3B82F6);
-      default:
-        return const Color(0xFF6B7280);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _getPriorityColor();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.flag_outlined, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            'P-$priority',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _TaskTypeBadge extends StatelessWidget {
@@ -613,12 +687,14 @@ class _ModernTeamMember extends StatelessWidget {
   final String name;
   final String searchQuery;
   final Color color;
+  final String? url;
 
   const _ModernTeamMember({
     required this.role,
     required this.name,
     required this.searchQuery,
     required this.color,
+    this.url,
   });
 
   @override
@@ -627,15 +703,18 @@ class _ModernTeamMember extends StatelessWidget {
 
     return Row(
       children: [
-        // Avatar Circle
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.person_rounded, size: 18, color: color),
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: color.withOpacity(0.15),
+          backgroundImage: (url != null && url!.isNotEmpty)
+              ? NetworkImage(url!)
+              : null,
+          onBackgroundImageError: (url != null && url!.isNotEmpty)
+              ? (_, __) {}
+              : null,
+          child: (url == null || url!.isEmpty)
+              ? Icon(Icons.person_rounded, size: 18, color: color)
+              : null,
         ),
         const SizedBox(width: 12),
         Expanded(

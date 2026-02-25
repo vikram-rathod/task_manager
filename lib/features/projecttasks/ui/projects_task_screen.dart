@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/features/projecttasks/ui/widgets/role_filters.dart';
 import 'package:task_manager/features/projecttasks/ui/widgets/task_list.dart';
 import 'package:task_manager/features/projecttasks/ui/widgets/user_drop_down.dart';
-import 'package:task_manager/reusables/task_card.dart';
 
-import '../../../reusables/searchable_dropdown.dart';
-import '../../auth/models/user_model.dart';
 import '../../home/model/project_count_model.dart';
 import '../bloc/project_wise_task_bloc.dart';
 import '../bloc/project_wise_task_event.dart';
@@ -94,6 +90,7 @@ class _ProjectWiseTaskViewState extends State<ProjectWiseTaskView> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    context.read<ProjectWiseTaskBloc>().add(const LoadUserRole());
   }
 
   @override
@@ -214,8 +211,12 @@ class _TaskContent extends StatelessWidget {
       }
       return TaskList(
         tasks: tasks,
+        canEditPriority: state.isHighAuthority,
+        userId: state.loginUserId,
         isLoadingMore: state.isLoadingMore,
         scrollController: scrollController,
+        onRefresh: () =>
+            context.read<ProjectWiseTaskBloc>().add(const RefreshTasks()),
       );
     }
 

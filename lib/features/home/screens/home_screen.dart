@@ -114,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen>
               prev.notificationCount != cur.notificationCount,
               builder: (context, homeState) {
                 return Scaffold(
+                  resizeToAvoidBottomInset: false,
                   appBar: HomeAppBar(
                     user: user,
                     showSwitchAccount: showSwitch,
@@ -136,6 +137,9 @@ class _HomeScreenState extends State<HomeScreen>
                   floatingActionButton: const HomeFab(),
                   floatingActionButtonLocation:
                   FloatingActionButtonLocation.centerDocked,
+                  floatingActionButtonAnimator:
+                  FloatingActionButtonAnimator.scaling,
+
                 );
               },
             );

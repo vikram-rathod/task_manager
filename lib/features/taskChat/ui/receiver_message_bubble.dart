@@ -477,8 +477,8 @@ class ReceiverMessageBubble extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => FilePreviewScreen(
-          fileUrl: url,
+        builder: (_) => FilePreviewScreen.fromUrl(
+          url: url,
           fileName: fileName,
         ),
       ),

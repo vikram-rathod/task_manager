@@ -7,6 +7,11 @@ abstract class ProchatTaskEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class LoadUserRole extends ProchatTaskEvent {
+  const LoadUserRole();
+}
+
+
 // ── Task list ──────────────────────────────────────────────────────────────
 
 class ProchatTaskFetched extends ProchatTaskEvent {

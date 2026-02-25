@@ -395,8 +395,8 @@ class _TemplateItemCardState extends State<TemplateItemCard>
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => FilePreviewScreen(
-                            fileUrl: file.remoteFilePath,
+                          builder: (_) => FilePreviewScreen.fromUrl(
+                            url: file.remoteFilePath,
                             fileName: fileName,
                           ),
                         ),

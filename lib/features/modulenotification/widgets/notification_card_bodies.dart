@@ -342,6 +342,7 @@ class NotificationMentionBody extends StatelessWidget {
             message: task.message!,
             timestamp: task.messageDateTime,
             accentColor: tc.dot,
+            username: task.username,
           ),
         const SizedBox(height: NotificationDt.sp8),
         NotificationMetaGrid(
@@ -350,6 +351,7 @@ class NotificationMentionBody extends StatelessWidget {
               NotificationMetaEntry('Project', task.projectName),
             if (task.chatId?.isNotEmpty ?? false)
               NotificationMetaEntry('Chat', '#${task.chatId}'),
+
           ],
         ),
       ],
@@ -372,10 +374,10 @@ class NotificationDefaultMetaRow extends StatelessWidget {
       entries: [
         if (task.projectName.isNotEmpty)
           NotificationMetaEntry('Project', task.projectName),
-        if (task.makerName.isNotEmpty)
-          NotificationMetaEntry('Maker', task.makerName),
         if (task.checkerName.isNotEmpty)
           NotificationMetaEntry('Checker', task.checkerName),
+        if (task.makerName.isNotEmpty)
+          NotificationMetaEntry('Maker', task.makerName),
         if (task.pcName.isNotEmpty) NotificationMetaEntry('PC', task.pcName),
         if (task.status.isNotEmpty)
           NotificationMetaEntry('Status', task.status),

@@ -8,6 +8,7 @@ import 'package:task_manager/features/projecttasks/bloc/project_wise_task_event.
 import 'package:task_manager/features/projecttasks/bloc/project_wise_task_state.dart';
 import 'package:task_manager/features/utils/app_exception.dart';
 
+import '../../../core/constants/app_constant.dart';
 import '../../auth/models/user_model.dart';
 import '../../home/repository/home_repository.dart';
 import '../../home/repository/task_repository.dart';
@@ -31,6 +32,7 @@ class ProjectWiseTaskBloc
     required this.homeRepository,
     required this.storageService,
   }) : super(const ProjectWiseTaskState()) {
+    on<LoadUserRole>(_onLoadUserRole);
     on<InitializeProjectWiseTask>(_onInitialize);
     on<UserRoleSelected>(_onUserRoleSelected);
     on<MakerUserSelected>(_onMakerUserSelected);
@@ -43,6 +45,20 @@ class ProjectWiseTaskBloc
   }
 
   // ── Initialize ─────────────────────────────────────────────────────────────
+
+  Future<void> _onLoadUserRole(LoadUserRole event,
+      Emitter<ProjectWiseTaskState> emit,) async {
+    final userType = await storageService.read(StorageKeys.userType) ?? "";
+    final loginUserId = await storageService.read(StorageKeys.userId) ?? "0";
+
+
+    final isHighAuthority =
+        AppConstant.owners.contains(userType) ||
+            AppConstant.partners.contains(userType);
+
+    emit(state.copyWith(isHighAuthority: isHighAuthority,
+        loginUserId: int.tryParse(loginUserId)));
+  }
 
   Future<void> _onInitialize(
       InitializeProjectWiseTask event,

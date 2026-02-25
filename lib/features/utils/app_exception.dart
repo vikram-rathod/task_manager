@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 abstract class AppException implements Exception {
   final String message;
   final String? code;
@@ -109,27 +111,54 @@ class AppExceptionMapper {
   static AppException from(Object error) {
     if (error is AppException) return error;
 
-    final msg = error.toString();
+    if (error is DioException) {
+      switch (error.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return const NetworkException(
+            message: 'Request timed out. Please check your connection.',
+          );
+        case DioExceptionType.connectionError:
+          return const NetworkException();
+        case DioExceptionType.badResponse:
+          final statusCode = error.response?.statusCode;
+          final serverMsg = _extractServerMessage(error.response);
+          if (statusCode == 401) return const UnauthorisedException();
+          if (statusCode == 403) return const ForbiddenException();
+          if (statusCode == 404) return const NotFoundException();
+          if (statusCode != null && statusCode >= 500) {
+            return ServerException(message: serverMsg ?? 'A server error occurred.');
+          }
+          return ApiException(message: serverMsg ?? 'Unexpected error (HTTP $statusCode).');
+        case DioExceptionType.cancel:
+          return const ApiException(message: 'Request was cancelled.');
+        default:
+          return ApiException(message: error.message ?? 'Unknown network error.');
+      }
+    }
 
-    if (msg.contains('SocketException') ||
-        msg.contains('Connection refused') ||
-        msg.contains('Network is unreachable')) {
+    //  Dart core errors
+    if (error is FormatException) return const ParseException();
+
+    final msg = error.toString();
+    if (msg.contains('SocketException') || msg.contains('Network is unreachable')) {
       return const NetworkException();
     }
 
-    if (msg.contains('TimeoutException') ||
-        msg.contains('Connection timeout')) {
-      return const NetworkException(
-        message: 'Request timed out. Please check your connection.',
-      );
-    }
-
-    if (msg.contains('FormatException') ||
-        msg.contains('type \'String\' is not a subtype') ||
-        msg.contains('is not a subtype of type \'Map')) {
-      return const ParseException();
-    }
-
     return ApiException(message: msg);
+  }
+
+  /// Tries to extract a human-readable message from the server response body.
+  static String? _extractServerMessage(Response? response) {
+    try {
+      final data = response?.data;
+      if (data is Map) {
+        return data['message'] as String? ??
+            data['error'] as String? ??
+            data['msg'] as String?;
+      }
+    } catch (_) {}
+    return null;
   }
 }

@@ -28,6 +28,11 @@ class EmployeeTaskState extends Equatable {
   // Has more data flag by tab ID
   final Map<String, bool> hasMoreByTab;
 
+  final isHighAuthority;
+
+  final int loginUserId;
+
+
   const EmployeeTaskState({
     this.currentTabIndex = 0,
     this.searchQuery,
@@ -38,6 +43,8 @@ class EmployeeTaskState extends Equatable {
     this.errorsByTab = const {},
     this.pagesByTab = const {},
     this.hasMoreByTab = const {},
+    this.isHighAuthority = false,
+    this.loginUserId = 0,
   });
 
   // Convenience getters for current tab
@@ -66,6 +73,8 @@ class EmployeeTaskState extends Equatable {
     String? searchQuery,
     bool clearSearch = false,
     List<TaskTab>? tabs,
+    bool? isHighAuthority,
+    int? loginUserId,
   }) {
     return EmployeeTaskState(
       currentTabIndex: currentTabIndex ?? this.currentTabIndex,
@@ -77,6 +86,8 @@ class EmployeeTaskState extends Equatable {
       errorsByTab: errorsByTab ?? this.errorsByTab,
       pagesByTab: pagesByTab ?? this.pagesByTab,
       hasMoreByTab: hasMoreByTab ?? this.hasMoreByTab,
+      isHighAuthority: isHighAuthority ?? this.isHighAuthority,
+      loginUserId: loginUserId ?? this.loginUserId,
     );
   }
 
@@ -91,5 +102,7 @@ class EmployeeTaskState extends Equatable {
     errorsByTab,
     pagesByTab,
     hasMoreByTab,
+    isHighAuthority,
+    loginUserId,
   ];
 }

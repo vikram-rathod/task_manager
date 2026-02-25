@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/features/home/model/quick_action_model.dart';
+
 import '../../reusables/task_card.dart';
 import 'assign_task_bottom_sheet.dart';
 import 'bloc/prochat_task_bloc.dart';
@@ -21,6 +22,7 @@ class _ProChatTaskScreenState extends State<ProChatTaskScreen> {
     super.initState();
     context.read<ProchatTaskBloc>().add(const ProchatTaskFetched());
     context.read<ProchatTaskBloc>().add(const ProchatTaskSyncCheck());
+    context.read<ProchatTaskBloc>().add(const LoadUserRole());
   }
 
   Future<void> _onRefresh() async {
@@ -172,6 +174,9 @@ class _ProChatTaskScreenState extends State<ProChatTaskScreen> {
                         itemBuilder: (context, index) {
                           final task = state.tasks[index];
                           return TaskCard(
+                            canEditPriority: (task.taskPriority != '--' ) &&
+                                (state.isHighAuthority ||
+                                    state.loginUserId == task.checkerId),
                             task: task,
                             onTap: () => _onTaskTap(task),
                             onChatTap: () => _onChatTap(task),
@@ -179,6 +184,7 @@ class _ProChatTaskScreenState extends State<ProChatTaskScreen> {
                             (task.prochatTaskId?.isNotEmpty ?? false)
                                 ? () => _onAssignTap(task)
                                 : null,
+                            onRefresh: _onRefresh,
                           );
                         },
                       ),

@@ -3,6 +3,8 @@ part of 'all_task_bloc.dart';
 @immutable
 sealed class AllTaskEvent {}
 
+class LoadUserRole extends AllTaskEvent {}
+
 class LoadAllTasks extends AllTaskEvent {
   final bool reset;
   LoadAllTasks({this.reset = false});
@@ -18,3 +20,4 @@ class SearchQueryChanged extends AllTaskEvent {
 class RefreshTasks extends AllTaskEvent {}
 
 class ResetTasksState extends AllTaskEvent {}
+

@@ -226,6 +226,7 @@ class _TodaysTaskSectionState extends State<TodaysTaskSection>
             return CompactTaskCard(
               task: task,
               onTap: () => Navigator.pushNamed(context, '/taskDetails', arguments: task),
+
             );
           },
         );

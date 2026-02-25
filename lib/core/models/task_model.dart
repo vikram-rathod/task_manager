@@ -33,6 +33,11 @@ class TMTasksModel {
   final String? updatedAt;
   final String? taskType;
 
+  final String? userProfilePicUrl;
+  final String? checkerProfilePicUrl;
+  final String? makerProfilePicUrl;
+  final String? pcEngrProfilePicUrl;
+
   TMTasksModel({
     this.projectId = '',
     this.projectName = '',
@@ -61,6 +66,10 @@ class TMTasksModel {
     this.createdAt,
     this.updatedAt,
     this.taskType,
+    this.userProfilePicUrl,
+    this.checkerProfilePicUrl,
+    this.makerProfilePicUrl,
+    this.pcEngrProfilePicUrl,
   });
 
   factory TMTasksModel.fromJson(Map<String, dynamic> json) {
@@ -97,6 +106,11 @@ class TMTasksModel {
       createdAt: json['created_at']?.toString(),
       updatedAt: json['updated_at']?.toString(),
       taskType: json['task_type']?.toString(),
+      userProfilePicUrl: json['user_profile_pic_url']?.toString(),
+      checkerProfilePicUrl: json['checker_profile_pic_url']?.toString(),
+      makerProfilePicUrl: json['maker_profile_pic_url']?.toString(),
+      pcEngrProfilePicUrl: json['pc_profile_pic_url']?.toString(),
+
     );
   }
 
@@ -129,6 +143,10 @@ class TMTasksModel {
       'created_at': createdAt,
       'updated_at': updatedAt,
       'task_type': taskType,
+      'user_profile_pic_url': userProfilePicUrl,
+      'checker_profile_pic_url': checkerProfilePicUrl,
+      'maker_profile_pic_url': makerProfilePicUrl,
+      'pc_profile_pic_url': pcEngrProfilePicUrl,
     };
   }
   @override

@@ -159,7 +159,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                       ),
                       _buildBadge(
                         label: 'Priority',
-                        value: task.taskPriority,
+                        value: task.taskPriority ?? task.priority  ?? "--",
                         icon: Icons.flag_rounded,
                         scheme: scheme,
                       ),
@@ -216,7 +216,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionTitle(Icons.folder_rounded,'Project', scheme: scheme),
+                        _buildSectionTitle(Icons.folder_rounded,'Project & Task Type', scheme: scheme),
                         const SizedBox(height: 16),
                         _buildInfoRow(
                           icon: Icons.folder_rounded,
@@ -250,73 +250,81 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                           role: 'UserName',
                           name: task.userName,
                           scheme: scheme,
+                          url: task.userProfilePicUrl,
                         ),
-                      if (task.makerName.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        _buildRoleRow(
-                          role: 'Maker',
-                          name: task.makerName,
-                          scheme: scheme,
-                        ),
-                      ],
+
                       if (task.checkerName.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         _buildRoleRow(
                           role: 'Checker',
                           name: task.checkerName,
                           scheme: scheme,
+                          url: task.checkerProfilePicUrl,
                         ),
                       ],
+
+                      if (task.makerName.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        _buildRoleRow(
+                          role: 'Maker',
+                          name: task.makerName,
+                          scheme: scheme,
+                          url: task.makerProfilePicUrl,
+                        ),
+                      ],
+
                       if (task.pcEngrName.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         _buildRoleRow(
                           role: 'Planner/Coordinator',
                           name: task.pcEngrName,
                           scheme: scheme,
+                          url: task.pcEngrProfilePicUrl,
                         ),
                       ],
                       if (task.createdByName != null &&
                           task.createdByName!.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         _buildRoleRow(
-                          role: 'Created By',
+                          role: 'Created By Vikram Baba',
                           name: task.createdByName!,
                           scheme: scheme,
+                          url: task.userProfilePicUrl,
                         ),
                       ],
                     ],
                   ),
                 ),
 
-                // Team Members
-                if (task.teamMembers.isNotEmpty)
-                  _buildCard(
-                    scheme: scheme,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionTitle(
-                          Icons.group_rounded,
-                          'Team Members (${task.teamMembers.length})',
-                          scheme: scheme,
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          height: 90,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: task.teamMembers.length,
-                            separatorBuilder: (context, index) =>
-                            const SizedBox(width: 12),
-                            itemBuilder: (context, index) {
-                              final member = task.teamMembers[index];
-                              return _buildTeamMemberCard(member, scheme);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                // // Team Members
+                // if (task.teamMembers.isNotEmpty)
+                //   _buildCard(
+                //     scheme: scheme,
+                //     child: Column(
+                //       crossAxisAlignment: CrossAxisAlignment.start,
+                //       children: [
+                //         _buildSectionTitle(
+                //           Icons.group_rounded,
+                //           'Team Members (${task.teamMembers.length})',
+                //           scheme: scheme,
+                //         ),
+                //         const SizedBox(height: 16),
+                //         SizedBox(
+                //           height: 90,
+                //           child: ListView.separated(
+                //             scrollDirection: Axis.horizontal,
+                //             itemCount: task.teamMembers.length,
+                //             separatorBuilder: (context, index) =>
+                //             const SizedBox(width: 12),
+                //             itemBuilder: (context, index) {
+                //               final member = task.teamMembers[index];
+                //               return _buildTeamMemberCard(member, scheme);
+                //             },
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
 
                 // Timeline
                 _buildCard(
@@ -590,33 +598,36 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     required String role,
     required String name,
     required ColorScheme scheme,
+    required String? url,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: scheme.outline,width: 0.2),
+        border: Border.all(color: scheme.outline, width: 0.2),
       ),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: scheme.primaryContainer,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onPrimaryContainer,
-                ),
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: scheme.primaryContainer,
+            backgroundImage: (url != null && url.isNotEmpty)
+                ? NetworkImage(url)
+                : null,
+            onBackgroundImageError: (url != null && url.isNotEmpty)
+                ? (_, __) {} // falls back to child on error
+                : null,
+            child: (url == null || url.isEmpty)
+                ? Text(
+              name.isNotEmpty ? name[0].toUpperCase() : '?',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: scheme.onPrimaryContainer,
               ),
-            ),
+            )
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(

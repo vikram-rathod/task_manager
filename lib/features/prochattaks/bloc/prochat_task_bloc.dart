@@ -5,6 +5,7 @@ import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/core/storage/storage_keys.dart';
 import 'package:task_manager/core/storage/storage_service.dart';
 
+import '../../../core/constants/app_constant.dart';
 import '../../../core/models/project_model.dart';
 import '../../auth/models/user_model.dart';
 import '../../home/repository/home_repository.dart';
@@ -21,6 +22,7 @@ class ProchatTaskBloc extends Bloc<ProchatTaskEvent, ProchatTaskState> {
 
   ProchatTaskBloc(this._repository, this._homeRepository, this._storageService)
       : super(const ProchatTaskState()) {
+    on<LoadUserRole>(_onLoadUserRole);
     // Task list
     on<ProchatTaskFetched>(_onFetched);
     on<ProchatTaskRefreshed>(_onRefreshed);
@@ -44,6 +46,21 @@ class ProchatTaskBloc extends Bloc<ProchatTaskEvent, ProchatTaskState> {
     on<ProchatAssignPreselect>(_onAssignPreselect);
 
   }
+
+  Future<void> _onLoadUserRole(LoadUserRole event,
+      Emitter<ProchatTaskState> emit,) async {
+    final userType = await _storageService.read(StorageKeys.userType) ?? "";
+    final loginUserId = await _storageService.read(StorageKeys.userId) ?? "0";
+
+
+    final isHighAuthority =
+        AppConstant.owners.contains(userType) ||
+            AppConstant.partners.contains(userType);
+
+    emit(state.copyWith(isHighAuthority: isHighAuthority,
+        loginUserId: int.tryParse(loginUserId)));
+  }
+
 
   Future<({String userId, String companyId, String userType})>
   _readCredentials() async {

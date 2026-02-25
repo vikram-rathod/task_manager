@@ -39,6 +39,8 @@ class ApiConstants {
   static const String insertNewTask = '${baseUrl}insert_new_task.php';
   static const String taskList = '${baseUrl}task_list.php';
   static const String taskDetails = '${baseUrl}get_task_details.php';
+  static const String changePriority = '${baseUrl}change_priority.php';
+
 
   // Task Chat
   static const String getTaskChat = '${baseUrl}get_task_chat.php';
