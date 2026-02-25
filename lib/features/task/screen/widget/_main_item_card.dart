@@ -122,7 +122,7 @@ class MainItemCardState extends State<MainItemCard>
                               _badge(
                                 cs,
                                 icon: Icons.task_alt_rounded,
-                                label: "$transferredTasks/$totalTasks done",
+                                label: "$transferredTasks/$totalTasks Assigned",
                                 color: allDone ? cs.primary : cs.tertiary,
                                 bg: allDone
                                     ? cs.primaryContainer

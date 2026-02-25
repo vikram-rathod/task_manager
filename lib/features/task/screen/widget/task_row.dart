@@ -76,7 +76,7 @@ class TaskRowState extends State<TaskRow> {
 
                   const SizedBox(width: 8),
 
-                  /// Transfer or Done pill
+                  /// Transfer or Assigned pill
                   if (widget.task.transferStatus)
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -92,7 +92,7 @@ class TaskRowState extends State<TaskRow> {
                               size: 13, color: cs.primary),
                           const SizedBox(width: 4),
                           Text(
-                            "Done",
+                            "Assigned",
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -154,48 +154,49 @@ class TaskRowState extends State<TaskRow> {
               /// EXPANDED DETAILS
               if (expanded && hasDetails) ...[
                 const SizedBox(height: 10),
-                Divider(height: 1, color: cs.outlineVariant),
+                Divider(height: 1, color: cs.outlineVariant.withOpacity(0.4),),
                 const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _infoChip(
-                        cs,
-                        icon: Icons.build_rounded,
-                        label: "Maker",
-                        value: widget.task.taskDetails?.makerName
-                            ?.isNotEmpty ==
-                            true
-                            ? widget.task.taskDetails!.makerName!
-                            : "-",
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _infoChip(
-                        cs,
-                        icon: Icons.verified_rounded,
-                        label: "Checker",
-                        value: widget.task.taskDetails?.checkerName
-                            ?.isNotEmpty ==
-                            true
-                            ? widget.task.taskDetails!.checkerName!
-                            : "-",
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                _infoChip(
-                  cs,
-                  icon: Icons.engineering_rounded,
-                  label: "Planner/Coordinator",
-                  value: widget.task.taskDetails?.pcEngrName?.isNotEmpty ==
-                      true
-                      ? widget.task.taskDetails!.pcEngrName!
-                      : "-",
-                  fullWidth: true,
-                ),
+
+                if (widget.task.taskDetails?.makerName?.isNotEmpty == true ||
+                    widget.task.taskDetails?.checkerName?.isNotEmpty == true)
+                  Row(
+                    children: [
+                      if (widget.task.taskDetails?.makerName?.isNotEmpty == true)
+                        Expanded(
+                          child: _infoChip(
+                            cs,
+                            icon: Icons.build_rounded,
+                            label: "Maker",
+                            value: widget.task.taskDetails!.makerName!,
+                          ),
+                        ),
+
+                      if (widget.task.taskDetails?.makerName?.isNotEmpty == true &&
+                          widget.task.taskDetails?.checkerName?.isNotEmpty == true)
+                        const SizedBox(width: 8),
+
+                      if (widget.task.taskDetails?.checkerName?.isNotEmpty == true)
+                        Expanded(
+                          child: _infoChip(
+                            cs,
+                            icon: Icons.verified_rounded,
+                            label: "Checker",
+                            value: widget.task.taskDetails!.checkerName!,
+                          ),
+                        ),
+                    ],
+                  ),
+
+                if (widget.task.taskDetails?.pcEngrName?.isNotEmpty == true) ...[
+                  const SizedBox(height: 8),
+                  _infoChip(
+                    cs,
+                    icon: Icons.engineering_rounded,
+                    label: "Planner/Coordinator",
+                    value: widget.task.taskDetails!.pcEngrName!,
+                    fullWidth: true,
+                  ),
+                ],
               ],
             ],
           ),

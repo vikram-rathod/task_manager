@@ -178,7 +178,7 @@ class _ProChatTaskScreenState extends State<ProChatTaskScreen> {
                                 (state.isHighAuthority ||
                                     state.loginUserId == task.checkerId),
                             task: task,
-                            onTap: () => _onTaskTap(task),
+                            // onTap: () => _onTaskTap(task),
                             onChatTap: () => _onChatTap(task),
                             onAssignTap:
                             (task.prochatTaskId?.isNotEmpty ?? false)

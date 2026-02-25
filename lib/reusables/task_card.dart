@@ -189,6 +189,7 @@ class _TaskCardState extends State<TaskCard>
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : Colors.black87,
                         height: 1.4,
+
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -750,17 +751,27 @@ class _HighlightedText extends StatelessWidget {
   final String text;
   final String query;
   final TextStyle style;
+  final int maxLines;
 
   const _HighlightedText({
     required this.text,
     required this.query,
     required this.style,
+    this.maxLines = 4,
   });
 
   @override
   Widget build(BuildContext context) {
     if (query.isEmpty) {
-      return Text(text, style: style);
+      return Tooltip(
+        message: text,
+        child: Text(
+          text,
+          style: style,
+          maxLines: maxLines,
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
     }
 
     final theme = Theme.of(context);
@@ -784,8 +795,7 @@ class _HighlightedText extends StatelessWidget {
           TextSpan(
             text: text.substring(matchIndex, matchIndex + query.length),
             style: TextStyle(
-              backgroundColor:
-              theme.primaryColor.withOpacity(0.3),
+              backgroundColor: theme.primaryColor.withOpacity(0.3),
               color: theme.primaryColor,
               fontWeight: FontWeight.bold,
             ),
@@ -796,8 +806,13 @@ class _HighlightedText extends StatelessWidget {
       }
     }
 
-    return RichText(
-      text: TextSpan(style: style, children: spans),
+    return Tooltip(
+      message: text,
+      child: RichText(
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+        text: TextSpan(style: style, children: spans),
+      ),
     );
   }
 }
