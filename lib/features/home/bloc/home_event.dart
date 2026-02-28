@@ -13,13 +13,43 @@ class ClearQuickActionsError extends HomeEvent {}
 
 class FetchTaskHistory extends HomeEvent {}
 
-class LoadProjectList extends HomeEvent {}
+class LoadProjectList extends HomeEvent {
+
+  final String page;
+  final String size;
+
+  const LoadProjectList({required this.page,
+    required this.size,
+  });
+
+  @override
+  List<Object?> get props =>
+      [
+        page,
+        size,
+      ];
+}
 
 class ClearProjectList extends HomeEvent {}
 
 class ClearTaskHistoryError extends HomeEvent {}
 
-class LoadEmployeeWiseTaskList extends HomeEvent {}
+class LoadEmployeeWiseTaskList extends HomeEvent {
+  final int page;
+  final int size;
+
+  const LoadEmployeeWiseTaskList({required this.page,
+    required this.size,
+  });
+
+  @override
+  List<Object?> get props =>
+      [
+        page,
+        size,
+      ];
+
+}
 
 class ClearEmployeeWiseTaskListError extends HomeEvent {}
 

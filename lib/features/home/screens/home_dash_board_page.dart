@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/features/home/screens/project_section.dart';
 import 'package:task_manager/features/home/screens/quick_action_section.dart';
@@ -25,8 +24,8 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     final bloc = context.read<HomeBloc>();
     bloc.add(FetchQuickActions());
     bloc.add(FetchTaskHistory());
-    bloc.add(LoadProjectList());
-    bloc.add(LoadEmployeeWiseTaskList());
+    bloc.add(LoadProjectList(page: "1", size: '10'));
+    bloc.add(LoadEmployeeWiseTaskList(page: 1, size: 10));
     bloc.add(const FetchTodaysTasks(page: 1, isMyTasks: true));
 
   }
@@ -37,8 +36,9 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
       onRefresh: () async {
         context.read<HomeBloc>().add(FetchQuickActions());
         context.read<HomeBloc>().add(FetchTaskHistory());
-        context.read<HomeBloc>().add(LoadProjectList());
-        context.read<HomeBloc>().add(LoadEmployeeWiseTaskList());
+        context.read<HomeBloc>().add(LoadProjectList(page: "1", size: '10'));
+        context.read<HomeBloc>().add(
+            LoadEmployeeWiseTaskList(page: 1, size: 10,));
         context.read<HomeBloc>().add(const FetchTodaysTasks(page: 1, isMyTasks: true));
         context.read<AuthBloc>().add(SessionCheckRequested());
       },

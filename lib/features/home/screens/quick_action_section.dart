@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shimmer/shimmer.dart';
@@ -10,8 +11,70 @@ import '../../template/bloc/template_bloc.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_state.dart';
 
-class QuickActionSection extends StatelessWidget {
+class QuickActionSection extends StatefulWidget {
   const QuickActionSection({super.key});
+
+  @override
+  State<QuickActionSection> createState() => _QuickActionSectionState();
+}
+
+class _QuickActionSectionState extends State<QuickActionSection> {
+  late final ScrollController _scrollController;
+  Timer? _autoScrollTimer;
+
+  // How often to scroll (milliseconds)
+  static const _scrollInterval = Duration(milliseconds: 2500);
+  // How far each step scrolls (pixels)
+  static const double _scrollStep = 160.0;
+  // Animation duration for each scroll step
+  static const _scrollDuration = Duration(milliseconds: 600);
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _startAutoScroll();
+  }
+
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = Timer.periodic(_scrollInterval, (_) {
+      if (!_scrollController.hasClients) return;
+
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.offset;
+
+      if (currentScroll >= maxScroll) {
+        // Snap back to start smoothly
+        _scrollController.animateTo(
+          0,
+          duration: _scrollDuration,
+          curve: Curves.easeInOut,
+        );
+      } else {
+        _scrollController.animateTo(
+          (currentScroll + _scrollStep).clamp(0.0, maxScroll),
+          duration: _scrollDuration,
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  void _pauseAutoScroll() {
+    _autoScrollTimer?.cancel();
+  }
+
+  void _resumeAutoScroll() {
+    _startAutoScroll();
+  }
+
+  @override
+  void dispose() {
+    _autoScrollTimer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,15 +85,12 @@ class QuickActionSection extends StatelessWidget {
       p.quickActions != c.quickActions ||
           p.isQuickActionsLoading != c.isQuickActionsLoading,
       builder: (context, state) {
-
         if (state.quickActions.isEmpty) {
           return const SizedBox.shrink();
         }
 
         return Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -62,161 +122,177 @@ class QuickActionSection extends StatelessWidget {
               const SizedBox(height: 8),
               SizedBox(
                 height: 60,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  itemCount: state.quickActions.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final action = state.quickActions[index];
-                    final showPendingBreakdown =
-                        (action.id == 'dueToday' || action.id == 'overDue') &&
-                            action.count > 0;
+                // Pause auto-scroll when the user manually drags
+                child: Listener(
+                  onPointerDown: (_) => _pauseAutoScroll(),
+                  onPointerUp: (_) => _resumeAutoScroll(),
+                  onPointerCancel: (_) => _resumeAutoScroll(),
+                  child: ListView.separated(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    itemCount: state.quickActions.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final action = state.quickActions[index];
+                      final showPendingBreakdown =
+                          (action.id == 'dueToday' || action.id == 'overDue') &&
+                              action.count > 0;
 
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        switch (action.id) {
-                          case 'addTask':
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                MultiBlocProvider(
-                                  providers: [
-                                    BlocProvider(create: (_) => sl<TaskListBloc>()),
-                                    BlocProvider(create: (_) => sl<CreateTaskBloc>()),
-                                    BlocProvider(create: (_) => sl<TemplateBloc>()),
-                                  ],
-                                  child: const TaskListScreen(),
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          switch (action.id) {
+                            case 'addTask':
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => MultiBlocProvider(
+                                    providers: [
+                                      BlocProvider(
+                                          create: (_) => sl<TaskListBloc>()),
+                                      BlocProvider(
+                                          create: (_) =>
+                                              sl<CreateTaskBloc>()),
+                                      BlocProvider(
+                                          create: (_) => sl<TemplateBloc>()),
+                                    ],
+                                    child: const TaskListScreen(),
+                                  ),
+                                ),
+                              );
+                              break;
+                            case 'prochat':
+                              Navigator.pushNamed(context, '/prochat',
+                                  arguments: action);
+                              break;
+                            case 'dueToday':
+                              Navigator.pushNamed(context, '/dueToday',
+                                  arguments: action);
+                              break;
+                            case 'overDue':
+                              Navigator.pushNamed(context, '/overdue',
+                                  arguments: action);
+                              break;
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: action.isHighlighted
+                                ? scheme.primary.withOpacity(0.75)
+                                : scheme.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: action.isHighlighted
+                                  ? Colors.transparent
+                                  : scheme.outline.withOpacity(0.5),
+                              width: action.isHighlighted ? 0 : 0.2,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: action.isHighlighted
+                                      ? scheme.surface
+                                      : _getIconBackgroundColor(
+                                      context, action.id),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  action.icon,
+                                  size: 18,
+                                  color: action.isHighlighted
+                                      ? scheme.primary
+                                      : _getIconColor(action.id),
                                 ),
                               ),
-                            );
-                            break;
-                          case 'prochat':
-                            Navigator.pushNamed(context, '/prochat', arguments: action);
-                            break;
-                          case 'dueToday':
-                            Navigator.pushNamed(context, '/dueToday', arguments: action);
-                            break;
-                          case 'overDue':
-                            Navigator.pushNamed(context, '/overdue', arguments: action);
-                            break;
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: action.isHighlighted
-                              ? scheme.primary.withOpacity(0.75)
-                              : scheme.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: action.isHighlighted
-                                ? Colors.transparent
-                                : scheme.outline.withOpacity(0.5),
-                            width: action.isHighlighted ? 0 : 0.2,
+                              const SizedBox(width: 8),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    action.label,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: action.isHighlighted
+                                          ? scheme.onPrimary
+                                          : scheme.onSurface,
+                                      height: 1.1,
+                                    ),
+                                  ),
+                                  if (state.isQuickActionsLoading &&
+                                      action.id != 'addTask') ...[
+                                    const SizedBox(height: 3),
+                                    Shimmer.fromColors(
+                                      baseColor: action.isHighlighted
+                                          ? Colors.white.withOpacity(0.3)
+                                          : Colors.grey.shade300,
+                                      highlightColor: action.isHighlighted
+                                          ? Colors.white.withOpacity(0.6)
+                                          : Colors.grey.shade100,
+                                      child: Container(
+                                        width: 48,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                          BorderRadius.circular(4),
+                                        ),
+                                      ),
+                                    ),
+                                  ] else if (showPendingBreakdown) ...[
+                                    const SizedBox(height: 3),
+                                    _buildPendingCount(
+                                      action.pendingAtMe,
+                                      action.count,
+                                      action.isHighlighted,
+                                      action.id,
+                                      action.pendingAtOthers,
+                                    ),
+                                  ] else if (action.count > 0) ...[
+                                    const SizedBox(height: 3),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 1,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: action.isHighlighted
+                                            ? scheme.primary
+                                            : _getIconBackgroundColor(
+                                            context, action.id),
+                                        borderRadius:
+                                        BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '${action.count}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                          color: action.isHighlighted
+                                              ? scheme.onPrimary
+                                              : _getIconColor(action.id),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: action.isHighlighted
-                                    ? scheme.surface
-                                    : _getIconBackgroundColor(context, action.id),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                action.icon,
-                                size: 18,
-                                color: action.isHighlighted
-                                    ? scheme.primary
-                                    : _getIconColor(action.id),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  action.label,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: action.isHighlighted
-                                        ? scheme.onPrimary
-                                        : scheme.onSurface,
-                                    height: 1.1,
-                                  ),
-                                ),
-
-                                if (state.isQuickActionsLoading &&
-                                    action.id != 'addTask') ...[
-                                  const SizedBox(height: 3),
-                                  Shimmer.fromColors(
-                                    baseColor: action.isHighlighted
-                                        ? Colors.white.withOpacity(0.3)
-                                        : Colors.grey.shade300,
-                                    highlightColor: action.isHighlighted
-                                        ? Colors.white.withOpacity(0.6)
-                                        : Colors.grey.shade100,
-                                    child: Container(
-                                      width: 48,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                    ),
-                                  ),
-                                ] else if (showPendingBreakdown) ...[
-                                  const SizedBox(height: 3),
-                                  _buildPendingCount(
-                                    action.pendingAtMe,
-                                    action.count,
-                                    action.isHighlighted,
-                                    action.id,
-                                    action.pendingAtOthers
-                                  ),
-                                ] else if (action.count > 0) ...[
-                                  const SizedBox(height: 3),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 1,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: action.isHighlighted
-                                          ? scheme.primary
-                                          : _getIconBackgroundColor(context, action.id),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      '${action.count}',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11,
-                                        color: action.isHighlighted
-                                            ? scheme.onPrimary
-                                            : _getIconColor(action.id),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
@@ -231,7 +307,7 @@ class QuickActionSection extends StatelessWidget {
       int total,
       bool isHighlighted,
       String actionId,
-      int pendingAtOthers
+      int pendingAtOthers,
       ) {
     return RichText(
       text: TextSpan(

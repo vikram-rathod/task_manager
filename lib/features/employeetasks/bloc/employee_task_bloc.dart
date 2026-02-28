@@ -73,7 +73,7 @@ class EmployeeTaskBloc extends Bloc<EmployeeTaskEvent, EmployeeTaskState> {
       // Viewing others' tasks
       const TaskTab(
         id: '0',
-        label: 'For U',
+        label: 'For User',
         icon: Icons.person_outline_rounded,
       ),
       const TaskTab(

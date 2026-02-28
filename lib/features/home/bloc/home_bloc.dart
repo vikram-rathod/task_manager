@@ -19,7 +19,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   late final StreamSubscription _authSubscription;
 
-
   HomeBloc(this.repository, this.authBloc) : super(const HomeState()) {
 
     on<RefreshHomeData>(_onRefreshHomeData);
@@ -27,7 +26,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<ClearQuickActionsError>(_clearQuickActionsError);
     on<FetchTaskHistory>(_fetchTaskHistory);
     on<ClearTaskHistoryError>(_clearTaskHistoryError);
-    on<LoadProjectList>(_onLoadProjectList);
+    on<LoadProjectList>(_onLoadProjectCountList);
     on<ClearProjectList>(_onClearProjectList);
     on<LoadEmployeeWiseTaskList>(_fetchEmployeeWiseTaskList);
     on<ClearEmployeeWiseTaskListError>(_clearEmployeeWiseTaskListError);
@@ -50,8 +49,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     add(FetchQuickActions());
     add(FetchTaskHistory());
-    add(LoadProjectList());
-    add(LoadEmployeeWiseTaskList());
+    add(LoadProjectList(page: "1", size: '10',));
+    add(LoadEmployeeWiseTaskList(page: 1, size: 10));
     add(const FetchTodaysTasks(page: 1, isMyTasks: true));
   }
 
@@ -60,20 +59,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       Emitter<HomeState> emit,
       ) async {
     final staticActions = [
-      QuickActionModel(
-        id: 'addTask',
-        icon: Icons.add,
-        label: 'Add Task-List',
-        isHighlighted: true,
-        onTap: () {},
-      ),
-      QuickActionModel(
-        id: 'prochat',
-        icon: Icons.chat_bubble_outline,
-        label: 'Prochat Tasks',
-        count: 0,
-        onTap: () {},
-      ),
       QuickActionModel(
         id: 'dueToday',
         icon: Icons.today,
@@ -92,8 +77,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         pendingAtOthers: 0,
         onTap: () {},
       ),
-    ];
+      QuickActionModel(
+        id: 'prochat',
+        icon: Icons.chat_bubble_outline,
+        label: 'Prochat Tasks',
+        count: 0,
+        onTap: () {},
+      ),
 
+      QuickActionModel(
+        id: 'addTask',
+        icon: Icons.add,
+        label: 'Add Task-List',
+        isHighlighted: false,
+        onTap: () {},
+      ),
+    ];
     emit(state.copyWith(
       isQuickActionsLoading: true,
       quickActions: staticActions,
@@ -173,27 +172,49 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(state.copyWith(taskHistoryError: null));
   }
 
-  Future<void> _onLoadProjectList(
-    LoadProjectList event,
-    Emitter<HomeState> emit,
-  ) async {
-    emit(state.copyWith(isProjectsLoading: true, projectsError: null));
+  Future<void> _onLoadProjectCountList(LoadProjectList event,
+      Emitter<HomeState> emit,) async {
+    final page = event.page;
+    final size = event.size;
+
+    // If first page → show full loader
+    if (page == 1) {
+      emit(state.copyWith(
+        isProjectsLoading: true,
+        projectsError: null,
+      ));
+    }
+
     try {
-      final projectsCountList = await repository.getProjectsCountList();
-      emit(
-        state.copyWith(projects: projectsCountList, isProjectsLoading: false),
+      final projectCountData = await repository.getProjectsCountList(
+        page: page,
+        size: size,
       );
+
+      final updatedList = page == 1
+          ? projectCountData.list
+          : [...state.projectCountsList, ...projectCountData.list];
+
+      emit(state.copyWith(
+        projects: updatedList,
+        isProjectsLoading: false,
+        projectsError: null,
+        hasMoreProjects: projectCountData.list.length == size,
+        totalProjects: projectCountData.total,
+      ));
     } catch (e) {
       debugPrint('[HomeBloc] Error in LoadProjectList: $e');
       final exception = AppExceptionMapper.from(e);
-      emit(
-        state.copyWith(isProjectsLoading: false, projectsError: exception.message),
-      );
+
+      emit(state.copyWith(
+        isProjectsLoading: false,
+        projectsError: exception.message,
+      ));
     }
   }
 
   void _onClearProjectList(ClearProjectList event, Emitter<HomeState> emit) {
-    emit(state.copyWith(projects: []));
+    emit(state.copyWith(projects: [], totalProjects: 0, hasMoreProjects: true));
   }
 
   FutureOr<void> _clearQuickActionsError(
@@ -208,20 +229,46 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       LoadEmployeeWiseTaskList event,
       Emitter<HomeState> emit,
       ) async {
-    emit(state.copyWith(isEmployeeWiseTaskListLoading: true, employeeWiseTaskListError: null));
+    final page = event.page;
+    final size = event.size;
+
+    if (page == 1) {
+      emit(state.copyWith(
+        isEmployeeWiseTaskListLoading: true,
+        employeeWiseTaskListError: null,
+      ));
+    }
+
     try {
-      final employeeWiseTaskList = await repository.getEmployeeWiseTaskList();
-      debugPrint("Fetched EmployeeWiseTaskList: $employeeWiseTaskList");
-      emit(
-        state.copyWith(employeeWiseTaskList: employeeWiseTaskList, isEmployeeWiseTaskListLoading: false),
+      final response = await repository.getEmployeeWiseTaskList(
+        page: page.toString(),
+        size: size.toString(),
       );
+
+      final newItems = response.list;
+
+      final updatedList = page == 1
+          ? newItems
+          : [...state.employeeWiseTaskList, ...newItems];
+
+      final total = response.total;
+
+      emit(state.copyWith(
+        employeeWiseTaskList: updatedList,
+        totalEmployeeWiseTaskList: total,
+        isEmployeeWiseTaskListLoading: false,
+        employeeWiseTaskListError: null,
+
+        hasMoreEmployeeWiseTaskList: updatedList.length < total,
+      ));
     } catch (e, stackTrace) {
-      debugPrint('[HomeBloc] Error in LoadEmployeeWiseTaskList: $e');
       final exception = AppExceptionMapper.from(e);
       debugPrint(stackTrace.toString());
-      emit(
-        state.copyWith(isEmployeeWiseTaskListLoading: false, employeeWiseTaskListError: exception.message),
-      );
+
+      emit(state.copyWith(
+        isEmployeeWiseTaskListLoading: false,
+        employeeWiseTaskListError: exception.message,
+      ));
     }
   }
 

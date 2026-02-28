@@ -211,7 +211,7 @@ class _MultiAccountSheetState extends State<MultiAccountSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Select an Account',
+                        Text('Multiple Account Found',
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 4),
                         Text('Choose an account to continue',
@@ -415,9 +415,9 @@ class _MultiAccountSheetState extends State<MultiAccountSheet> {
                                 ),
                               ),
 
-                              if (isCurrentAccount)
-                                Icon(Icons.check_circle,
-                                    color: scheme.primary, size: 24),
+                              // if (isCurrentAccount)
+                              //   Icon(Icons.check_circle,
+                              //       color: scheme.primary, size: 24),
                             ],
                           ),
                         ),

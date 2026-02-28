@@ -3,7 +3,7 @@ class EmployeeModel {
   final int userId;
   final String userName;
   final int totalTaskCount;
-  final int completedTaskCount;
+  final double completedTaskCount;
   final int inProgressTaskCount;
   final String userProfileUrl;
   final int pendingAtMe;
@@ -29,7 +29,7 @@ class EmployeeModel {
       userId: json['user_id'] ?? 0,
       userName: json['user_name'] ?? '',
       totalTaskCount: json['total_tasks_count'] ?? 0,
-      completedTaskCount: json['completed_task_count'] ?? 0,
+      completedTaskCount: (json['completed_task_count'] as num?)?.toDouble() ?? 0.0,
       inProgressTaskCount: json['in_progress_task_count'] ?? 0,
       userProfileUrl: json['user_profile_url'] ?? '',
       pendingAtMe: json['pending_at_me'] ?? 0,

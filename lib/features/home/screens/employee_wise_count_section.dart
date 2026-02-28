@@ -27,7 +27,7 @@ class EmployeeSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _EmployeeHeader(count: state.employeeWiseTaskList.length),
+              _EmployeeHeader(count: state.totalEmployeeWiseTaskList),
               SizedBox(
                 height: 130,
                 child: state.isEmployeeWiseTaskListLoading

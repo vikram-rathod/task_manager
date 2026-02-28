@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/features/home/model/dash_board_count_model.dart';
+import 'package:task_manager/features/home/model/employee_count_list_data.dart';
 import 'package:task_manager/features/home/model/task_history_model.dart';
 
 import '../../../core/models/project_model.dart';
@@ -9,8 +10,7 @@ import '../../../core/storage/storage_service.dart';
 import '../../auth/models/api_response.dart';
 import '../../auth/models/user_model.dart';
 import '../../utils/app_exception.dart';
-import '../model/employee_count_model.dart';
-import '../model/project_count_model.dart';
+import '../model/project_count_list_data.dart';
 import '../services/home_service.dart';
 
 class HomeRepository {
@@ -61,15 +61,22 @@ class HomeRepository {
     }
   }
 
-  Future<List<ProjectCountModel>> getProjectsCountList() async {
+  Future<ProjectListData> getProjectsCountList({
+    required String page,
+    required String size
+  }) async {
     try {
       final c = await _getCredentials();
-      debugPrint('getProjectsCountList: userId=${c.userId}');
+      debugPrint(
+          'getProjectsCountList: userId=${c.userId} | page=$page | size=$size');
       final response = await _homeService.getProjectsCountList(
         userId: c.userId,
         companyId: c.companyId,
         userType: c.userType,
+          page: page,
+          size: size
       );
+
       return _requireData(response, 'Failed to load project counts.');
     } on AppException {
       rethrow;
@@ -80,7 +87,10 @@ class HomeRepository {
 
   // ── Employees ──────────────────────────────────────────────────────────────
 
-  Future<List<EmployeeModel>> getEmployeeWiseTaskList() async {
+  Future<EmployeeCountListData> getEmployeeWiseTaskList({
+    required String page,
+    required String size
+  }) async {
     try {
       final c = await _getCredentials();
       debugPrint('getEmployeeWiseTaskList: userId=${c.userId}');
@@ -88,6 +98,8 @@ class HomeRepository {
         userId: c.userId,
         companyId: c.companyId,
         userType: c.userType,
+        page: page,
+        size: size,
       );
       return _requireData(response, 'Failed to load employee task list.');
     } on AppException {

@@ -51,12 +51,12 @@ class OverDueBloc extends Bloc<OverDueEvent, OverDueState> {
       // Viewing own tasks
       const TaskTab(
         id: '0',
-        label: 'Pending@U',
+        label: 'For U',
         icon: Icons.person_outline_rounded,
       ),
       const TaskTab(
         id: '1',
-        label: 'Pending@Others',
+        label: 'For Others',
         icon: Icons.groups_outlined,
       ),
     ];

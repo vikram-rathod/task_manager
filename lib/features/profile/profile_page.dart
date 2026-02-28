@@ -80,13 +80,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _ProfileDetailItem(
                         icon: Icons.email_outlined,
                         label: 'Email',
-                        value: user.userEmail,
+                        value: maskEmail(user.userEmail),
                       ),
                     if (user.userMobileNumber.isNotEmpty)
                       _ProfileDetailItem(
                         icon: Icons.phone_outlined,
                         label: 'Phone',
-                        value: user.userMobileNumber,
+                        value: maskPhone(user.userMobileNumber),
                       ),
                     if (user.userTypeName.isNotEmpty)
                       _ProfileDetailItem(
@@ -206,6 +206,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
     );
+  }
+
+  String maskEmail(String userEmail) {
+    if (userEmail.isEmpty || !userEmail.contains('@')) {
+      return userEmail;
+    }
+
+    final parts = userEmail.split('@');
+    final name = parts[0];
+    final domain = parts[1];
+
+    if (name.length <= 2) {
+      return '${name[0]}*@${domain}';
+    }
+
+    final visiblePart = name.substring(0, 2);
+    final maskedPart = '*' * (name.length - 2);
+
+    return '$visiblePart$maskedPart@$domain';
+  }
+
+  String maskPhone(String userMobileNumber) {
+    if (userMobileNumber.length <= 4) {
+      return userMobileNumber;
+    }
+
+    final visibleDigits = userMobileNumber.substring(userMobileNumber.length - 4);
+    final maskedPart = '*' * (userMobileNumber.length - 4);
+
+    return '$maskedPart$visibleDigits';
   }
 }
 

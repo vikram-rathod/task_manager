@@ -22,9 +22,9 @@ class ApiConstants {
 
   static const String pcEnggUserList = '${baseUrl}list_pc_engg_users.php';
 
-  static String getProjectsCountList = '${baseUrl}dashboard_project_wise.php';
+  static String getProjectsCountList = '${baseUrl}v1/dashboard_project_wise.php';
   static String getEmployeeWiseTaskList =
-      '${baseUrl}dashboard_employee_wise.php';
+      '${baseUrl}v1/dashboard_employee_wise.php';
   static const String taskHistory = '${baseUrl}dashboard_history.php';
   static const String tmDashboardCount = '${baseUrl}tm_dashboard_count.php';
   static const String todaysTask = '${baseUrl}todays_task.php';

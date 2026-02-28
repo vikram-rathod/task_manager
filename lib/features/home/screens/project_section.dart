@@ -14,9 +14,9 @@ class ProjectSection extends StatelessWidget {
     return BlocBuilder<HomeBloc, HomeState>(
       buildWhen: (prev, curr) =>
       prev.isProjectsLoading != curr.isProjectsLoading ||
-          prev.projects != curr.projects,
+          prev.projectCountsList != curr.projectCountsList,
       builder: (context, state) {
-        if (!state.isProjectsLoading && state.projects.isEmpty) {
+        if (!state.isProjectsLoading && state.projectCountsList.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -25,12 +25,12 @@ class ProjectSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ProjectHeader(count: state.projects.length),
+              _ProjectHeader(count: state.totalProjects),
               SizedBox(
                 height: 140,
                 child: state.isProjectsLoading
                     ? const _ProjectShimmerList()
-                    : _ProjectList(projects: state.projects),
+                    : _ProjectList(projects: state.projectCountsList),
               ),
             ],
           ),

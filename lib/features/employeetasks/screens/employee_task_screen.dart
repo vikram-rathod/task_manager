@@ -176,7 +176,6 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: NestedScrollView(
-          // ✅ NestedScrollView replaces CustomScrollView
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             // Track collapse state based on innerBoxIsScrolled
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -192,7 +191,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
           body: Column(
             children: [
               const SizedBox(height: 12),
-              Expanded( // ✅ Expanded fills remaining space, no overflow
+              Expanded(
                 child: _buildTasksSection(),
               ),
             ],
@@ -208,7 +207,7 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
       expandedHeight: 140,
       floating: false,
       pinned: true,
-      forceElevated: innerBoxIsScrolled, // ✅ shows shadow when inner list scrolls
+      forceElevated: innerBoxIsScrolled,
       elevation: 0,
       backgroundColor: theme.primaryColor,
       title: _isCollapsed
@@ -327,15 +326,15 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
                         Row(
                           children: [
                             _buildMicroStat(
-                              icon: Icons.check_circle_outline_rounded,
-                              value: employee.completedTaskCount.toString(),
-                              label: 'Done',
-                            ),
-                            const SizedBox(width: 12),
-                            _buildMicroStat(
                               icon: Icons.pending_actions_rounded,
                               value: employee.totalPendingTask.toString(),
                               label: 'Pending',
+                            ),
+                            const SizedBox(width: 12),
+                            _buildMicroStat(
+                              icon: Icons.check_circle_outline_rounded,
+                              value: employee.completedTaskCount.toString(),
+                              label: 'Done',
                             ),
                           ],
                         ),
@@ -548,9 +547,9 @@ class _EmployeeTaskScreenState extends State<EmployeeTaskScreen>
           color: scheme.surface,
           child: ListView.builder(
             controller: _scrollControllers[tabId],
-            physics: const AlwaysScrollableScrollPhysics(), // ✅ allows pull-to-refresh even when not full
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).padding.bottom + 20, // ✅ bottom nav bar safe area
+              bottom: MediaQuery.of(context).padding.bottom + 20,
             ),
             itemCount: tasks.length + (isPaginationLoading ? 1 : 0),
             itemBuilder: (context, index) {

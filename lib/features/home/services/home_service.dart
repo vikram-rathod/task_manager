@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:task_manager/core/models/project_model.dart';
 import 'package:task_manager/features/auth/models/api_response.dart';
 import 'package:task_manager/features/home/model/dash_board_count_model.dart';
+import 'package:task_manager/features/home/model/employee_count_list_data.dart';
 import 'package:task_manager/features/home/model/employee_count_model.dart';
+import 'package:task_manager/features/home/model/project_count_list_data.dart';
 import 'package:task_manager/features/home/model/task_history_model.dart';
 
 import '../../../core/constants/api_constants.dart';
@@ -52,10 +54,12 @@ class HomeApiService {
     return apiResponse;
   }
 
-  Future<ApiResponse<List<ProjectCountModel>>> getProjectsCountList({
+  Future<ApiResponse<ProjectListData>> getProjectsCountList({
     required String userId,
     required String companyId,
     required String userType,
+    required String page,
+    required String size,
   }) async {
     final response = await _dio.post(
       ApiConstants.getProjectsCountList,
@@ -63,28 +67,27 @@ class HomeApiService {
         'user_id': userId,
         'comp_id': companyId,
         'user_type': userType,
+        'page': page,
+        'size': size,
       },
       options: Options(
         contentType: Headers.formUrlEncodedContentType,
       ),
     );
 
-    final apiResponse = ApiResponse<List<ProjectCountModel>>.fromJson(
+    final apiResponse = ApiResponse<ProjectListData>.fromJson(
       response.data as Map<String, dynamic>,
-          (data) =>
-          (data as List)
-              .map((e) =>
-              ProjectCountModel.fromJson(Map<String, dynamic>.from(e)))
-              .toList(),
+          (data) => ProjectListData.fromJson(Map<String, dynamic>.from(data)),
     );
-
 
     return apiResponse;
   }
-  Future<ApiResponse<List<EmployeeModel>>> getEmployeeWiseTaskList({
+  Future<ApiResponse<EmployeeCountListData>> getEmployeeWiseTaskList({
     required String userId,
     required String companyId,
     required String userType,
+    required String page,
+    required String size,
   }) async {
     final response = await _dio.post(
       ApiConstants.getEmployeeWiseTaskList,
@@ -92,6 +95,8 @@ class HomeApiService {
         'user_id': userId,
         'comp_id': companyId,
         'user_type': userType,
+        'page': page,
+        'size': size,
       },
       options: Options(
         contentType: Headers.formUrlEncodedContentType,
@@ -99,13 +104,10 @@ class HomeApiService {
     );
     debugPrint("homeApi RAW EmployeeWiseTaskList => ${response.data}");
 
-    final apiResponse = ApiResponse<List<EmployeeModel>>.fromJson(
+    final apiResponse = ApiResponse<EmployeeCountListData>.fromJson(
       response.data as Map<String, dynamic>,
           (data) =>
-          (data as List)
-              .map((e) =>
-              EmployeeModel.fromJson(Map<String, dynamic>.from(e)))
-              .toList(),
+              EmployeeCountListData.fromJson(Map<String, dynamic>.from(data)),
     );
     debugPrint("homeApi Parsed EmployeeWiseTaskList => $apiResponse");
     return apiResponse;

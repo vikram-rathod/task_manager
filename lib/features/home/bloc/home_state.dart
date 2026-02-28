@@ -16,13 +16,21 @@ class HomeState extends Equatable {
 
   // projects
   final bool isProjectsLoading;
-  final List<ProjectCountModel> projects;
+  final List<ProjectCountModel> projectCountsList;
   final String? projectsError;
+  final bool hasMoreProjects;
+  final int totalProjects;
+
+
+
 
   // employee wise task list
   final bool isEmployeeWiseTaskListLoading;
   final List<EmployeeModel> employeeWiseTaskList;
   final String? employeeWiseTaskListError;
+  final bool hasMoreEmployeeWiseTaskList;
+  final int totalEmployeeWiseTaskList;
+
 
 
   // Task history
@@ -58,13 +66,21 @@ class HomeState extends Equatable {
 
     // Projects
     this.isProjectsLoading = false,
-    this.projects = const [],
+    this.projectCountsList = const [],
     this.projectsError,
+    this.hasMoreProjects = true,
+    this.totalProjects = 0,
+
+
 
     // employee wise task list
     this.isEmployeeWiseTaskListLoading = false,
     this.employeeWiseTaskList = const [],
     this.employeeWiseTaskListError,
+    this.hasMoreEmployeeWiseTaskList = true,
+    this.totalEmployeeWiseTaskList = 0,
+
+
 
     // Task history
     this.isTaskHistoryLoading = false,
@@ -101,11 +117,21 @@ class HomeState extends Equatable {
     bool? isProjectsLoading,
     List<ProjectCountModel>? projects,
     String? projectsError,
+    bool? hasMoreProjects,
+    int? totalProjects,
+
+
 
     // employee wise task list
     bool? isEmployeeWiseTaskListLoading,
     List<EmployeeModel>? employeeWiseTaskList,
     String? employeeWiseTaskListError,
+    bool? hasMoreEmployeeWiseTaskList,
+    int? totalEmployeeWiseTaskList,
+
+
+
+    // Task history
 
     bool? isTaskHistoryLoading,
     List<TaskHistoryModel>? taskHistory,
@@ -135,23 +161,32 @@ class HomeState extends Equatable {
 
       isQuickActionsLoading: isQuickActionsLoading ?? this.isQuickActionsLoading,
       quickActions: quickActions ?? this.quickActions,
-      quickActionsError: quickActionsError,
+      quickActionsError: quickActionsError ?? this.quickActionsError,
 
       isProjectsLoading: isProjectsLoading ?? this.isProjectsLoading,
-      projects: projects ?? this.projects,
-      projectsError: projectsError,
+      projectCountsList: projects ?? this.projectCountsList,
+      projectsError: projectsError ?? this.projectsError,
+      hasMoreProjects: hasMoreProjects ?? this.hasMoreProjects,
+      totalProjects: totalProjects ?? this.totalProjects,
+
+
 
       isEmployeeWiseTaskListLoading: isEmployeeWiseTaskListLoading ?? this.isEmployeeWiseTaskListLoading,
       employeeWiseTaskList: employeeWiseTaskList ?? this.employeeWiseTaskList,
       employeeWiseTaskListError: employeeWiseTaskListError,
+      hasMoreEmployeeWiseTaskList: hasMoreEmployeeWiseTaskList ?? this.hasMoreEmployeeWiseTaskList,
+      totalEmployeeWiseTaskList: totalEmployeeWiseTaskList ?? this.totalEmployeeWiseTaskList,
+
+
+
 
       isTaskHistoryLoading: isTaskHistoryLoading ?? this.isTaskHistoryLoading,
       taskHistory: taskHistory ?? this.taskHistory,
-      taskHistoryError: taskHistoryError,
+      taskHistoryError: taskHistoryError ?? this.taskHistoryError,
 
       isMyTasksLoading: isMyTasksLoading ?? this.isMyTasksLoading,
       myTasks: myTasks ?? this.myTasks,
-      myTasksError: myTasksError,
+      myTasksError: myTasksError ?? this.myTasksError,
       myTasksPage: myTasksPage ?? this.myTasksPage,
       hasMoreMyTasks: hasMoreMyTasks ?? this.hasMoreMyTasks,
 
@@ -175,11 +210,15 @@ class HomeState extends Equatable {
     taskHistory,
     taskHistoryError,
     isProjectsLoading,
-    projects,
+    projectCountsList,
     projectsError,
+    hasMoreProjects,
+    totalProjects,
     isEmployeeWiseTaskListLoading,
     employeeWiseTaskList,
     employeeWiseTaskListError,
+    hasMoreEmployeeWiseTaskList,
+    totalEmployeeWiseTaskList,
     isMyTasksLoading,
     myTasks,
     myTasksError,
